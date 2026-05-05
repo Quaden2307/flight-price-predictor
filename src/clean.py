@@ -2,7 +2,6 @@
 import pandas as pd
 from src.config import COLUMNS_TO_CLEAN, ROWS_TO_INCLUDE, COLUMNS_TO_KEEP
 
-
 #string to number conversion
 def clean_data(df):
     df = df[COLUMNS_TO_KEEP]
