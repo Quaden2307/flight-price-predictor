@@ -1,0 +1,112 @@
+PLOTS OBSERVATIONS
+==================
+Notes for each plot in 02_data_visualization.ipynb.
+Each entry: what the plot shows, what it means, and any modeling implication.
+
+
+1. df['fare'].hist()  --  Distribution of fare
+-----------------------------------------------
+- Distribution is right-skewed: most fares cluster between $150-$300,
+  with a long tail extending toward $600+.
+- Run df['fare'].skew() to confirm. If skew > 1, apply a log transform
+  before modeling (np.log1p(fare)).
+- A few extreme high-fare routes will dominate RMSE if untransformed —
+  the model will optimize for the rare expensive routes at the cost of
+  the typical ones.
+
+
+2. nsmiles vs fare  --  Distance vs average fare
+------------------------------------------------
+- Clear positive trend: longer routes cost more, as expected.
+- Relationship is NOT perfectly linear — fare grows fast over short
+  distances, then plateaus around $300-$400 for cross-country routes.
+  This is a logarithmic-shaped relationship (cost per mile decreases
+  with distance).
+- Significant vertical spread at every distance: many other factors
+  (carrier, competition, season, demand) affect price beyond distance
+  alone. Distance alone won't be enough to predict fare accurately.
+
+
+3. large_ms vs fare  --  Dominant carrier market share vs fare
+--------------------------------------------------------------
+- COUNTERINTUITIVE: routes where one carrier has 100% market share
+  (large_ms = 1) have LOWER fares, not higher.
+- This contradicts the monopoly intuition. The likely cause is
+  CONFOUNDING with distance — see plot 4 below.
+- Important lesson: high correlation alone is not enough to claim
+  causation. Always check for hidden third variables.
+
+
+4. nsmiles vs large_ms  --  Distance vs market share concentration
+------------------------------------------------------------------
+- Confirms the confounding: short routes (under ~500 miles) have
+  large_ms close to 1 (single dominant carrier), while longer routes
+  show much more spread (multiple carriers competing).
+- The story: short routes are thin markets where only one airline
+  bothers to fly. They charge less because demand is small and
+  passengers are price-sensitive (driving is an alternative). It's
+  not the monopoly causing low prices — it's the route's economics.
+- Modeling implication: large_ms by itself is NOT a clean signal.
+  Distance must also be in the model to disentangle the two effects.
+
+
+5. avg nsmiles by quarter  --  Bar chart of mean route distance per Q
+---------------------------------------------------------------------
+- Nearly identical across quarters (~1000 miles avg), as expected:
+  route distances are physical constants and don't change seasonally.
+- This plot is not very informative — likely worth replacing with
+  AVERAGE FARE by quarter, which would actually reveal seasonal
+  pricing patterns (Q2/Q3 typically peak for leisure travel).
+- TODO: redo as df.groupby('quarter')['fare'].mean().plot(kind='bar')
+
+
+6. nsmiles vs fare_lg  --  Distance vs dominant carrier's average fare
+----------------------------------------------------------------------
+- Bimodal pattern at shorter distances (< ~1500 miles): a "main
+  cluster" around $200-$300 and a clearly separate "low cluster"
+  around $75-$150.
+- Hypothesis: low-cost carriers (LCCs) — Spirit (NK), Frontier (F9),
+  Allegiant (G4) — operate primarily on short-to-medium routes and
+  charge 30-50% less than legacy carriers. Their entire business
+  model produces this separate price regime.
+- LCCs are clearly concentrated at smaller distances: the low
+  cluster fades out past ~1500 miles and is essentially absent on
+  long-haul routes. This matches LCC economics — their model relies
+  on high-frequency short hops with fast aircraft turnaround. Long
+  routes require more crew, more fuel reserves, and lock up planes
+  for full days, which kills the cost advantage. Effectively, LCCs
+  do not exist on transcontinental routes in this dataset.
+- Verify with:
+      low = df[(df['fare_lg'] < 150) & (df['nsmiles'] < 1500)]
+      print(low['carrier_lg'].value_counts())
+  If NK / F9 / G4 dominate the output, hypothesis confirmed.
+- Modeling implication: the distance-fare relationship isn't one
+  curve, it's two curves depending on carrier type. An is_lcc binary
+  feature would help linear models. Tree-based models (random forest,
+  gradient boosting) would discover this automatically by splitting
+  on carrier first.
+- This same pattern transfers to phase 2 international data:
+  Ryanair, EasyJet, AirAsia behave the exact same way.
+- Note: fare_lg itself is leakage (derived from the target) and must
+  be dropped before modeling. The INSIGHT, however, is real and
+  useful — it tells us is_lcc is a feature worth engineering.
+
+
+CROSS-CUTTING TAKEAWAYS
+=======================
+- Distance is the single strongest predictor of fare, but with a
+  non-linear shape and large residual variance.
+- Carrier type (LCC vs legacy) is a hidden second axis that splits
+  fares into distinct regimes.
+- Naive interpretations of single-variable plots can be misleading
+  (the large_ms case). Always check for confounding variables.
+- The fare distribution is skewed and likely needs a log transform
+  for linear models.
+
+NEXT PLOTS TO ADD
+=================
+- AVERAGE FARE by quarter (replacing the avg-distance-by-quarter)
+- AVERAGE FARE by Year (look for COVID dip around 2020)
+- Color-coded scatter: nsmiles vs fare, colored by carrier_lg
+- Boxplot of fare per carrier (rank carriers by typical price)
+- Correlation matrix of all numeric features
