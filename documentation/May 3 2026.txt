@@ -1,9 +1,0 @@
-May 3 2026:
-
-Initial creation. Worked on Kaggle dataset of domestic American flight prices, including year, quarter and city miles. 
-Dataset includes marketshare, which may be useful in training. 
-Created clean.py that includes a clean function clean_data, which 
-takes a pandas dataframe and converts strings into integers as well as remove commas and unnecessary symbols. Relies on 
-global variables in config.py. 
-Created data_init.py that loads data. The load_data function ensures that the file path of the dataset is found based on 
-where the file lives, not where the code is ran. Returns pandas dataframe of csv file. 

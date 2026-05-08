@@ -1,3 +1,0 @@
-Started experimenting with SQLite. This decision was made because the earlier live data
-is collected, the better. While working with the original model on just the Domestic American flights,
-data will be collected in the background. 
