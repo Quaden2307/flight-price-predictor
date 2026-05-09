@@ -61,8 +61,8 @@ for origin, destination in ROUTES:
                 airline, flight_number, departure_at,
                 transfers, return_transfers,
                 duration, duration_to, duration_back,
-                class, price, currency, gate, link, raw_offer
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                flight_class, price, currency, gate, link, raw_offer
+            ) VALUES (?, ?. ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 captured_at,

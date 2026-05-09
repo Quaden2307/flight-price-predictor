@@ -14,6 +14,7 @@ CREATE TABLE offers (
     duration INTEGER,
     duration_to INTEGER,
     duration_back INTEGER,
+    flight_class INTEGER, 
     price REAL NOT NULL,
     currency TEXT,
     gate TEXT,
