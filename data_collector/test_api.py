@@ -1,5 +1,5 @@
 """
-Verify Python can call the TravelPayouts API.
+Verify Python can call the flight pricing API.
 Throwaway test script. Saves the latest response to data/sample_response.json
 for inspection. Each run overwrites the previous sample.
 """
@@ -11,13 +11,13 @@ import requests
 from dotenv import load_dotenv
 
 
-# Block A: Load the .env file sitting next to this script, then read the token
+# Block A: Load the .env file sitting next to this script, then read API config
 load_dotenv(Path(__file__).parent / ".env")
-token = os.environ["TRAVELPAYOUTS_TOKEN"]
+token = os.environ["API_TOKEN"]
 
 
-# Block B: Define the endpoint URL and the query parameters
-URL = "https://api.travelpayouts.com/aviasales/v3/prices_for_dates"
+# Block B: Get the endpoint URL and define query parameters
+URL = os.environ["API_URL"]
 params = {
     "origin": "JFK",
     "destination": "LHR",
