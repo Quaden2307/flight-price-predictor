@@ -83,6 +83,22 @@ Normal, ignore it. Most use cases don't actually need `AUTOINCREMENT` — plain 
 **7. Always use parameterized queries (`?` placeholders).**
 Never build SQL with string formatting / f-strings. Reasons: SQL injection, type coercion bugs, statement caching performance. This rule is universal across every database in every language.
 
+**8. `CREATE TABLE` does NOT overwrite — it errors if the table exists.**
+SQL is paranoid about destroying data. Running `schema.sql` twice against the same db throws "table already exists." Three options for handling re-runs:
+- Plain `CREATE TABLE` → errors if exists. Forces you to think.
+- `CREATE TABLE IF NOT EXISTS` → does nothing if exists. Safe to re-run, but the *original* schema sticks even if you edit the file later (silent file/db drift).
+- `DROP TABLE IF EXISTS X; CREATE TABLE X (...)` → destroys all rows, rebuilds fresh. Dev-only.
+
+**9. `schema.sql` and the live db are independent — keep them in sync manually.**
+Two distinct modes:
+- `schema.sql` is the blueprint for a *fresh* database. Run once when the db doesn't exist yet.
+- `ALTER TABLE` (run via CLI) is for modifying an existing database that has rows you want to keep.
+
+When you change the schema, do BOTH: update `schema.sql` (so future fresh builds include the change) AND run an `ALTER` against the live db (so your existing data file gets the change). Forgetting one creates drift — usually discovered weeks later when "columns from schema" aren't actually there.
+
+**10. The grown-up version: migrations.**
+A `migrations/` folder with numbered files (`0001_create_offers.sql`, `0002_add_flight_class.sql`, ...). A small script tracks which have run and applies missing ones. Replayable, version-controlled, multi-environment safe. Overkill for one developer on one machine — but the right answer once the project deploys, has staging/prod, or other people clone it.
+
 ---
 
 ## Modeling architecture
@@ -246,8 +262,8 @@ Toronto-rooted (dogfood) + NYC/SF heavy (target user concentration) > geographic
 **2. Header auth is preferred over query-param auth.**
 URLs land in server logs and proxy caches; headers usually don't. If the API supports both, send the token in a header.
 
-**3. Know your rate limit before scaling routes.**
-Free tier is typically ~100 req/min. Daily run = (routes × lead times) calls. Plan for 1.5x headroom for retries.
+**3. Rate limit (verified): 600 requests per 60-second window.**
+Confirmed via response headers (`X-Rate-Limit: 600`, `X-Rate-Limit-Reset: 60`). Plenty of headroom for the project's foreseeable scale — even 200 routes × 7 months = 1,400 calls completes in under 3 minutes. If you ever hit a 429 error, the response includes the wait time.
 
 **4. Add `try/except` per API call.**
 One bad route shouldn't kill the run. Log the failure, increment a counter, continue.
@@ -257,6 +273,9 @@ Default `requests.get(url)` waits forever. Always set `timeout=10` (or whatever'
 
 **6. Cabin class affects price 4-10x.**
 If you collect business class, store it in a `flight_class` column. Don't mix economy and business prices in one column without distinguishing — the model learns nothing useful from mixed data.
+
+**7. The pricing API normalizes airport codes to city codes.**
+You query `JFK → LHR`, the API stores responses with `origin = NYC, origin_airport = JFK`. This is fine for collection (both fields land in the DB) but matters for the app: when a user searches "JFK to LHR," the backend's SQL query must use `origin_airport = 'JFK'` (or translate to city code first) to find rows. Same for destination. Affects multi-airport cities most: NYC = {JFK, EWR, LGA}, LON = {LHR, LGW, STN, LCY}, TYO = {NRT, HND}.
 
 ---
 

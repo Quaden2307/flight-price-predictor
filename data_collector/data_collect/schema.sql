@@ -24,3 +24,12 @@ CREATE TABLE offers (
 
 CREATE INDEX idx_route_date ON offers(origin, destination, departure_at);
 CREATE INDEX idx_captured ON offers(captured_at);
+
+CREATE TABLE runs_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    started_at TEXT NOT NULL,
+    finished_at TEXT,
+    api_calls INTEGER,
+    offers_inserted INTEGER,
+    failures INTEGER
+);
