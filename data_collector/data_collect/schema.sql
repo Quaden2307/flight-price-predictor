@@ -1,25 +1,29 @@
+-- One row per offer returned by the API. captured_at is when this script ran,
+-- departure_at and return_at come from the offer itself.
 CREATE TABLE offers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     captured_at TEXT NOT NULL,
     lead_time_days INTEGER,
-    origin TEXT NOT NULL,
+    origin TEXT NOT NULL,            -- IATA city code (use *_airport for joins)
     destination TEXT NOT NULL,
     origin_airport TEXT,
     destination_airport TEXT,
     airline TEXT,
     flight_number TEXT,
     departure_at TEXT NOT NULL,
+    return_at TEXT,
+    trip_duration_days INTEGER,
     transfers INTEGER,
     return_transfers INTEGER,
-    duration INTEGER,
+    duration INTEGER,                -- minutes; round-trip total
     duration_to INTEGER,
     duration_back INTEGER,
-    flight_class INTEGER, 
+    flight_class INTEGER DEFAULT 0,  -- 0=economy, 1=business, 2=first
     price REAL NOT NULL,
     currency TEXT,
     gate TEXT,
     link TEXT,
-    raw_offer TEXT
+    raw_offer TEXT                   -- full JSON in case I missed a field above
 );
 
 CREATE INDEX idx_route_date ON offers(origin, destination, departure_at);

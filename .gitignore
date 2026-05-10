@@ -6,3 +6,5 @@ data/
 .DS_Store
 venv/
 CONTEXT.md
+.claude/
+logs/

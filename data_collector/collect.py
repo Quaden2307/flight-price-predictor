@@ -1,6 +1,5 @@
 """
-Daily flight data collector. Fetches offers from the flight pricing API
-and inserts each returned offer as a row into data/flights.db.
+Daily collector. Calls the flight pricing API and writes offers to data/flights.db.
 """
 import os
 import json
@@ -12,17 +11,12 @@ from dotenv import load_dotenv
 
 from datetime import datetime, timezone
 
+from routes import ROUTES
 
 
 # Load API config from .env
 load_dotenv(Path(__file__).parent / ".env")
 token = os.environ["API_TOKEN"]
-
-ROUTES = [ #might implement popular routes (another API) in the future and store it in separate db
-    ("JFK", "LHR"),
-    ("JFK", "CDG"),
-    ("YYZ", "LHR"),
-]
 
 connection = sqlite3.connect("data/flights.db")
 
@@ -35,26 +29,43 @@ captured_at and today represent the same moment in time, however in different fo
 captured_at is stored as a string in the database, whereas today is used for math. (Not added to db)
 '''
 
-# Build month strings to query — current month through 6 months ahead.
-# Querying by month returns more offers per call than querying specific dates,
-# and we derive the actual lead time from each offer's departure_at below.
-MONTHS = []
+# Current month + 6 months ahead. Querying by month returns more offers per call than by date.
+DEPART_MONTHS = []
 year, month_num = today.year, today.month
 for _ in range(7):
-    MONTHS.append(f"{year:04d}-{month_num:02d}")
+    DEPART_MONTHS.append(f"{year:04d}-{month_num:02d}")
     month_num += 1
     if month_num > 12:
         month_num = 1
         year += 1
 
+
+def offset_month(month_str, offset):
+    # Shift YYYY-MM forward by N months
+    y, m = map(int, month_str.split("-"))
+    m += offset
+    while m > 12:
+        m -= 12
+        y += 1
+    return f"{y:04d}-{m:02d}"
+
+
+'''
+Round-trip duration offsets — months between depart and return month.
+The API caps round-trip queries at a 30-day gap, so we can only do offset 0
+(same month, 1-30d trips) and offset 1 (next month, up to ~60d). Anything
+longer (semester-long, internships) needs a different API and is on hold.
+'''
+DURATION_OFFSETS = [0, 1]
+
+
 '''
 Business and first class data will be collected in a separate script and in
-higher intervals than economy API calls. This is because these classes are not the main target
-of this project, as most users will be searching for economy anyway (They want cheaper prices). 
-However, the addition of these classes may be useful especially since routes are used mainly for
-individuals working in the tech industry, which is a corporate setting. 
+higher intervals than economy API calls. Most users will be searching for economy
+anyway, but business may be useful since routes lean toward tech-industry travel
+which has more corporate booking.
 '''
-CLASSES = [0, 1, 2] #0=economy, 1=business, 2=first -> WILL IMPLEMENT IN SEPARATE SCRIPT
+CLASSES = [0, 1, 2]  # 0=economy, 1=business, 2=first -> SEPARATE SCRIPT
 
 
 URL = os.environ["API_URL"]
@@ -65,72 +76,84 @@ offers_inserted = 0
 failures = 0
 
 for origin, destination in ROUTES:
-    for month in MONTHS:
-        params = {
-            "origin": origin,
-            "destination": destination,
-            "departure_at": month,
-            "currency": "usd",
-            "market": "us",
-            "one_way": "true",
-            "limit": 1000,
-            "token": token,
-        }
+    for depart_month in DEPART_MONTHS:
+        for offset in DURATION_OFFSETS:
+            return_month = offset_month(depart_month, offset)
 
-        api_calls += 1
-        try:
-            response = requests.get(URL, params=params, timeout=10)
-            response.raise_for_status()
-            offers = response.json().get("data", [])
-        except Exception as e:
-            print(f"{origin}→{destination} ({month}): FAILED — {e}")
-            failures += 1
-            continue
+            params = {
+                "origin": origin,
+                "destination": destination,
+                "departure_at": depart_month,
+                "return_at": return_month,
+                "currency": "usd",
+                "market": "us",
+                "one_way": "false",
+                "limit": 1000,
+                "token": token,
+            }
 
-        print(f"{origin}→{destination} ({month}): {len(offers)} offers")
-
-        for offer in offers:
-            # Derive lead time from THIS offer's actual departure date
-            depart_date = datetime.fromisoformat(offer["departure_at"]).date()
-            lead = (depart_date - today).days
-            if lead < 0:
+            api_calls += 1
+            try:
+                response = requests.get(URL, params=params, timeout=10)
+                response.raise_for_status()
+                offers = response.json().get("data", [])
+            except Exception as e:
+                print(f"{origin}→{destination} ({depart_month}→{return_month}): FAILED — {e}")
+                failures += 1
                 continue
 
-            cur.execute(
-                """
-                INSERT INTO offers (
-                    captured_at, lead_time_days,
-                    origin, destination, origin_airport, destination_airport,
-                    airline, flight_number, departure_at,
-                    transfers, return_transfers,
-                    duration, duration_to, duration_back,
-                    flight_class, price, currency, gate, link, raw_offer
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    captured_at,
-                    lead,                              # lead_time_days
-                    offer["origin"],
-                    offer["destination"],
-                    offer.get("origin_airport"),
-                    offer.get("destination_airport"),
-                    offer.get("airline"),
-                    offer.get("flight_number"),
-                    offer["departure_at"],
-                    offer.get("transfers"),
-                    offer.get("return_transfers"),
-                    offer.get("duration"),
-                    offer.get("duration_to"),
-                    offer.get("duration_back"),
-                    0,
-                    offer["price"],
-                    "usd",
-                    offer.get("gate"),
-                    offer.get("link"),
-                    json.dumps(offer),
-                ),
-            )
-            offers_inserted += 1
+            print(f"{origin}→{destination} ({depart_month}→{return_month}): {len(offers)} offers")
+
+            for offer in offers:
+                # Lead time and trip duration come from the offer's actual dates, not the query month.
+                depart_date = datetime.fromisoformat(offer["departure_at"]).date()
+                lead = (depart_date - today).days
+                if lead < 0:
+                    continue
+
+                return_at = offer.get("return_at")
+                trip_duration_days = None
+                if return_at:
+                    return_date = datetime.fromisoformat(return_at).date()
+                    trip_duration_days = (return_date - depart_date).days
+
+                cur.execute(
+                    """
+                    INSERT INTO offers (
+                        captured_at, lead_time_days,
+                        origin, destination, origin_airport, destination_airport,
+                        airline, flight_number, departure_at, return_at, trip_duration_days,
+                        transfers, return_transfers,
+                        duration, duration_to, duration_back,
+                        flight_class, price, currency, gate, link, raw_offer
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        captured_at,
+                        lead,
+                        offer["origin"],
+                        offer["destination"],
+                        offer.get("origin_airport"),
+                        offer.get("destination_airport"),
+                        offer.get("airline"),
+                        offer.get("flight_number"),
+                        offer["departure_at"],
+                        return_at,
+                        trip_duration_days,
+                        offer.get("transfers"),
+                        offer.get("return_transfers"),
+                        offer.get("duration"),
+                        offer.get("duration_to"),
+                        offer.get("duration_back"),
+                        0,
+                        offer["price"],
+                        "usd",
+                        offer.get("gate"),
+                        offer.get("link"),
+                        json.dumps(offer),
+                    ),
+                )
+                offers_inserted += 1
 
 
 # Log this run
