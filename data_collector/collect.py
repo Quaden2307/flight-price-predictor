@@ -4,6 +4,7 @@ Daily collector. Calls the flight pricing API and writes offers to data/flights.
 import os
 import json
 import sqlite3
+import time
 from pathlib import Path
 
 import requests
@@ -70,6 +71,11 @@ CLASSES = [0, 1, 2]  # 0=economy, 1=business, 2=first -> SEPARATE SCRIPT
 
 URL = os.environ["API_URL"]
 
+# Retry knobs: each failed call is reattempted up to MAX_ATTEMPTS times,
+# with exponential backoff starting at BASE_BACKOFF seconds.
+MAX_ATTEMPTS = 3
+BASE_BACKOFF = 2
+
 # Run-level counters
 api_calls = 0
 offers_inserted = 0
@@ -93,13 +99,23 @@ for origin, destination in ROUTES:
             }
 
             api_calls += 1
-            try:
-                response = requests.get(URL, params=params, timeout=10)
-                response.raise_for_status()
-                offers = response.json().get("data", [])
-            except Exception as e:
-                print(f"{origin}→{destination} ({depart_month}→{return_month}): FAILED — {e}")
-                failures += 1
+            offers = None
+            for attempt in range(MAX_ATTEMPTS):
+                try:
+                    response = requests.get(URL, params=params, timeout=10)
+                    response.raise_for_status()
+                    offers = response.json().get("data", [])
+                    break
+                except requests.exceptions.RequestException as e:
+                    if attempt < MAX_ATTEMPTS - 1:
+                        sleep_for = BASE_BACKOFF * (2 ** attempt)
+                        print(f"{origin}→{destination} ({depart_month}→{return_month}): attempt {attempt + 1}/{MAX_ATTEMPTS} failed ({type(e).__name__}), retrying in {sleep_for}s")
+                        time.sleep(sleep_for)
+                    else:
+                        print(f"{origin}→{destination} ({depart_month}→{return_month}): FAILED after {MAX_ATTEMPTS} attempts — {e}")
+                        failures += 1
+
+            if offers is None:
                 continue
 
             print(f"{origin}→{destination} ({depart_month}→{return_month}): {len(offers)} offers")
