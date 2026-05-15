@@ -31,3 +31,13 @@ Data integrity itself is still clean: 0 NULLs across price, airline, departure_a
 One bad day was noise; two in a row with today qualitatively worse is signal. Added retry-with-backoff around the requests.get call in collect.py — wrapped it in a loop that retries up to 3 times on connection errors, with exponential backoff (2s, then 4s) between attempts. Two new constants at the top (MAX_ATTEMPTS = 3, BASE_BACKOFF = 2) make the knobs easy to tweak. Also narrowed the except clause from bare Exception to requests.exceptions.RequestException so unrelated bugs don't get silently swallowed as retry-eligible.
 
 This should salvage yesterday's failure mode (sparse transient errors scattered through the run) but won't help with today's (DNS dead for ~800 consecutive calls — retries just make a dead run longer). If today's pattern repeats, next step is a circuit breaker that bails the whole run after N consecutive failures. Holding off on that until I see whether retries alone change the picture.
+
+---
+
+## May 14, 2026
+
+Run 7 went clean: 0 failures, 4043 offers inserted, ~7 minute runtime. Right back to the May 10-11 baseline after two rough days. Cumulative dataset now 28,428 rows. NULL audit still clean across all key fields, value ranges still sane.
+
+Couldn't actually test yesterday's retry code though. Grepped the log for "retrying in" and "FAILED after" — zero matches. Every API call succeeded on first attempt because the network just had a healthy day, so the retry path never got exercised. The code is in place and didn't break the run, but it hasn't been stress-tested in the wild yet. Next time conditions degrade I'll see retry log lines and be able to judge whether it actually salvages calls or not.
+
+Worth keeping in mind for tomorrow's run too — if everything keeps going smoothly the retry logic could sit unverified for a while. That's fine, but the moment it does fire, the log lines are the signal to watch for.
