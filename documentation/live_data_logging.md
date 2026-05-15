@@ -41,3 +41,17 @@ Run 7 went clean: 0 failures, 4043 offers inserted, ~7 minute runtime. Right bac
 Couldn't actually test yesterday's retry code though. Grepped the log for "retrying in" and "FAILED after" — zero matches. Every API call succeeded on first attempt because the network just had a healthy day, so the retry path never got exercised. The code is in place and didn't break the run, but it hasn't been stress-tested in the wild yet. Next time conditions degrade I'll see retry log lines and be able to judge whether it actually salvages calls or not.
 
 Worth keeping in mind for tomorrow's run too — if everything keeps going smoothly the retry logic could sit unverified for a while. That's fine, but the moment it does fire, the log lines are the signal to watch for.
+
+---
+
+## May 15, 2026
+
+Run still in progress when I checked, so couldn't query offers directly (DB locked by the writer). Two unusual things and one good thing.
+
+First unusual thing: the run started at 3:04 AM, not the scheduled 6 AM. launchd plist still says Hour=6, so either the schedule got modified, something woke launchd early, or I triggered it manually and forgot. Worth chasing down if it happens again — for now just noting it so I have the timestamp recorded.
+
+Second unusual thing: the slow-API pattern from May 12/13 is back. 5+ hours of runtime with only 29 seconds of CPU used — the script is spending essentially all its time waiting on slow network responses, not doing any actual work. The TravelPayouts API is just slow today. Not a thing I can fix on my end.
+
+The good thing: this is the first time the retry-with-backoff code has actually fired in the wild, and it's working as intended. 13 retry events recorded in the log so far, 0 final failures. Those 13 calls would have been losses on May 12 (the only transient errors that day were final-attempt prints) and part of the wave on May 13. Today they're saves — exactly what the retry logic was meant to do. Counts the code as validated.
+
+Will update this entry with the final offer count and failure breakdown once the run finishes.
