@@ -64,3 +64,15 @@ is_international is even simpler: join offers to airports twice (once for origin
 6. Loader script for airlines, populated semi-manually from the carrier list in offers.
 
 Each step is small and reversible — wipe the table and re-run if anything looks off.
+
+---
+
+## Update — airports table done
+
+Wrote populate_airports.py and ran it. The script reads the public airports CSV row by row with csv.DictReader, filters to the IATA codes that appear in ROUTES (flattened into a set for O(1) lookup), casts lat/long to float, and inserts into the airports table. Used INSERT OR REPLACE instead of plain INSERT so re-runs don't crash on the PRIMARY KEY constraint, and wrapped the ALTER TABLE statement in a try/except since SQLite has no "ADD COLUMN IF NOT EXISTS" — that combo makes the script fully idempotent.
+
+55 airports loaded, not the 53 I'd estimated. Turns out routes.py has grown to 230 routes since CONTEXT.md was written, so the unique-airport count is a bit higher. Country distribution looks right (28 US, 7 CA, then a long tail across Europe, East Asia, Latin America). Lat/long values resolve to the correct cities when spot-checked.
+
+Decided to also pull the type column from the CSV into a new airport_type column on the airports table, on the theory it could be a free first pass at hub_tier. That turned out to be a bust — every single one of the 55 airports is classified as "large_airport" in the public dataset, so the column has zero discriminative value for this route mix. Leaving the column in for now since it costs nothing, but hub_tier still needs to be filled manually from passenger-volume data later if I want it.
+
+Next step is the haversine distance helper, which uses the lat/long columns directly. is_international after that.

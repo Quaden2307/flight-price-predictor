@@ -8,3 +8,6 @@ venv/
 CONTEXT.md
 .claude/
 logs/
+documentation/architecture.md
+documentation/architecture.svg
+documentation/considerations.md
