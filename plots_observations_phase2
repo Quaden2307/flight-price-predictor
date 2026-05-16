@@ -1,0 +1,86 @@
+PLOTS OBSERVATIONS — PHASE 2 (live data)
+========================================
+Notes for each plot in 03_live_data_visualization.ipynb.
+Each entry: what the plot shows, what it means, and any modeling implication.
+
+
+1. sns.histplot price  --  Price distribution across all offers
+---------------------------------------------------------------
+- Distribution is clearly BIMODAL, not just right-skewed: primary peak
+  around $300 with ~2200 offers, secondary hump around $800-900 with
+  ~500 offers, long tail to $2400.
+- Two modes likely correspond to two market segments — short-haul
+  domestic ($200-400) and long-haul international ($700-1000).
+- Modeling implication: a single linear model will split the
+  difference between the two modes and fit neither well. Tree models
+  (XGBoost / LightGBM) will pick up the regime split automatically via
+  is_international / distance features.
+
+
+2. sns.scatterplot price vs lead_time_days  --  Price vs lead time
+------------------------------------------------------------------
+- L-shaped scatter: dense band 0-100 days at prices $100-1000, sparser
+  cloud beyond 100 days.
+- NO obvious price-vs-lead-time slope — prices look similar whether
+  booked 5 days out or 80. Counterintuitive vs the "book early =
+  cheaper" assumption.
+- Vertical wall at ~200 days is the 7-month query horizon — script
+  doesn't query further out, so density drops to zero. Artifact, not
+  signal.
+- Modeling implication: lead time matters within a route, not across
+  them. Need to facet by distance bucket or route to see the real
+  signal. Don't drop lead_time as a feature — the slope is probably
+  masked by the bimodality, not absent.
+
+
+3. Side-by-side histograms (lead_time, price)
+---------------------------------------------
+- lead_time histogram: heavy mass at 0-25 days, geometric decay
+  outward. Bumpy plateaus at 50 and 100 days are likely month-boundary
+  artifacts from querying by month.
+- Reflects the cache, not booking behavior: TravelPayouts caches what
+  people actually search, and most searches are weeks-to-months out.
+- Modeling implication: model predictions for lead_time > 100 days are
+  based on much sparser data — confidence interval should reflect this
+  if the eventual app surfaces predictions for distant dates.
+
+
+4. sns.histplot price by is_international  --  Stacked histogram
+----------------------------------------------------------------
+- The $800-900 hump is entirely international (orange). Bimodality
+  hypothesis confirmed for the right side.
+- BUT the left peak ($200-500) is NOT cleanly domestic — substantial
+  orange chunk hiding inside it. is_international does not split the
+  two modes alone.
+- The low-price international cluster is short cross-border routes:
+  YYZ-JFK/EWR/BOS, LAX-MEX, MIA-CUN, HND-ICN, etc. Different country,
+  but short distance, so they price like domestic.
+- Modeling implication: is_international is a coarse proxy that
+  correlates with distance for most routes but fails on short
+  cross-border hops. Distance is the real driver — is_international is
+  redundant once distance is in the model, but cheap to keep as a
+  binary backup signal.
+
+
+5. sns.scatterplot price vs distance_km  --  Price vs distance
+--------------------------------------------------------------
+- Clear positive trend, as expected. Prices rise with distance. The
+  cleanest single-variable relationship found so far.
+- Three visible distance clusters:
+    0-4500 km: dense, prices $100-700 (NA-NA backbone + cross-border)
+    4500-8000 km: sparser, prices $500-1500 (trans-Atlantic territory)
+    8000-14000+ km: $700-2000 (long-haul intercontinental)
+- Visible GAP in route density around 4500-5500 km. The route mix has
+  lots of short flights and lots of long flights, but few in between.
+  Reflects geography more than anything else — there isn't much that
+  falls in that distance band from NA hubs.
+- Wide vertical spread at every distance — distance alone doesn't fully
+  explain price. Airline, lead time, season, demand still in play.
+- Relationship looks roughly linear or slightly sublinear, not
+  exponential. A 14,000 km flight isn't 14× more expensive than a
+  1,000 km one — closer to 4-5×. Air travel has economies of scale
+  (per-km cost decreases with distance).
+- Modeling implication: distance_km will be one of the most important
+  features. Tree models will pick up the sublinear shape automatically;
+  if I ever use a linear model, consider log-transforming distance or
+  adding distance-bucket categoricals.
