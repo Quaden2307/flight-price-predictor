@@ -84,3 +84,68 @@ Each entry: what the plot shows, what it means, and any modeling implication.
   features. Tree models will pick up the sublinear shape automatically;
   if I ever use a linear model, consider log-transforming distance or
   adding distance-bucket categoricals.
+
+
+6. 2x2 scatter price vs lead_time by distance_bucket
+----------------------------------------------------
+- Top-left "All": green (long) sits high, blue (short) sits low,
+  orange (medium) in between. Vertical color banding is more visible
+  than any horizontal trend — distance dominates the picture.
+- Short bucket: dense band, prices flat across the lead time range.
+  No clear slope. If anything the upper tail (premium fares) leans
+  slightly higher at low lead times, but the typical price is flat.
+- Medium bucket: sparse cloud (underpopulated distance band — the
+  4500-6000 km gap). Possible mild upward bump at very low lead times
+  but data is too thin to trust visually.
+- Long bucket: most vertical spread, prices $500-2400. No clear
+  price-vs-lead-time slope visible. Data thins out past 100 days.
+
+- Volume concentration at low lead times is real but has two stacked
+  causes: (a) TravelPayouts cache density — people search close to
+  departure more than far out, reflects search activity not booking
+  behavior, applies to every bucket; (b) route-mix artifact — 129/230
+  routes are short-haul, so the short bucket gets more rows in absolute
+  terms regardless of any user behavior.
+- Long flights show wider price spread than short within any lead-time
+  slice. Structural reasons: more cabin/fare-class variation on
+  long-haul, more airline diversity competing on intercontinental
+  routes, more diverse demand mix (vacation / business / family /
+  immigration) each pricing differently. Not a behavioral effect.
+
+- I initially thought I could see a decreasing-price-with-lead-time
+  trend in the long bucket, weaker in medium, near-absent in short.
+  Pushed back on this — with this much scatter, the eye over-reads
+  patterns. The visual "trend" is plausibly a density artifact:
+  dense low-lead-time clouds appear higher because there's more data
+  there, not because the typical price is higher.
+- Built a median-line plot to test it. Plot 7 below covers the result.
+
+- Modeling implication: don't drop lead_time as a feature, but lower
+  expectations of how important it'll turn out to be. May end up as a
+  weak signal that mainly matters for the upper price tail or in
+  combination with other features (airline, day_of_week, demand).
+
+
+7. Median price per 10-day lead_time bin, by distance bucket (line plot)
+------------------------------------------------------------------------
+- Long bucket: shows a faint but real downward slope as lead_time
+  increases. The "book early = cheaper" effect is weakly present for
+  intercontinental flights. Not a dramatic effect but it's there
+  consistently across most of the lead_time range.
+- Medium bucket: no clear correlation. Line is roughly flat with
+  noise. Visual "trend" from the scatter was an illusion.
+- Short bucket: no clear correlation across most of the range, but
+  prices spike dramatically at ~200 days. Almost certainly outliers
+  / very low data volume in those far-out bins for short routes —
+  the cache is thin out there and a few high-price rows can move the
+  median sharply. Don't read this as a real "buy short flights early"
+  signal.
+
+- Conclusion: lead_time has predictive value for long-haul, not for
+  short or medium. The visual trend I thought I was seeing in short
+  and medium scatters was indeed a density artifact, confirmed by the
+  flat median lines.
+- Modeling implication: tree models will pick up the long-haul
+  lead_time signal automatically through interactions with
+  distance_km. If using linear models, a lead_time × distance
+  interaction term would be needed to capture this effect.
