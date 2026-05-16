@@ -46,12 +46,10 @@ Worth keeping in mind for tomorrow's run too — if everything keeps going smoot
 
 ## May 15, 2026
 
-Run still in progress when I checked, so couldn't query offers directly (DB locked by the writer). Two unusual things and one good thing.
+Run 8 finished while I wasn't looking. Final numbers: 3220 API calls, 4022 offers inserted, 0 final failures, ~5h 20m runtime (10:04 → 15:24 UTC). Cumulative dataset now 32,450 rows across 8 runs. NULL audit still clean across all key fields, value ranges still sane.
 
-First unusual thing: the run started at 3:04 AM, not the scheduled 6 AM. launchd plist still says Hour=6, so either the schedule got modified, something woke launchd early, or I triggered it manually and forgot. Worth chasing down if it happens again — for now just noting it so I have the timestamp recorded.
+Two things worth recording. First, the slow-API pattern from May 12/13 was back. 5+ hours of runtime with the script's actual CPU time at well under a minute — the entire run was spent waiting on slow network responses to successful calls. Not a thing I can fix on my end; the TravelPayouts API was just slow today.
 
-Second unusual thing: the slow-API pattern from May 12/13 is back. 5+ hours of runtime with only 29 seconds of CPU used — the script is spending essentially all its time waiting on slow network responses, not doing any actual work. The TravelPayouts API is just slow today. Not a thing I can fix on my end.
+Second and more importantly: this is the first time the retry-with-backoff code has actually fired in the wild, and it worked exactly as designed. 13 retry events in the log, 0 final failures. Those 13 calls would have been hard losses on May 12 and contributed to the wave on May 13. Today they were saves, and the offer count came in at the normal ~4,000 instead of the 2,892 disaster from May 13. Counts the retry logic as validated in real conditions.
 
-The good thing: this is the first time the retry-with-backoff code has actually fired in the wild, and it's working as intended. 13 retry events recorded in the log so far, 0 final failures. Those 13 calls would have been losses on May 12 (the only transient errors that day were final-attempt prints) and part of the wave on May 13. Today they're saves — exactly what the retry logic was meant to do. Counts the code as validated.
-
-Will update this entry with the final offer count and failure breakdown once the run finishes.
+(Self-correction: I originally noted the run as starting unusually early at 3:04 AM. Reviewing all 8 runs' captured_at timestamps, every launchd-triggered run since May 10 has fired at ~10:00 UTC consistently, and today's is no exception. The 3:04 AM observation was either a timezone misread or me confusing myself — the run actually started at the normal time. No anomaly there.)
