@@ -53,3 +53,15 @@ Two things worth recording. First, the slow-API pattern from May 12/13 was back.
 Second and more importantly: this is the first time the retry-with-backoff code has actually fired in the wild, and it worked exactly as designed. 13 retry events in the log, 0 final failures. Those 13 calls would have been hard losses on May 12 and contributed to the wave on May 13. Today they were saves, and the offer count came in at the normal ~4,000 instead of the 2,892 disaster from May 13. Counts the retry logic as validated in real conditions.
 
 (Self-correction: I originally noted the run as starting unusually early at 3:04 AM. Reviewing all 8 runs' captured_at timestamps, every launchd-triggered run since May 10 has fired at ~10:00 UTC consistently, and today's is no exception. The 3:04 AM observation was either a timezone misread or me confusing myself — the run actually started at the normal time. No anomaly there.)
+
+---
+
+## May 16, 2026
+
+Run 9 came in: 3220 API calls, 3933 offers inserted, 0 final failures, 18 retry events. Cumulative dataset now 36,383 rows across 9 runs. NULL audit still clean, value ranges still sane.
+
+Two things worth recording. First, the API slowness has officially become a pattern rather than an anomaly. Today's runtime was 6h 36m — the longest yet — and 4 of the last 5 days (May 12, 13, 15, 16) have had 5+ hour runs. May 14 was the only fast day in that stretch. The morning collection window is now eating into half the workday. Not a data-quality issue but worth flagging if it keeps drifting upward.
+
+Second, the retry code keeps earning its keep. 18 saves today on top of 13 yesterday — 31 calls over two days that would have been losses on May 12 or part of the wave on May 13. Validates the decision to ship the retry logic when I did.
+
+One thing to keep an eye on: offer count came in at 3,933, slightly below the recent ~4,000-4,300 range. Could be normal day-to-day API cache variance, could be TravelPayouts thinning their cached offers. If it keeps trending down across the next few runs, that's a real signal worth investigating — sparser cache would mean fewer training rows per route over time.
