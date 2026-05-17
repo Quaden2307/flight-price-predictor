@@ -65,3 +65,13 @@ Two things worth recording. First, the API slowness has officially become a patt
 Second, the retry code keeps earning its keep. 18 saves today on top of 13 yesterday — 31 calls over two days that would have been losses on May 12 or part of the wave on May 13. Validates the decision to ship the retry logic when I did.
 
 One thing to keep an eye on: offer count came in at 3,933, slightly below the recent ~4,000-4,300 range. Could be normal day-to-day API cache variance, could be TravelPayouts thinning their cached offers. If it keeps trending down across the next few runs, that's a real signal worth investigating — sparser cache would mean fewer training rows per route over time.
+
+---
+
+## May 17, 2026
+
+Run 10 broke the slow-API streak — back to a normal ~7.5 minute runtime with 0 failures, 0 retry events, and 3921 offers inserted. First fast day since May 14. Cumulative dataset crossed 40,000 rows for the first time (40,304 across 10 runs). NULL audit still clean.
+
+The four-out-of-five slow days from May 12-16 weren't a permanent regression in the TravelPayouts API — they come and go based on whatever's happening server-side on their end. Means I can't predict when slow days hit, but the retry code handles them when they do.
+
+Worth flagging: the offer-count drift I noted yesterday is continuing very slowly. Three runs in a row now at 4022 → 3933 → 3921, vs the early-May baseline of ~4,300. Three points isn't a real trend yet, but if it keeps drifting downward over the next week while runtime stays healthy, that points to TravelPayouts thinning their cache rather than network issues. Sparser cache means fewer training rows per (route, date) snapshot — worth investigating before it gets material.
