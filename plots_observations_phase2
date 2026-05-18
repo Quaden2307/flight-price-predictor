@@ -204,3 +204,83 @@ Each entry: what the plot shows, what it means, and any modeling implication.
   natively via the airline feature; for linear models, one-hot
   encoding or target encoding on airline is required. airline_type
   remains useful as a coarse feature but isn't sufficient alone.
+
+
+11. sns.boxplot price by day_of_week
+------------------------------------
+- Median prices cluster Mon $405, Tue $360, Wed $370, Thu $370,
+  Fri $360, Sat $370, Sun $400. Spread is modest — ~12% top to bottom.
+- Mon and Sun have the highest medians AND the fattest upper tails.
+  Tue-Fri cluster as the "cheap" days.
+- The "Friday is significantly cheap" first impression was wrong at
+  the median level — Friday's median is identical to Tue/Wed/Thu. What
+  IS different about Friday is its compressed upper tail (whisker max
+  ~$1170 vs $1400-1665 for other days). Fewer expensive flights leave
+  on Fridays.
+- Modeling implication: real signal but modest. Keep day_of_week as a
+  feature. Probably ranks mid-pack in importance.
+
+
+12. sns.boxplot price by transfers (0 / 1 / 2+)
+-----------------------------------------------
+- Strong gradient: 0 transfers $280 median, 1 transfer $520,
+  2+ transfers $980.
+- BUT this is heavily confounded with distance — direct flights are
+  mostly short routes, multi-stop flights are mostly long routes. See
+  stratified version below.
+
+
+13. Price vs trip_duration_days (scatter + binned boxplot)
+----------------------------------------------------------
+- Scatter shows broad cloud with no obvious single-variable
+  relationship. Bucketed view reveals a clear monotonic trend:
+  0-3 days $300, 4-7 $370, 8-14 $510, 15+ $780.
+- Again confounded with route type — long trips are mostly
+  international vacations, short trips mostly domestic. See stratified
+  version below.
+
+
+14. Transfers × distance_bucket (1x3 panels)
+--------------------------------------------
+- Direct premium is REAL at every distance, not just a distance proxy.
+- Short: 0 transfers $270 / 1 $300 / 2+ $480. The 2+ jump is dramatic
+  (probably weird routing on thin routes); 0 vs 1 gap is small.
+- Medium: 0 $390 / 1 $460 / 2+ $440. 1 vs 2+ basically tied — once
+  you've added one connection, second adds little.
+- Long: 0 $830 / 1 $1070 / 2+ $1200. Cleanest direct premium pattern.
+- Modeling implication: transfers adds independent signal beyond
+  distance. Keep as a feature. Tree models will capture the
+  per-distance variation automatically.
+
+
+15. Trip duration × distance_bucket (1x3 panels)
+------------------------------------------------
+- Within short distance: essentially FLAT ($255-$280 across all
+  duration buckets). 15+ is slightly cheaper than 0-3, counterintuitive
+  — possibly cheaper extended-stay routing where same-day return isn't
+  needed.
+- Within medium: mild upward trend ($400 → $540, ~35%).
+- Within long: mild upward trend ($930 → $1080, ~16%).
+- Trip duration was MOSTLY a distance proxy. Real within-route signal
+  exists for medium and long but it's small.
+- Modeling implication: keep trip_duration_days but expect low
+  importance. Probably ranks below distance, airline, lead_time.
+
+
+16. Day of week × distance_bucket (1x3 panels)
+----------------------------------------------
+- Most interesting finding of the stratified set. Day-of-week pattern
+  PERSISTS at every distance, but the SHAPE changes by distance:
+    Short: U-curve. Wed cheapest ($255), Mon/Fri/Sun highest ($290-
+       $295). Business-traveler pattern (Mon-out / Fri-back / Sun
+       repositioning).
+    Medium: relatively flat. Mon slightly higher ($465). Others
+       cluster $420-$435.
+    Long: monotonic rise toward Sunday. Tue cheapest ($985), Sun
+       highest ($1140). Vacation-departure pattern.
+- Two different demand structures embedded in the same column: short
+  routes serve business commuters, long routes serve vacationers.
+- Modeling implication: day_of_week is more important than I expected.
+  Interaction with distance / is_international matters — the day-of-
+  week shape differs by route type. Tree models will pick this up
+  automatically; linear models need an interaction term.
