@@ -149,3 +149,58 @@ Each entry: what the plot shows, what it means, and any modeling implication.
   lead_time signal automatically through interactions with
   distance_km. If using linear models, a lead_time × distance
   interaction term would be needed to capture this effect.
+
+
+8. sns.boxplot price by airline_type (lcc / hybrid / legacy)
+------------------------------------------------------------
+- LCC box sits clearly below the others: median ~$280, IQR
+  $220-$400, whisker max ~$600.
+- Hybrid and legacy boxes look almost identical: both have median
+  ~$400, similar IQR, similar long upper tails. The visual
+  distinction is barely there.
+- All three categories have heavy right tails (long-haul rows in
+  each).
+- Conclusion: the meaningful split is LCC vs not-LCC. The
+  hybrid/legacy distinction adds very little.
+- Modeling implication: could simplify type to a binary `is_lcc`
+  feature without losing much signal. Tree models will figure this
+  out automatically; for linear models the binary version is easier
+  to reason about.
+
+
+9. sns.scatterplot price vs distance, colored by airline_type
+-------------------------------------------------------------
+- At short distances (0-4000 km): clear color stratification, blue
+  (LCC) below orange/green (hybrid/legacy).
+- At medium-to-long distances (4000+ km): blue dots almost
+  disappear. LCCs don't operate transatlantic / transpacific routes
+  at any meaningful volume.
+- The "color separation collapses at long distance" hypothesis from
+  earlier doesn't quite hold the way expected — separation doesn't
+  collapse, LCCs are simply absent. Hybrid and legacy overlap
+  heavily at every distance.
+- Modeling implication: the airline_type × distance interaction
+  exists but it's mostly "LCCs are missing on long routes" rather
+  than "type matters more on short routes." Tree models will pick
+  this up through the joint feature; linear models would need
+  explicit interaction terms.
+
+
+10. sns.boxplot price by individual airline (top 15), colored by type
+---------------------------------------------------------------------
+- Within-type variance is enormous, exposing that type is partially
+  proxying for route mix:
+    Legacy:  SC ~$300 ... AA ~$370 ... AC ~$700 ... CX ~$1300
+    Hybrid:  B6 ~$290 ... PD ~$300 ... WS ~$450 ... FI ~$770 ... DE ~$900
+    LCC:     F9 ~$280 ... F8 ~$330 ... MM ~$370
+- B6 (JetBlue, hybrid) behaves more like LCC than like its type peers.
+- CX (Cathay) sits at the top of legacy because it flies long-haul, not
+  because it prices premium relative to other long-haul carriers.
+- LCCs are the most internally consistent: F9, F8, MM all cluster in
+  the $280-$370 range.
+- Modeling implication: airline itself needs to be a feature, not just
+  airline_type. The within-type variance is bigger than the
+  between-type variance for hybrid and legacy. Tree models handle this
+  natively via the airline feature; for linear models, one-hot
+  encoding or target encoding on airline is required. airline_type
+  remains useful as a coarse feature but isn't sufficient alone.
