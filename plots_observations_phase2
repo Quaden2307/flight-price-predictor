@@ -284,3 +284,50 @@ Each entry: what the plot shows, what it means, and any modeling implication.
   Interaction with distance / is_international matters — the day-of-
   week shape differs by route type. Tree models will pick this up
   automatically; linear models need an interaction term.
+
+
+17. Transfers × is_international (1x2 panels)
+---------------------------------------------
+- Direct-flight premium exists in both groups, but magnitude differs
+  dramatically.
+- Domestic: 0 transfers $280 / 1 $330 / 2+ $405. ~$125 spread, ~45%
+  increase top to bottom.
+- International: 0 transfers $375 / 1 $830 / 2+ $1060. ~$685 spread,
+  ~180% increase.
+- The international direct premium is operationally explainable —
+  long-haul direct flights require special aircraft and prime slots,
+  so they command real premiums. Domestic connections add some cost
+  but not as dramatically.
+- Confirms transfers is NOT purely a distance proxy. Independent
+  signal exists in both groups.
+- Note: international 0-transfers median ($375) is much lower than
+  the long-distance bucket's 0-transfers median ($830) from plot 14,
+  because is_international includes short cross-border routes
+  (YYZ-JFK etc) that are cheap even when international.
+
+
+18. Day of Week × is_international (1x2 panels)
+-----------------------------------------------
+- Domestic: nearly FLAT. Medians range $280-$305 (~9% spread).
+  Mild Fri/Sun lift but no clear weekly pattern.
+- International: clear Sun premium. Medians range $625-$770 (~23%
+  spread). Sun is the most expensive departure day; Fri and Tue are
+  the cheapest.
+- Pattern is consistent with vacation-departure timing for
+  international flights: travelers leave on Sun to maximize PTO. No
+  similar pattern for domestic travel.
+
+- REVISION to earlier claim in plot 16: I called the day-of-week effect
+  on short-haul a "business pattern" (Mon/Fri/Sun expensive,
+  midweek cheap). Looking at the cleaner pure-domestic cut here,
+  domestic travel is much flatter than that — the U-curve I saw on
+  short-distance was driven by the short cross-border international
+  subset (YYZ-JFK etc), not pure domestic business travel. The
+  underlying mechanism is "international flights have vacation-driven
+  weekly patterns; domestic is mostly flat" rather than two distinct
+  business/vacation regimes.
+
+- Modeling implication: day_of_week matters mainly for international
+  flights. Domestic feature value is weak. A day_of_week ×
+  is_international interaction (or equivalently, tree splits on
+  is_international after splitting on day_of_week) will capture this.
