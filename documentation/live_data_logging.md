@@ -75,3 +75,13 @@ Run 10 broke the slow-API streak — back to a normal ~7.5 minute runtime with 0
 The four-out-of-five slow days from May 12-16 weren't a permanent regression in the TravelPayouts API — they come and go based on whatever's happening server-side on their end. Means I can't predict when slow days hit, but the retry code handles them when they do.
 
 Worth flagging: the offer-count drift I noted yesterday is continuing very slowly. Three runs in a row now at 4022 → 3933 → 3921, vs the early-May baseline of ~4,300. Three points isn't a real trend yet, but if it keeps drifting downward over the next week while runtime stays healthy, that points to TravelPayouts thinning their cache rather than network issues. Sparser cache means fewer training rows per (route, date) snapshot — worth investigating before it gets material.
+
+---
+
+## May 18, 2026
+
+Run 11: 3963 offers, 0 failures, 0 retries, ~8 min runtime. Second consecutive clean fast day. Cumulative dataset now 44,267 rows across 11 runs. NULL audit still clean.
+
+API is fully back to normal — the May 12/13/15/16 slow streak really was a transient TravelPayouts server-side thing, not anything in my pipeline. Two fast days in a row argues it's resolved.
+
+The offer-count drift I flagged earlier (4022 → 3933 → 3921) bounced up slightly today to 3963. Not a clear continuation of the downward trend. Probably just day-to-day variance rather than a permanent cache thinning. De-prioritizing the concern but will keep watching.
