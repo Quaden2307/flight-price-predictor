@@ -85,3 +85,15 @@ Run 11: 3963 offers, 0 failures, 0 retries, ~8 min runtime. Second consecutive c
 API is fully back to normal — the May 12/13/15/16 slow streak really was a transient TravelPayouts server-side thing, not anything in my pipeline. Two fast days in a row argues it's resolved.
 
 The offer-count drift I flagged earlier (4022 → 3933 → 3921) bounced up slightly today to 3963. Not a clear continuation of the downward trend. Probably just day-to-day variance rather than a permanent cache thinning. De-prioritizing the concern but will keep watching.
+
+---
+
+## May 19, 2026
+
+Run 12: 3968 offers, 0 failures, ~7m 53s runtime. Third consecutive clean fast day — the slow-API streak from May 12-16 is fully behind us. Cumulative dataset now 48,235 rows across 12 runs. NULL audit still clean.
+
+Offer count trend has flattened: 3921 → 3963 → 3968. The downward drift I flagged a few days ago isn't continuing. Calling that concern resolved.
+
+First production run of the iCloud backup pipeline. The shutil.copy line shipped yesterday silently refreshed flights.db (~70 MB) in the iCloud folder at 08:12 local right after the collector run finished. Worked exactly as designed — no manual intervention needed. Laptop loss is no longer an existential risk to the dataset.
+
+Halfway to the 96K-row target for modeling start on May 31. On track.
