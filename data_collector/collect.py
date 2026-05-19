@@ -5,6 +5,7 @@ import os
 import json
 import sqlite3
 import time
+import shutil
 from pathlib import Path
 
 import requests
@@ -182,3 +183,9 @@ print(f"\nDone: {api_calls} API calls, {offers_inserted} offers inserted, {failu
 
 connection.commit()
 connection.close()
+
+# Back up the DB to the cloud folder defined in .env (skipped if not set).
+backup_path = os.environ.get("BACKUP_PATH")
+if backup_path:
+    Path(backup_path).parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy("data/flights.db", backup_path)
