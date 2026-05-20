@@ -20,9 +20,10 @@ Status: TODO. ~30 min each, each either earns a feature a spot in the model or r
 - **Trip duration vs price** — does a 2-day round trip cost less than a 14-day round trip on the same route? Tests whether trip_duration_days matters.
 
 ### 3. Sanity check duplicates one more time
-Status: TODO. After all the merging activity (countries, lat/long, airline_type), re-run the dup-check query I did earlier:
-- Group by (captured_at, origin_airport, destination_airport, departure_at, return_at, airline, flight_number, price) and look for groups with count > 1.
-- Already verified once on 2026-05-12 (the apparent duplicates were legit same-outbound-different-return round-trip pairs). Worth re-confirming after the additional joins.
+Status: done 2026-05-19.
+- Exact-key duplicate check (captured_at, route, departure_at, return_at, airline, flight_number, price): **0 collisions** across all 48,235 rows. Clean.
+- Same-flight-different-agent variants: 27 groups / 54 rows (0.1% of dataset). Real data, not a bug — TravelPayouts aggregates from multiple booking agents (Kiwi, Turna, Vayama, etc.) so the same flight can appear at different prices through different channels. Each row is an actual purchasable price.
+- Modeling decision: keep all rows for v1, ignore `gate` as a feature. Only 0.1% of data is affected — won't materially change anything. Revisit if residual analysis shows systematic gate-related patterns.
 
 ### 4. Target variable decision
 Status: leaning toward `log(price)` for v1.
