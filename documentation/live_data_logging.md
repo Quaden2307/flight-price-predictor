@@ -97,3 +97,15 @@ Offer count trend has flattened: 3921 → 3963 → 3968. The downward drift I fl
 First production run of the iCloud backup pipeline. The shutil.copy line shipped yesterday silently refreshed flights.db (~70 MB) in the iCloud folder at 08:12 local right after the collector run finished. Worked exactly as designed — no manual intervention needed. Laptop loss is no longer an existential risk to the dataset.
 
 Halfway to the 96K-row target for modeling start on May 31. On track.
+
+---
+
+## May 20, 2026
+
+Run 13: 4014 offers, 0 failures, ~7m 39s runtime. Fourth straight clean fast day. Cumulative dataset now 52,249 rows across 13 runs. NULL audit still clean, offer count slightly above the recent baseline (3933 → 3921 → 3963 → 3968 → 4014).
+
+Two things worth recording today.
+
+First, five routes that had been showing up consistently (8 of the previous 9 days) went missing from today's pull: NYC→PHL, OAK→AUS, ONT→ORL, SFO→AMS, SJC→SEA. Five new routes also appeared that hadn't been in the prior six days. Some route churn is normal from TravelPayouts' cache, but the missing-stable-route count is something to watch — if those five keep not showing up for another day or two, worth checking whether the request log is even hitting them or whether TravelPayouts has dropped aggregated prices for those metro pairs.
+
+Second, ran a same-flight price comparison from yesterday to today: matched 3,250 flights by (origin, destination, departure_at, return_at, airline, flight#), and only 49 of them (1.5%) had any price change at all. Average delta $0.02. Biggest mover was NYC→LON on FI dropping $181. Doing the same check across the full 11-day capture window: of 9,155 unique flights seen on 2+ days, only 516 (5.6%) ever changed price. This is a real finding for modeling — TravelPayouts is mostly serving stable cached snapshots, so almost all of the day-over-day variation in the dataset comes from the flight set churning (new flights appearing, old ones falling out), not from prices on existing flights actually moving. Worth thinking about whether the target should really be "predict the price of a flight appearing on day X" rather than "predict how the price of a known flight will move." The latter would be modeling a signal that barely exists in this data source.

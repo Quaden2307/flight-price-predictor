@@ -69,12 +69,15 @@ def build_features(offers_df, airports_df, airlines_df, route_means=None):
     "longitude": "destination_lon",
     })[["destination", "destination_country", "destination_lat", "destination_lon"]]
     df = df.merge(destination_ap, on="destination", how="left")
-    
+
     # 4. is_international: 1 if origin_country != destination_country else 0
     df["is_international"] = (df["origin_country"] != df["destination_country"]).astype(int)
 
     # 5. distance_km: haversine(origin_lat, origin_lon, destination_lat, destination_lon)
-
+    df["distance_km"] = df.apply(
+        lambda r: haversine_km(r["origin_lat"], r["origin_lon"], r["destination_lat"], r["destination_lon"]),
+        axis=1
+    )
     # 6. Merge airlines_df on airline iata -> airline_type. Fill NaN with "unknown".
 
     # 7. day_of_week: parse departure_at as local wall-clock (strip tz offset), take day name
