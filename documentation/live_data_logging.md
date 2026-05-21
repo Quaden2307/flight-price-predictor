@@ -109,3 +109,18 @@ Two things worth recording today.
 First, five routes that had been showing up consistently (8 of the previous 9 days) went missing from today's pull: NYC→PHL, OAK→AUS, ONT→ORL, SFO→AMS, SJC→SEA. Five new routes also appeared that hadn't been in the prior six days. Some route churn is normal from TravelPayouts' cache, but the missing-stable-route count is something to watch — if those five keep not showing up for another day or two, worth checking whether the request log is even hitting them or whether TravelPayouts has dropped aggregated prices for those metro pairs.
 
 Second, ran a same-flight price comparison from yesterday to today: matched 3,250 flights by (origin, destination, departure_at, return_at, airline, flight#), and only 49 of them (1.5%) had any price change at all. Average delta $0.02. Biggest mover was NYC→LON on FI dropping $181. Doing the same check across the full 11-day capture window: of 9,155 unique flights seen on 2+ days, only 516 (5.6%) ever changed price. This is a real finding for modeling — TravelPayouts is mostly serving stable cached snapshots, so almost all of the day-over-day variation in the dataset comes from the flight set churning (new flights appearing, old ones falling out), not from prices on existing flights actually moving. Worth thinking about whether the target should really be "predict the price of a flight appearing on day X" rather than "predict how the price of a known flight will move." The latter would be modeling a signal that barely exists in this data source.
+
+---
+
+## May 21, 2026
+
+Run 14 is still in progress while I'm writing this. Started at 10:07 UTC same as every prior run, ~5h 20m in, 2,231 of 3,220 calls completed (~69%). DB is locked so no row-level checks yet — these notes are from the log only. Projected finish around 12-13 UTC, putting today in the same slow-API neighborhood as May 15/16. Retry code firing modestly: 12 attempt-1 retries so far (6 ReadTimeout, 6 ConnectionError), all recovered on the first retry. No attempt-2 retries, no FAILED-after-3 lines.
+
+Real anomaly today is timing. The launchd plist is Hour=6 with no explicit timezone, so it fires at 6 AM local. The laptop's clock currently reads PDT, which means 6 AM local would be 13 UTC — but today's run started at 10 UTC, the same UTC slot every prior run has used. That puts the process start at 3:07 AM local under PDT.
+
+This conflicts with the self-correction I wrote in the May 15 entry. At the time I dismissed a 3:04 AM observation as a timezone misread and concluded the run was firing at the normal 6 AM local. That conclusion may have been correct when the laptop was on EDT (10 UTC = 6 AM EDT) but isn't anymore. Two possibilities to disambiguate once the run finishes:
+
+1. Laptop was on EDT for runs 1-13 and is now on PDT. launchd may have kept the cached fire time for today and will re-anchor to current local 6 AM tomorrow — meaning tomorrow's run shifts to 13 UTC. If that happens, fine, but the dataset will have a 3-hour break in the capture cadence to flag in the modeling.
+2. The plist was firing at 10 UTC the whole time independent of local time (e.g. launchd interpreting the plist in UTC for some reason, or another scheduler running it). In that case the May 15 self-correction was wrong from the start.
+
+Will update this entry with final run numbers and the timezone resolution once the run finishes.
