@@ -123,4 +123,18 @@ This conflicts with the self-correction I wrote in the May 15 entry. At the time
 1. Laptop was on EDT for runs 1-13 and is now on PDT. launchd may have kept the cached fire time for today and will re-anchor to current local 6 AM tomorrow — meaning tomorrow's run shifts to 13 UTC. If that happens, fine, but the dataset will have a 3-hour break in the capture cadence to flag in the modeling.
 2. The plist was firing at 10 UTC the whole time independent of local time (e.g. launchd interpreting the plist in UTC for some reason, or another scheduler running it). In that case the May 15 self-correction was wrong from the start.
 
-Will update this entry with final run numbers and the timezone resolution once the run finishes.
+Final numbers once the run finished: 4,047 offers, 0 failures, 5h 22m runtime (10:07 → 15:29 UTC). NULL audit clean. Retry code did its job — 12 attempt-1 retries, none escalated.
+
+Timezone question is mostly resolved by today's run (see May 22 below): the May 22 run also fired at 10:07 UTC despite the laptop still being on PDT. That means launchd is NOT computing "Hour=6 local" against current local time — it's been firing at a fixed UTC slot the whole time. The May 15 self-correction was wrong. Most likely the plist was loaded when the machine was elsewhere (or launchd cached a fire time against the original local timezone) and the schedule has stayed pinned to that UTC instant ever since. Not urgent to fix because the slot is still a reasonable morning window, but worth re-anchoring later if I want it to actually fire at 6 AM local going forward.
+
+---
+
+## May 22, 2026
+
+Run 15 is in progress and going very badly. Started 10:07 UTC same as always, but 5h 9m in only 798 of 3,220 calls have completed (~24%). At the current pace the run projects to roughly 21 hours total. For comparison, yesterday at the same elapsed time was at 67%, and the previously-worst slow day (May 16) finished in 6h 36m. Today is a different magnitude.
+
+Per-call latency is ~23 seconds today vs ~5 seconds yesterday — about 5x slower on the wire. This isn't retry-induced: only 11 attempt-1 retries so far (7 ReadTimeout, 4 ConnectionError), all recovered, 0 final failures. The TravelPayouts API itself is just unusually slow.
+
+Concrete risk worth tracking: if today's pace holds, the run finishes around 06 UTC on May 23 — only ~4 hours before tomorrow's run is scheduled to start at 10 UTC. If today's run hasn't completed by then, two collectors will fight over the SQLite write lock and at least one will fail (or launchd may skip the new run entirely if it sees the old PID still alive). Watching through the afternoon. If the pace doesn't pick up materially by early evening, will kill the run before tomorrow's window opens rather than risk a tangled overlap.
+
+DB is locked while the run is in flight, so no row-level checks yet. Will update with final numbers once it finishes (or once I kill it).
