@@ -138,3 +138,19 @@ Per-call latency is ~23 seconds today vs ~5 seconds yesterday — about 5x slowe
 Concrete risk worth tracking: if today's pace holds, the run finishes around 06 UTC on May 23 — only ~4 hours before tomorrow's run is scheduled to start at 10 UTC. If today's run hasn't completed by then, two collectors will fight over the SQLite write lock and at least one will fail (or launchd may skip the new run entirely if it sees the old PID still alive). Watching through the afternoon. If the pace doesn't pick up materially by early evening, will kill the run before tomorrow's window opens rather than risk a tangled overlap.
 
 DB is locked while the run is in flight, so no row-level checks yet. Will update with final numbers once it finishes (or once I kill it).
+
+Final numbers: 3,992 offers, 0 failures, 5h 15m runtime (10:07 → 15:22 UTC). The 21-hour projection from mid-run was wrong — API latency recovered somewhere in the back half and the run finished comfortably before tomorrow's window. No overlap risk materialized. NULL audit clean. The "5x slower than yesterday" pattern I logged at the 5h mark didn't hold for the whole run, which is a useful lesson: per-call latency in a partial sample isn't a reliable extrapolation when the API can recover mid-run.
+
+---
+
+## May 23, 2026
+
+Run 16: 3,870 offers, 0 failures, ~6h 23m runtime (10:04 → 16:27 UTC), ~15 retry events (all recovered on attempt 1). Cumulative dataset now 64,158 rows across 16 runs. NULL audit clean across price, airline, departure_at, return_at, trip_duration_days, lead_time_days. Value ranges sane (price $35-$5647, trip duration 0-58d, lead time 0-190d).
+
+Three things worth recording.
+
+First, slow-API runs are now the rule rather than the exception. 7 of the last 12 days (May 12, 13, 15, 16, 21, 22, 23) have been 5+ hour runs versus 5 fast days (May 14, 17, 18, 19, 20). The pattern's stable enough that I'd stop treating it as an anomaly — this is just how the API behaves now. Retry code handles it cleanly so there's no data-quality impact, but the mental model of "collection runs in the background while I sleep" needs updating: half the time it now runs deep into the workday.
+
+Second, the offer-count drift I called resolved on May 19 is back. Today's 3,870 is the lowest single-run total in the 16-run history. Last 9 runs: 4022 → 3933 → 3921 → 3963 → 3968 → 4014 → 4047 → 3992 → 3870. The early-May ~4,300 baseline is gone and the bounce-back on May 18-19 looks like noise on top of a real downward drift. Cache thinning on the API side is the most likely explanation — nothing I can do about it on my end anyway. Not actionable yet; just worth knowing the per-day yield is trending down.
+
+Third, on track but no buffer for the 96K-row modeling start on May 31. Need ~32K more rows in 8 days (~4K/day), almost exactly the current rate. If the drift continues even slightly, May 31 slips. Acceptable — that date is a target, not a deadline, and the pre-modeling structural work (features.py and split.py) is still in progress anyway.
