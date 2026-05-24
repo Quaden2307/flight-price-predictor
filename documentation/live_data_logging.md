@@ -154,3 +154,17 @@ First, slow-API runs are now the rule rather than the exception. 7 of the last 1
 Second, the offer-count drift I called resolved on May 19 is back. Today's 3,870 is the lowest single-run total in the 16-run history. Last 9 runs: 4022 → 3933 → 3921 → 3963 → 3968 → 4014 → 4047 → 3992 → 3870. The early-May ~4,300 baseline is gone and the bounce-back on May 18-19 looks like noise on top of a real downward drift. Cache thinning on the API side is the most likely explanation — nothing I can do about it on my end anyway. Not actionable yet; just worth knowing the per-day yield is trending down.
 
 Third, on track but no buffer for the 96K-row modeling start on May 31. Need ~32K more rows in 8 days (~4K/day), almost exactly the current rate. If the drift continues even slightly, May 31 slips. Acceptable — that date is a target, not a deadline, and the pre-modeling structural work (features.py and split.py) is still in progress anyway.
+
+---
+
+## May 24, 2026
+
+Run 17: 3,861 offers, 0 failures, ~8h 28m runtime (10:13 → 18:42 UTC). Cumulative dataset now 68,019 rows across 17 runs. Integrity check clean across NULLs, ranges, and the 3-day volume baseline.
+
+Two things worth recording.
+
+First, the offer-count drift I re-flagged yesterday is continuing. 3,861 is the new single-run low — third consecutive day under 4,000 (3,992 → 3,870 → 3,861). The volume-drop check didn't fire (today is ~97% of the 3-day baseline, well above the 75% threshold), but the trend itself is steady. Same explanation as yesterday — most likely cache thinning on the API side. Not actionable but worth knowing per-day yield keeps eroding.
+
+Second, runtime is creeping up alongside the slow-API pattern. Last three days: 5h 15m → 6h 23m → 8h 28m. The 6 AM PDT start still leaves comfortable margin before the next 6 AM trigger (today finished at ~11:42 AM PDT), so no overlap risk yet. But if runtime keeps doubling, the safe margin disappears fast. Worth pre-thinking a circuit-breaker or earlier start time if runtime crosses ~16 hours, well before the actual overlap point.
+
+Modeling-start math: need ~28K more rows in 7 days. At the current ~3,900/day rate that's right on the line. May 31 still feasible but increasingly tight.
