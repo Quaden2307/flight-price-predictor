@@ -79,11 +79,19 @@ def build_features(offers_df, airports_df, airlines_df, route_means=None):
         axis=1
     )
     # 6. Merge airlines_df on airline iata -> airline_type. Fill NaN with "unknown".
+    airlines = airlines_df.rename(columns={
+        "iata": "airline",
+        "type": "airline_type",
+    })[["airline", "airline_type"]]
+    df = df.merge(airlines, on="airline", how="left")
+    df["airline_type"] = df["airline_type"].fillna("unknown")
 
     # 7. day_of_week: parse departure_at as local wall-clock (strip tz offset), take day name
+    local_departure = pd.to_datetime(df["departure_at"].str[:19])
+    df["day_of_week"] = local_departure.dt.day_name()
 
     # 8. month_of_year: parse departure_at, take month as int
-
+    df["month_of_year"] = local_departure.dt.month
     # 9. route_mean_log_price:
     #    if route_means is None: route_means = df.groupby(["origin","destination"])["log_price"].mean()
     #    merge route_means into df as a new column
