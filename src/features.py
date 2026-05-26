@@ -96,8 +96,30 @@ def build_features(offers_df, airports_df, airlines_df, route_means=None):
     #    if route_means is None: route_means = df.groupby(["origin","destination"])["log_price"].mean()
     #    merge route_means into df as a new column
 
+    if route_means is None:
+        route_means = df.groupby(["origin", "destination"])["log_price"].mean()
+
+    route_means_df = route_means.reset_index().rename(
+        columns={"log_price": "route_mean_log_price"}
+    )
+    df = df.merge(route_means_df, on=["origin", "destination"], how="left")
+
     # 10. Drop rows with NaN in critical columns (log_price, distance_km, lead_time_days)
+    df = df.dropna(subset=["log_price", "distance_km", "lead_time_days", "route_mean_log_price"])
 
     # 11. Select final columns: target + features
+    FINAL_COLUMNS = [
+        "log_price",
+        "distance_km",
+        "lead_time_days",
+        "day_of_week",
+        "month_of_year",
+        "airline_type",
+        "airline",
+        "transfers",
+        "is_international",
+        "route_mean_log_price",
+    ]
+    df = df[FINAL_COLUMNS]
 
     return df, route_means
