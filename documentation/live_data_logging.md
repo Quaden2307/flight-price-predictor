@@ -139,6 +139,22 @@ Concrete risk worth tracking: if today's pace holds, the run finishes around 06 
 
 DB is locked while the run is in flight, so no row-level checks yet. Will update with final numbers once it finishes (or once I kill it).
 
+Update: the run finished cleanly — 3,992 offers, 0 failures, 5h 15m runtime (10:07 → 15:22 UTC). My 21-hour projection at the 5h 9m mark was badly wrong. API response speed picked up sharply after the first quarter of calls and the back half ran at normal pace. Self-correction: linearly extrapolating a slow-day finish time from the first segment isn't reliable for this API — slow stretches and fast stretches mix within the same run. Future slow-day projections should wait until at least 50-60% completion before estimating, or just not estimate at all.
+
+---
+
+## May 25, 2026
+
+Run 18: 3,814 offers, 0 failures, 5h 5m runtime. Cumulative dataset now 71,833 rows. Skipped detailed entries for May 23 (6h 23m, 3,870 offers, 0 failures) and May 24 (8h 28m, 3,861 offers, 0 failures — slowest run on record but retry code handled the slow API fine, no drops).
+
+Two things worth recording today.
+
+First, a single offer came in at \$5,647 — NYC→PAR on Air France, June 5 depart 01:00 ET and return same day 20:30 Paris local, nonstop both ways. Prior all-time max in the dataset was \$2,436, and only this one row exceeds it today. A same-day NYC↔Paris turn on a premium carrier at \$5,647 strongly looks like a business-class fare leaking into the feed even though `flight_class=0` for every row in the schema. Could be a one-off, but the outlier is far enough out that I want to look at the raw_offer JSON to see what TravelPayouts is actually saying. If they've started returning premium cabins without a class flag on these queries, the model will get polluted with mixed-cabin prices that the current cleaning step doesn't catch.
+
+Second, 11 routes that normally show up (seen on ≥5 of the prior 6 days) went missing today — roughly double the May 20 count of 5. Could be normal cache shuffling on TravelPayouts' end, but if the gap stays elevated through the week it warrants checking whether the request log is actually hitting these metro-pairs and the API is returning empty, or whether requests are silently being dropped before the response.
+
+Day-over-day price movement was 1.9% (62/3,281 matched flights changed) — still consistent with the cached-snapshot pattern from the earlier analysis. No update needed to the modeling-target thinking.
+
 Final numbers: 3,992 offers, 0 failures, 5h 15m runtime (10:07 → 15:22 UTC). The 21-hour projection from mid-run was wrong — API latency recovered somewhere in the back half and the run finished comfortably before tomorrow's window. No overlap risk materialized. NULL audit clean. The "5x slower than yesterday" pattern I logged at the 5h mark didn't hold for the whole run, which is a useful lesson: per-call latency in a partial sample isn't a reliable extrapolation when the API can recover mid-run.
 
 ---
