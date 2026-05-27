@@ -2,9 +2,9 @@
 
 End-to-end flight price prediction system covering 200+ routes across 55+ airports in North America, Europe, and Asia.
 
-Two phases: an automated data pipeline (running daily) and an XGBoost price model (in active development in a separate private repo). The pipeline has been live since early May 2026 and has accumulated 60,000+ flight offers across 16 daily runs so far. Modeling work is informed by ~18 plots of documented EDA across two data phases.
+Two phases: an automated data pipeline (running daily) and an XGBoost price model (in active development). The pipeline has been live since early May 2026 and has accumulated 60,000+ flight offers across 16 daily runs so far. Modeling work is informed by ~18 plots of documented EDA across two data phases.
 
-This public repo covers the data pipeline, feature engineering, and EDA. Model training code and trained artifacts are kept private.
+This public repo covers the data pipeline, feature engineering, and EDA.
 
 ![System architecture](diagrams/architecture.svg)
 
@@ -23,7 +23,7 @@ This public repo covers the data pipeline, feature engineering, and EDA. Model t
 | EDA — Phase 2 (live international) | Complete |
 | Feature engineering (`src/features.py`) | In progress |
 | Train/val/test split (`src/split.py`) | Planned |
-| XGBoost model training | In progress (separate private repo) |
+| XGBoost model training | In progress |
 | Prediction API / frontend | Planned |
 
 Target modeling start: end of May 2026, once feature engineering and the split strategy are locked in. Goal metric: MAPE on a held-out test set, targeting sub-10%. Will update with the measured number once a baseline is in place.
@@ -139,7 +139,7 @@ A single run takes ~8 minutes when the upstream API is responsive, ~5–6 hours 
 - `is_international` — coarse but cheap backup signal
 - `route_mean_log_price` — per-route mean of log-price, fit on training data only to avoid leakage
 
-**Model:** XGBoost. Chosen for native handling of the LCC/legacy regime split and the sublinear distance relationship without manual feature crossing, plus native handling of high-cardinality categoricals (airline, origin, destination). Training code and trained artifacts live in a separate private repository.
+**Model:** XGBoost. Chosen for native handling of the LCC/legacy regime split and the sublinear distance relationship without manual feature crossing, plus native handling of high-cardinality categoricals (airline, origin, destination).
 
 **Evaluation:** MAPE on a held-out test set, stratified by distance bucket. Targeting sub-10%.
 
@@ -151,4 +151,4 @@ A single run takes ~8 minutes when the upstream API is responsive, ~5–6 hours 
 
 The SQLite database is gitignored (~70MB and growing); the collector regenerates it from scratch given an API key, though cumulative dataset depth has to be built up over time at ~4K rows/day.
 
-The trained model, training scripts, and evaluation notebooks live in a separate private repository. This public repo is scoped to the data infrastructure, feature engineering, and EDA findings that shaped the model design.
+Modeling iteration happens in a working repo and will consolidate here once stable. This public repo is scoped to the data infrastructure, feature engineering, and EDA findings that shaped the model design.

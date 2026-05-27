@@ -9,3 +9,14 @@ Used upstream of build_features() so route_means and any other fitted feature
 parameters are computed on train only, then reused for val/test/inference.
 """
 import pandas as pd
+
+def split_offers(offers):
+    departure = pd.to_datetime(offers["departure_at"].str[:19])
+    val_cutoff = departure.quantile(0.70)
+    test_cutoff = departure.quantile(0.85)
+
+    train = offers[departure < val_cutoff]
+    val = offers[(departure >= val_cutoff) & (departure < test_cutoff)]
+    test = offers[departure >= test_cutoff]
+
+    return train, val, test
