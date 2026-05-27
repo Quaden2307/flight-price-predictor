@@ -198,3 +198,19 @@ First, the slow-API stretch broke. After three 5-8h runs in a row (May 23/24/25)
 Second, the offer-count drift continues. 3,758 is a new single-run low. Last five runs: 3,992 → 3,870 → 3,861 → 3,814 → 3,758, all under 4,000, all monotonically declining. Five-in-a-row downward isn't noise anymore — there's a real per-day yield erosion happening on the TravelPayouts side. Still nothing actionable from my end (the request set hasn't changed), but the math on May 31 keeps getting tighter: at ~3,800/day I need ~5.4 more runs to hit 96K, which puts me at ~June 1 instead of May 31. Still close enough that I'd call it on-track-with-no-buffer rather than slipping.
 
 The $5,647 outlier from yesterday is still in the daily max — same NYC→PAR Air France row carried forward in matched-flight comparisons, no new equivalent today. Haven't dug into the raw_offer JSON yet to confirm the business-class-leak hypothesis. Adding that to the queue for a quieter day.
+
+---
+
+## May 27, 2026
+
+Run 20: 3,683 offers, 0 failures, 0 retry events, ~7m 41s runtime (10:00 → 10:08 UTC). Cumulative dataset now 79,274 rows across 20 runs. NULL audit clean, price $62-$5,647, trip duration 0-58d, lead time 0-187d.
+
+Two things worth recording.
+
+First, the offer-count drift is now six consecutive days, every day a new low: 3,992 → 3,870 → 3,861 → 3,814 → 3,758 → 3,683. Cumulative erosion is ~14% off the early-May ~4,300 baseline. Not noise — there's a real downward trend in per-day yield from TravelPayouts, almost certainly cache thinning on their side. Still nothing I can fix on my end since the request set is unchanged.
+
+Setting an explicit alarm threshold going forward: **if daily offers drop to ~3,000 and stay there across 2+ consecutive runs, treat it as a real regression and investigate** — likely actions would be checking whether specific route-month combinations have stopped returning anything, comparing the response shape against earlier captures, and deciding whether to widen the request set to compensate. Today's 3,683 is still ~23% above that floor, but at the current ~50 offers/day decline rate, the threshold is ~14 days out if drift holds linearly. Probably won't be linear, but worth pre-committing to the trigger now rather than rationalizing it away when it hits.
+
+Second, modeling-start math at 79,274 rows: need ~16,700 more to hit 96K. At today's 3,683/day, that's 4.5 more runs — June 1. May 31 target is officially slipping by one day given the drift; June 1 is the new working assumption unless the trend reverses. Still well within "target, not deadline" territory.
+
+The $5,647 NYC→PAR outlier showed up again today (third consecutive day at that exact price). Strengthens the cached-row hypothesis — same Air France record is persisting in TravelPayouts' cache rather than being a coincidence of identical re-prices. Still need to look at raw_offer JSON to confirm the business-class-leak theory.
