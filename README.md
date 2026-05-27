@@ -6,6 +6,10 @@ Two phases: an automated data pipeline (running daily) and an XGBoost price mode
 
 This public repo covers the data pipeline, feature engineering, and EDA. Model training code and trained artifacts are kept private.
 
+![System architecture](diagrams/architecture.svg)
+
+![Flight Predictor overview](diagrams/Flight%20Predictor.jpeg)
+
 ---
 
 ## Status
