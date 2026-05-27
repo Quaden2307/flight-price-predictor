@@ -1,22 +1,24 @@
 """
-Daily integrity check for the offers table.
+Daily audit of the offers table.
 
-Three audits, run after collect.py each day:
+Three checks, run after collect.py each day:
 
-  1. NULL audit on columns the modeling pipeline depends on
-     (price, airline, departure_at, return_at, trip_duration_days,
-      lead_time_days) — any NULL here breaks training.
+  1. NULLs — any NULL in price, airline, departure_at, return_at,
+     trip_duration_days, or lead_time_days breaks training.
 
-  2. Range audit — flags impossible values (negative price, zero
-     price, negative lead time, etc.) that would indicate upstream
-     corruption or a collector bug.
+  2. Ranges — impossible values (negative price, zero price,
+     negative lead time, etc.) that point to upstream corruption
+     or a collector bug.
 
-  3. Volume audit — flags days where offer count drops >25% below
-     the 3-day rolling baseline, indicating possible API issues.
+  3. Volume — two ways:
+       a) Relative: today < 75% of the 3-day rolling avg. Catches
+          sudden cliffs.
+       b) Absolute: last N days all below a hard floor. Catches
+          gradual erosion the relative check misses once the
+          baseline slides down with it.
 
-Exits with status 1 if anything is flagged, so launchd's stderr log
-captures the alert. Exit 0 means the new batch is clean and safe to
-train against.
+Exits 1 if anything is flagged so launchd's stderr log captures
+it. Exit 0 means the new batch is clean.
 """
 import argparse
 import sqlite3
@@ -41,6 +43,8 @@ RANGE_CHECKS = {
 }
 
 VOLUME_DROP_THRESHOLD = 0.75  # flag if latest day < 75% of 3-day rolling avg
+ABSOLUTE_VOLUME_FLOOR = 3000      # hard floor, independent of recent baseline
+ABSOLUTE_FLOOR_CONSECUTIVE = 2    # only fire after N days in a row below the floor
 
 
 def null_audit(cur):
@@ -102,18 +106,26 @@ def main(db_path: str) -> int:
             print(f"\n  [FLAG] {msg}")
             flags.append(f"Volume drop: {msg}")
 
+    if len(volumes) >= ABSOLUTE_FLOOR_CONSECUTIVE:
+        recent = volumes[:ABSOLUTE_FLOOR_CONSECUTIVE]
+        if all(n < ABSOLUTE_VOLUME_FLOOR for _, n in recent):
+            counts = ", ".join(str(n) for _, n in recent)
+            msg = f"{ABSOLUTE_FLOOR_CONSECUTIVE} consecutive days < {ABSOLUTE_VOLUME_FLOOR} ({counts})"
+            print(f"  [FLAG] Absolute floor: {msg}")
+            flags.append(f"Absolute floor: {msg}")
+
     conn.close()
 
     if flags:
         print(f"\n{len(flags)} anomaly(ies) flagged.")
         return 1
 
-    print("\nAll integrity checks passed.")
+    print("\nAll audits passed.")
     return 0
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Daily integrity check for the offers table.")
+    parser = argparse.ArgumentParser(description="Daily audit of the offers table.")
     parser.add_argument("--db", default="data/flights.db")
     args = parser.parse_args()
     sys.exit(main(args.db))

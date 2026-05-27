@@ -193,12 +193,12 @@ if backup_path:
 
 # Post-collection data-quality checks. Dedup runs with --apply so any
 # exact-key collision from a re-run or partial-write artifact gets removed.
-# Integrity check exits non-zero on anomalies; we surface the result but
+# Audit exits non-zero on anomalies; we surface the result but
 # don't fail the whole run, so backup happens before this point above.
 import subprocess
 
 print("\n--- post-collection dedup ---")
 subprocess.run(["python", "data_collector/dedupe.py", "--apply"], check=False)
 
-print("\n--- post-collection integrity check ---")
-subprocess.run(["python", "data_collector/integrity_check.py"], check=False)
+print("\n--- post-collection audit ---")
+subprocess.run(["python", "data_collector/audit.py"], check=False)

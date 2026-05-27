@@ -18,7 +18,7 @@ This public repo covers the data pipeline, feature engineering, and EDA.
 |---|---|
 | Data pipeline — domestic (Phase 1) | Complete |
 | Data pipeline — live international (Phase 2) | Complete |
-| Data-quality scripts (dedup + integrity check) | Complete |
+| Data-quality scripts (dedup + audit) | Complete |
 | EDA — Phase 1 (domestic US) | Complete |
 | EDA — Phase 2 (live international) | Complete |
 | Feature engineering (`src/features.py`) | In progress |
@@ -47,7 +47,7 @@ flight-price-predictor/
 ├── data_collector/                # Daily ingestion pipeline
 │   ├── collect.py                 # Main collector — calls the API, writes to SQLite
 │   ├── dedupe.py                  # Exact-key duplicate guard (9-column key)
-│   ├── integrity_check.py         # Daily NULL/range/volume audit
+│   ├── audit.py                   # Daily NULL/range/volume audit
 │   ├── routes.py                  # 200+ origin-destination pairs to query
 │   ├── schema.sql                 # Database schema
 │   ├── populate_airports.py       # One-time airport reference table loader
@@ -80,11 +80,11 @@ The pipeline runs daily via launchd, pulling round-trip flight offers from a com
 - Per-run logging to a `runs_logs` table (start/finish, calls, inserts, failures)
 - Daily backup of the SQLite file to a cloud folder
 
-**Post-collection data-quality checks** (`dedupe.py`, `integrity_check.py`):
+**Post-collection data-quality checks** (`dedupe.py`, `audit.py`):
 - 9-column exact-key dedup guard (dry-run by default; `--apply` to delete)
 - NULL audit on modeling-critical columns (`price`, `airline`, `departure_at`, `return_at`, `trip_duration_days`, `lead_time_days`)
 - Range audit (impossible values like negative prices or trip durations >365 days)
-- Volume-drop detection (flags days >25% below a 3-day rolling baseline)
+- Volume-drop detection: relative (flags days >25% below a 3-day rolling baseline) and absolute (flags 2+ consecutive days below a hard floor)
 - Exits non-zero on any anomaly so launchd's stderr log captures the alert
 
 **To run the collector:**
