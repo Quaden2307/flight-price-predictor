@@ -184,3 +184,17 @@ First, the offer-count drift I re-flagged yesterday is continuing. 3,861 is the 
 Second, runtime is creeping up alongside the slow-API pattern. Last three days: 5h 15m → 6h 23m → 8h 28m. The 6 AM PDT start still leaves comfortable margin before the next 6 AM trigger (today finished at ~11:42 AM PDT), so no overlap risk yet. But if runtime keeps doubling, the safe margin disappears fast. Worth pre-thinking a circuit-breaker or earlier start time if runtime crosses ~16 hours, well before the actual overlap point.
 
 Modeling-start math: need ~28K more rows in 7 days. At the current ~3,900/day rate that's right on the line. May 31 still feasible but increasingly tight.
+
+---
+
+## May 26, 2026
+
+Run 19: 3,758 offers, 0 failures, 0 retry events, ~7m 51s runtime (10:00 → 10:08 UTC). Cumulative dataset now 75,591 rows across 19 runs. NULL audit clean, price $35-$5,647, trip duration 0-58d, lead time 0-188d.
+
+Two things worth recording.
+
+First, the slow-API stretch broke. After three 5-8h runs in a row (May 23/24/25), today finished in under 8 minutes — the fastest run since May 20. Consistent with the May 23 mental model that slow days and fast days mix unpredictably; one fast day doesn't mean the slow streak is over for good, but it confirms the API hasn't permanently shifted into slow-mode.
+
+Second, the offer-count drift continues. 3,758 is a new single-run low. Last five runs: 3,992 → 3,870 → 3,861 → 3,814 → 3,758, all under 4,000, all monotonically declining. Five-in-a-row downward isn't noise anymore — there's a real per-day yield erosion happening on the TravelPayouts side. Still nothing actionable from my end (the request set hasn't changed), but the math on May 31 keeps getting tighter: at ~3,800/day I need ~5.4 more runs to hit 96K, which puts me at ~June 1 instead of May 31. Still close enough that I'd call it on-track-with-no-buffer rather than slipping.
+
+The $5,647 outlier from yesterday is still in the daily max — same NYC→PAR Air France row carried forward in matched-flight comparisons, no new equivalent today. Haven't dug into the raw_offer JSON yet to confirm the business-class-leak hypothesis. Adding that to the queue for a quieter day.
