@@ -185,10 +185,17 @@ connection.commit()
 connection.close()
 
 # Back up the DB to the cloud folder defined in .env (skipped if not set).
+# Copy to a temp file then atomically rename over the target. iCloud
+# evicts the once-a-day-written backup to a dataless placeholder, and
+# opening that placeholder for write throws EDEADLK ("Resource deadlock
+# avoided"). os.replace swaps the directory entry without opening the
+# evicted file, and keeps the backup atomic if the copy is interrupted.
 backup_path = os.environ.get("BACKUP_PATH")
 if backup_path:
     Path(backup_path).parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy("data/flights.db", backup_path)
+    tmp_path = backup_path + ".tmp"
+    shutil.copy("data/flights.db", tmp_path)
+    os.replace(tmp_path, backup_path)
 
 
 # Post-collection data-quality checks. Dedup runs with --apply so any

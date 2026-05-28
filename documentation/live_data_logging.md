@@ -214,3 +214,25 @@ Setting an explicit alarm threshold going forward: **if daily offers drop to ~3,
 Second, modeling-start math at 79,274 rows: need ~16,700 more to hit 96K. At today's 3,683/day, that's 4.5 more runs — June 1. May 31 target is officially slipping by one day given the drift; June 1 is the new working assumption unless the trend reverses. Still well within "target, not deadline" territory.
 
 The $5,647 NYC→PAR outlier showed up again today (third consecutive day at that exact price). Strengthens the cached-row hypothesis — same Air France record is persisting in TravelPayouts' cache rather than being a coincidence of identical re-prices. Still need to look at raw_offer JSON to confirm the business-class-leak theory.
+
+---
+
+## May 28, 2026
+
+Run 21 was still in progress when I checked — started 3:04 AM local, ~69% done (2,230 of ~3,220 route-months), 11 retries all recovered on attempt 1, 0 hard failures. Another slow-API day. DB write-locked so NULL/range/volume row checks are deferred to the next entry.
+
+The headline today is not the collection — it's that **the iCloud backup has been silently broken for 5 days.**
+
+Last successful backup was May 23. Every run since (May 24/25/26/27) failed the `shutil.copy` step with `OSError: [Errno 11] Resource deadlock avoided` — four identical tracebacks sitting in collector.err.log that I hadn't looked at because the collection itself kept reporting 0 failures. The runs_logs `failures` column only counts API failures, not post-collection steps, so the backup dying never showed up in the daily numbers.
+
+Root cause, confirmed via `ls -O`: the backup file in iCloud is flagged `dataless` (compressed, evicted to cloud-only). iCloud's "Optimize Mac Storage" evicted it because the file is written once a day and never read back — textbook eviction candidate. When `shutil.copy` opens that cloud-only placeholder for write (`open(dst, 'wb')`), the file provider can't reconcile the write against materialization and throws EDEADLK. So the backup has been frozen at 93.8 MB / May 23 while the live DB grew to 120 MB / May 28 — five runs (~26 MB, ~18K rows) with no off-machine copy. The May 19 entry's "laptop loss is no longer an existential risk" was false from May 24 onward.
+
+Fix shipped to collect.py: copy to `backup_path + ".tmp"` then `os.replace(tmp, backup_path)`. The atomic rename swaps the directory entry without ever opening the evicted placeholder, so EDEADLK can't fire even after iCloud re-evicts between runs. Bonus: the backup is now atomic — an interrupted copy can't leave a half-written DB in the backup folder. Didn't try to stop iCloud from evicting the file; with the rename approach eviction is harmless.
+
+Two caveats I'm holding onto:
+
+1. The fix takes effect on the **next** run (May 29). Today's collector loaded the old code into memory at 3:04 AM, so when run 21 reaches the backup step it will fail a 5th time. Expected, not a regression.
+
+2. Need a manual one-off backup to close the 5-day gap — but only **after** run 21 finishes. Copying the DB mid-write would capture an inconsistent SQLite snapshot. Once the run completes and the lock releases, I'll run the temp+replace copy by hand so there's a current off-machine copy before tomorrow.
+
+Lesson worth internalizing: a daily job reporting "0 failures" only means the part that counts failures succeeded. The backup, the dedup, and the audit are all post-commit steps whose failures don't touch runs_logs. Worth a glance at collector.err.log on every check-in, not just when the offer numbers look off.

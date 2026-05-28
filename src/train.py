@@ -62,6 +62,8 @@ def prepare_xy(df, train_columns=None):
     # TODO: if train_columns is not None: X = X.reindex(columns=train_columns, fill_value=0)
     #       this forces val/test to match train's dummy column set
     ...
+    y = df["log_price"]
+    x = df.drop(columns=["log_price"])
 
 
 def evaluate(model, X, y_log, label):
