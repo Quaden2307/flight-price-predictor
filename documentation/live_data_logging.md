@@ -236,3 +236,23 @@ Two caveats I'm holding onto:
 2. Need a manual one-off backup to close the 5-day gap — but only **after** run 21 finishes. Copying the DB mid-write would capture an inconsistent SQLite snapshot. Once the run completes and the lock releases, I'll run the temp+replace copy by hand so there's a current off-machine copy before tomorrow.
 
 Lesson worth internalizing: a daily job reporting "0 failures" only means the part that counts failures succeeded. The backup, the dedup, and the audit are all post-commit steps whose failures don't touch runs_logs. Worth a glance at collector.err.log on every check-in, not just when the offer numbers look off.
+
+---
+
+## May 29, 2026
+
+Run 22: 3,679 offers, 203 routes, 0 API failures, ~6h47m runtime (10:08 → 16:55 UTC). Cumulative dataset now 86,622 rows across 22 runs. Audit clean (0 NULLs, 0 range violations), 0 duplicates table-wide.
+
+First good news: **the backup fix works.** This was the first run on the new temp+replace code, and the iCloud file came out at 126.7 MB / 09:55 local, byte-identical size and mtime to the live DB, no leftover `.tmp`. The 5-day gap closed on its own — no manual backup needed after all. EDEADLK did not recur. (The 5th EDEADLK traceback in collector.err.log, referencing old line 191, is yesterday's run failing on the in-memory old code — exactly as predicted, not a regression.)
+
+Then the fix un-masked a second latent bug. For the last 5 days the backup crash was killing collect.py at the backup step, *before* execution ever reached the post-collection dedup and audit subprocess calls. With the backup now succeeding, the flow continued to those calls and immediately crashed with `FileNotFoundError: 'python'`. Both `subprocess.run` calls were spawning `"python"`, but the launchd environment only has `python3` / the venv interpreter — there is no bare `python` on PATH. Because FileNotFoundError is raised at process spawn, `check=False` doesn't suppress it; it propagates and kills the script.
+
+Consequences, now understood:
+- The audit has never run automatically. The absolute-floor alarm added May 27 has therefore never actually executed in production — it only "passes" because I run audit.py by hand during check-ins. Until today that was hidden behind the backup crash.
+- The dedup has never run automatically either. No harm done: ran it dry today and the table is exact-key unique (0 dup groups). The 9-column key only collides on re-runs or partial-write artifacts, neither of which has happened, so there was nothing to remove.
+
+(Open archaeology question I'm not chasing: on May 23 and earlier the backup succeeded, so the flow should have reached these subprocess calls and failed the same way — yet there's no pre-May-24 FileNotFoundError in the err log. Either the err log was truncated/rotated around then or the PATH situation is recent. Doesn't change the fix, so leaving it.)
+
+Fix shipped to collect.py: added `import sys` and switched both subprocess calls from `"python"` to `sys.executable`, so they reuse the exact interpreter launchd invoked collect.py with — guaranteed to exist, same stdlib the scripts need. Verified by spawning `[sys.executable, "data_collector/audit.py"]` the same way collect.py will: exit 0, audit ran, clean stderr. Takes effect on the next run (May 30); tomorrow's check should be the first time dedup + audit + the floor alarm all run automatically end to end.
+
+Offer-count trend: 3,683 → 3,669 → 3,679. The six-day monotonic decline broke today with a +10 uptick. Marginal and could just be noise, but the steady slide has at least paused. Still ~700 above the 3,000 floor, so even if it resumes there's runway before the alarm would trip.

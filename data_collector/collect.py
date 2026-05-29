@@ -2,6 +2,7 @@
 Daily collector. Calls the flight pricing API and writes offers to data/flights.db.
 """
 import os
+import sys
 import json
 import sqlite3
 import time
@@ -205,7 +206,7 @@ if backup_path:
 import subprocess
 
 print("\n--- post-collection dedup ---")
-subprocess.run(["python", "data_collector/dedupe.py", "--apply"], check=False)
+subprocess.run([sys.executable, "data_collector/dedupe.py", "--apply"], check=False)
 
 print("\n--- post-collection audit ---")
-subprocess.run(["python", "data_collector/audit.py"], check=False)
+subprocess.run([sys.executable, "data_collector/audit.py"], check=False)
