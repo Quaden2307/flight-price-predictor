@@ -256,3 +256,17 @@ Consequences, now understood:
 Fix shipped to collect.py: added `import sys` and switched both subprocess calls from `"python"` to `sys.executable`, so they reuse the exact interpreter launchd invoked collect.py with — guaranteed to exist, same stdlib the scripts need. Verified by spawning `[sys.executable, "data_collector/audit.py"]` the same way collect.py will: exit 0, audit ran, clean stderr. Takes effect on the next run (May 30); tomorrow's check should be the first time dedup + audit + the floor alarm all run automatically end to end.
 
 Offer-count trend: 3,683 → 3,669 → 3,679. The six-day monotonic decline broke today with a +10 uptick. Marginal and could just be noise, but the steady slide has at least paused. Still ~700 above the 3,000 floor, so even if it resumes there's runway before the alarm would trip.
+
+---
+
+## May 30, 2026
+
+Run 23: 3,620 offers, 0 failures, 0 retry events, ~7m 54s runtime (10:00 → 10:08 UTC). Cumulative dataset now 90,242 rows across 23 runs. Audit clean (0 NULLs across all six modeling-critical fields), price $62-$5,855, trip duration 0-54d, lead time 0-184d.
+
+The headline: **first end-to-end automated run.** collector.err.log hasn't grown since May 29 09:55 — meaning the backup, dedup, audit, and floor alarm all ran without crashing for the first time since the two bugs were stacked. The May 28 atomic-rename fix and the May 29 `sys.executable` fix both held in production. The pipeline is finally doing what the runs_logs `0 failures` column had been falsely implying all month.
+
+Yesterday's +10 uptick was noise after all — today is a new floor at 3,620, the eighth new low in nine days. Drift continues. Still 620 above the 3,000 alarm threshold (~17% headroom), but the slope has not reversed. At the current ~50/day decline rate the alarm is ~12 days out if it stays linear.
+
+Modeling-start math: 90,242 rows toward the 96K target, need 5,758 more. At today's pace that's ~1.6 days — June 1 is the working target. Holding to it unless tomorrow's run drops sharply.
+
+Today's max price ($5,855, NYC→LON, AF) is higher than the persistent $5,647 NYC→PAR AF outlier from last week. Same airline, different long-haul route — looks like a second cached business-class-leak candidate rather than the same row carrying forward. Still on the "look at raw_offer JSON during a quieter day" queue.
