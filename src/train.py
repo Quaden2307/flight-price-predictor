@@ -56,14 +56,29 @@ def prepare_xy(df, train_columns=None):
         y : log_price Series
         columns : the column set used (return so val/test can reuse it)
     """
-    # TODO: y = df["log_price"]
-    # TODO: X = df.drop(columns=["log_price"])
-    # TODO: pd.get_dummies on the categorical columns (airline, airline_type, day_of_week)
-    # TODO: if train_columns is not None: X = X.reindex(columns=train_columns, fill_value=0)
-    #       this forces val/test to match train's dummy column set
-    ...
+    # 1. Separate target from features. log_price is what we're predicting,
+    #    so it can't be in X — that'd be target leakage (trivial perfect fit).
     y = df["log_price"]
-    x = df.drop(columns=["log_price"])
+    X = df.drop(columns=["log_price"])
+
+    # 2. Dummify string/categorical columns so LR can consume them.
+    # Alt encoding for month_of_year (option B): sin/cos pair instead of dummies.
+    #   X["month_sin"] = np.sin(2*np.pi * X["month_of_year"] / 12)
+    #   X["month_cos"] = np.cos(2*np.pi * X["month_of_year"] / 12)
+    # Dummies treat Dec and Jan as unrelated buckets; sin/cos preserves adjacency.
+    # Useful when the chronological split leaves some months only in test —
+    # sin/cos interpolates while dummies just zero out. Baseline uses dummies;
+    # revisit if test-set months mostly fall outside train coverage.
+    X = pd.get_dummies(X, columns=["airline", "airline_type", "day_of_week", "month_of_year"])
+
+    # 3. On val/test, force X to match train's column set (same names, same order).
+    #    Missing columns -> filled with 0. New columns in val/test -> dropped.
+    #    On train (train_columns=None), skip this — X.columns IS the source of truth.
+    if train_columns is not None:
+        X = X.reindex(columns=train_columns, fill_value=0)
+
+    return X, y, X.columns
+
 
 
 def evaluate(model, X, y_log, label):
