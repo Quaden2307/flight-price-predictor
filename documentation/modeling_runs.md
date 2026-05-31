@@ -1,5 +1,7 @@
 # Modeling runs
 
+> **Target:** val MAPE < 0.12 by 2026-08-01. Stretch goal for the deployable model.
+>
 > One row per training run. Goal: never lose track of what changed between runs.
 >
 > **Conventions:**
