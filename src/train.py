@@ -86,12 +86,14 @@ def evaluate(model, X, y_log, label):
     Predict, inverse the log transform, compute MAPE on dollar space.
     Print the result with the given label (e.g. "train", "val").
     """
-    # TODO: log_pred = model.predict(X)
-    # TODO: dollar_pred = np.exp(log_pred)
-    # TODO: dollar_true = np.exp(y_log)
-    # TODO: mape = mean_absolute_percentage_error(dollar_true, dollar_pred)
-    # TODO: print(f"{label} MAPE: {mape:.3f}")
-    ...
+    log_pred = model.predict(X)
+
+    # Inverse the log transform so MAPE is in dollars, not log-dollars.
+    dollar_pred = np.exp(log_pred)
+    dollar_true = np.exp(y_log)
+
+    mape = mean_absolute_percentage_error(dollar_true, dollar_pred)
+    print(f"{label} MAPE: {mape:.3f}")
 
 
 def main():
@@ -108,7 +110,7 @@ def main():
     # 3. Convert to (X, y). Capture train's column set so val/test align.
     X_train, y_train, train_cols = prepare_xy(train_df, train_columns=None)
     X_val,   y_val,   _          = prepare_xy(val_df,   train_columns=train_cols)
-    # test held out — don't touch until you've stopped tuning
+    # test held out — don't touch until stopped tuning
 
     # 4. Fit
     model = LinearRegression()
