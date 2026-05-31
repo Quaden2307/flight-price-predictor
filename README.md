@@ -59,7 +59,7 @@ flight-price-predictor/
 │   └── 04_airline_analysis.ipynb
 ├── src/                           # Feature engineering and modeling code
 │   ├── features.py                # build_features() — single source of truth
-│   └── ...                        # split.py, model.py, train.py (in progress)
+│   └── ...                        # split.py, train_lr.py (LR baseline), train_xgb.py
 ├── documentation/                 # Design notes, checklists, daily run logs
 ├── plots_observations             # EDA findings — Phase 1
 ├── plots_observations_phase2      # EDA findings — Phase 2
