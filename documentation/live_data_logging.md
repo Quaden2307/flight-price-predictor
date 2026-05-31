@@ -270,3 +270,24 @@ Yesterday's +10 uptick was noise after all — today is a new floor at 3,620, th
 Modeling-start math: 90,242 rows toward the 96K target, need 5,758 more. At today's pace that's ~1.6 days — June 1 is the working target. Holding to it unless tomorrow's run drops sharply.
 
 Today's max price ($5,855, NYC→LON, AF) is higher than the persistent $5,647 NYC→PAR AF outlier from last week. Same airline, different long-haul route — looks like a second cached business-class-leak candidate rather than the same row carrying forward. Still on the "look at raw_offer JSON during a quieter day" queue.
+
+---
+
+## May 31, 2026
+
+The headline today is **a duplicate run**, caused by relocating the project to a different parent directory (paths omitted here for privacy). The collector fired twice:
+
+- Run 24 at **07:01 UTC** (≈3:01 AM local) → 3,622 offers, 0 failures
+- Run 25 at **10:00 UTC** (the normal launchd slot) → 3,588 offers, 0 failures
+
+Both succeeded, so `runs_logs` showed 0 failures as usual and the only visible symptom was the row count: 7,210 offers, ~2× a normal day. 3,515 of those offers appear in both runs — it's the same daily snapshot collected twice, not new data.
+
+**Why dedupe.py wouldn't catch it:** its 9-column key includes `captured_at`, which differs between the two runs (07:01 vs 10:00). By the exact-key definition these aren't duplicates, so a dry run reports the table as clean even though the day is double-counted. This is exactly the brittleness flagged in CONTEXT.md's "Known issue" — relying on `captured_at` differing per run means semantic same-day duplicates slip through. Worth considering a `(date(captured_at), origin, destination, departure_at, return_at, airline, flight_number, price)` second-pass guard if folder moves / manual re-runs become a recurring source of doubles.
+
+**Resolution:** deleted the 3,622 offers from the 07:01 run, kept the 10:00 run as the canonical snapshot (matches the ~10:00 UTC capture time every other day uses). `runs_logs` row 24 left intact as an honest audit record that the run happened — its `offers_inserted=3622` no longer matches the table on purpose; the discarded rows are documented here instead. Today's canonical count: **3,588 offers. Cumulative dataset 93,830 rows** (90,242 on May 30 + 3,588). Audit clean — 0 NULLs across all six modeling-critical fields, price $62–$5,855, trip duration 0–54d, lead time 0–182d.
+
+**Root cause / state of launchd:** only one job is loaded (`local.flightpricepredictor.collector`), still `Hour=6` (fires at the pinned ~10:00 UTC slot), and its `WorkingDirectory` was correctly re-pointed to the new project location (plist edited May 30 23:53 local). So going forward it's back to one run/day — today's double was a one-time artifact of the move, most likely a load-time fire when the reconfigured job was reloaded. The 07:01 UTC timing (3 hours off the normal slot) fits a one-off reload rather than a new schedule. Watch tomorrow's run to confirm it's back to a single 10:00 UTC fire.
+
+**Stale error-log note:** collector.err.log still ends with old tracebacks referencing the *previous* project location — the `Resource deadlock` backup error and the bare-`python` FileNotFoundError. Both predate the move and the `python`→`sys.executable` fix; they are not from today's runs. The May 29/30 fixes still hold. (The $5,855 NYC→LON AF business-class-leak candidate persists — still queued for a raw_offer JSON look.)
+
+Lesson reinforced from May 28: "0 failures" in runs_logs says nothing about whether the *dataset* is clean. A duplicate run is invisible to the failure column and invisible to dedupe.py — only the daily row-count sanity check caught it. Glancing at offers-per-day, not just the failures column, stays on the check-in list.
