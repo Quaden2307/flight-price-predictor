@@ -291,3 +291,21 @@ Both succeeded, so `runs_logs` showed 0 failures as usual and the only visible s
 **Stale error-log note:** collector.err.log still ends with old tracebacks referencing the *previous* project location — the `Resource deadlock` backup error and the bare-`python` FileNotFoundError. Both predate the move and the `python`→`sys.executable` fix; they are not from today's runs. The May 29/30 fixes still hold. (The $5,855 NYC→LON AF business-class-leak candidate persists — still queued for a raw_offer JSON look.)
 
 Lesson reinforced from May 28: "0 failures" in runs_logs says nothing about whether the *dataset* is clean. A duplicate run is invisible to the failure column and invisible to dedupe.py — only the daily row-count sanity check caught it. Glancing at offers-per-day, not just the failures column, stays on the check-in list.
+
+---
+
+## June 1, 2026
+
+Run 26: 3,778 offers, **single run**, 0 failures, ~3h37m runtime (10:09 → 13:46 UTC — slow-API day, handled cleanly). Cumulative dataset now **97,608 rows**. Audit clean: 0 NULLs across all six modeling-critical fields, price $62–$5,855, trip duration 0–54d, lead time 0–213d.
+
+**The folder-move loose ends are all closed:**
+
+1. **No duplicate recurrence.** Today fired exactly once at the normal ~10:00 UTC slot, confirming yesterday's double was a one-time artifact of relocating the project (a load-time fire when the reconfigured launchd job reloaded), not a standing schedule problem. launchd is back to one run/day with no intervention.
+
+2. **Backup is current and matches the live DB exactly.** The backup now holds 97,608 rows = the live total (93,830 after yesterday's dedup + 3,778 today), mtime ~06:46 local — written by today's run. Yesterday's caveat (the off-machine copy was momentarily *ahead*, carrying the duplicate rows I'd deleted) self-resolved: today's run overwrote it with the clean state, so the manual refresh was never needed. The file is still `compressed,dataless` (iCloud-evicted) but that's harmless under the atomic-rename fix, and reading it materialized it fine.
+
+3. **Pipeline ran clean end to end.** collector.err.log hasn't grown since May 29 09:55 — backup, dedup, and audit all ran without crashing. The trailing `FileNotFoundError: 'python'` line in that log is the stale pre-fix entry, not from today.
+
+Two milestones worth recording. First, **crossed the 96K modeling-start target** (97,608 rows) — the working goal that had slipped from May 31 to June 1 across the drift entries. Hit it on the June 1 estimate.
+
+Second, **the offer-count drift reversed.** The recent slide was monotonic (… 3,679 → 3,620 → 3,588); today jumped to 3,778, a +190 single-day uptick — the largest in a while and the first clear break from the downward run. One day isn't a trend, but it argues against the cache-thinning hypothesis hardening into a permanent regression. Still well above the 3,000 alarm floor either way.
