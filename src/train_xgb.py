@@ -6,7 +6,8 @@ split, features, (X, y) prep, and dollar-space MAPE eval — so the ONLY thing
 that changes is the model. That isolates the question this run exists to answer:
 what does a gradient-boosted tree buy us over linear regression?
 
-Number to beat: the LR baseline at val MAPE 0.257 (run #1).
+Number to beat: the LR baseline at val MAPE 0.166 (LR re-run on full data after
+the airport-coverage fix; was 0.257 on the pre-fix 6k subset).
 
 The shared pipeline pieces (load_raw / prepare_xy / evaluate) are imported from
 src.train_lr rather than copied, so the two runs can't silently drift apart and
@@ -70,7 +71,7 @@ def main():
 
     print(f"\ntrain MAPE: {train_mape:.3f}")
     print(f"val MAPE:   {val_mape:.3f}")
-    print(f"(baseline to beat: val 0.257)")
+    print(f"(baseline to beat: val 0.166)")
 
     print(f"\ntotal                  {time.perf_counter() - overall_start:6.2f}s")
 
