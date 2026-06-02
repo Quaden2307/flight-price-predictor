@@ -296,6 +296,20 @@ Lesson reinforced from May 28: "0 failures" in runs_logs says nothing about whet
 
 ## June 1, 2026
 
+Run 26: 3,778 offers, 0 failures, 0 retry events, ~3h 37m runtime (10:09 → 13:46 UTC). Cumulative dataset now **97,608 rows across 24 canonical runs**. Audit clean — 0 NULLs across all six modeling-critical fields, price $62–$5,855, trip duration 0–54d, lead time 0–213d.
+
+Three things worth recording.
+
+**First, the folder move is fully settled.** Yesterday's double-run was a one-time artifact — today fired exactly once, at the normal ~10:00 UTC slot. collector.err.log hasn't grown since May 29 09:55, so backup + dedup + audit all ran end-to-end with no new tracebacks, and the new project location + new `Project Backups/` backup path are both working in production. The backup self-healed exactly as predicted: it now holds 97,608 rows, which is yesterday's deduped 93,830 + today's 3,778 — i.e. the duplicate snapshot I removed by hand is gone from the off-machine copy too (if it were still there the backup would read 101,230). No manual backup refresh was needed. (Backup file still shows as `dataless`/evicted with a misleading ~3h-stale mtime; the row count is the reliable currency check, not the mtime — same iCloud placeholder quirk as May 31.)
+
+**Second, the offer-count drift broke upward.** 3,778 is the highest single-run total since May 26 (3,758) and a +190 jump over yesterday's deduped 3,588. The eight-ish-day monotonic decline from the early-May ~4,300 baseline has at least paused; could be noise or TravelPayouts' cache refilling. One day isn't a confirmed reversal, but the slide stopped. Still comfortably above the 3,000 floor alarm.
+
+**Third — milestone: crossed the 96K modeling-start target.** At 97,608 rows the dataset is past the threshold the runs log had pinned for ~June 1. The data side is ready for XGBoost; modeling work moves to `src/train_xgb.py` (bar to beat from the LR baseline: val MAPE 0.257 — see `documentation/modeling_runs.md`). The collector keeps running daily in the background regardless; from here, dataset depth just keeps accruing while modeling proceeds.
+
+---
+
+## June 1, 2026
+
 Run 26: 3,778 offers, **single run**, 0 failures, ~3h37m runtime (10:09 → 13:46 UTC — slow-API day, handled cleanly). Cumulative dataset now **97,608 rows**. Audit clean: 0 NULLs across all six modeling-critical fields, price $62–$5,855, trip duration 0–54d, lead time 0–213d.
 
 **The folder-move loose ends are all closed:**
