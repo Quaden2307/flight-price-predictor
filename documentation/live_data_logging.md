@@ -323,3 +323,15 @@ Run 26: 3,778 offers, **single run**, 0 failures, ~3h37m runtime (10:09 → 13:4
 Two milestones worth recording. First, **crossed the 96K modeling-start target** (97,608 rows) — the working goal that had slipped from May 31 to June 1 across the drift entries. Hit it on the June 1 estimate.
 
 Second, **the offer-count drift reversed.** The recent slide was monotonic (… 3,679 → 3,620 → 3,588); today jumped to 3,778, a +190 single-day uptick — the largest in a while and the first clear break from the downward run. One day isn't a trend, but it argues against the cache-thinning hypothesis hardening into a permanent regression. Still well above the 3,000 alarm floor either way.
+
+---
+
+## June 2, 2026
+
+Run 27: 3,902 offers, **single run**, 0 failures, 0 retry events, ~7m 46s runtime. Cumulative dataset now **101,510 rows** (97,608 + 3,902). Audit clean — 0 NULLs across all six modeling-critical fields, price $62–$5,855, trip duration 0–54d, lead time 0–212d.
+
+Quiet, clean day — **third straight clean single-run since the folder move**, so the migration is firmly settled. Fired once at the normal 6 AM-local slot; collector.err.log still hasn't grown since May 29 09:55, so backup + dedup + audit all ran end to end with no new tracebacks. Backup matches the live DB exactly (101,510 rows, written by today's run on the `Project Backups/` path) — still self-syncing with no manual touch. The trailing `FileNotFoundError: 'python'` in the error log remains the stale pre-fix entry, not from today.
+
+**Drift recovery continues.** 3,902 is +124 over yesterday's 3,778 — second straight up-day after the early-May slide (… 3,588 → 3,778 → 3,902). The downward run that once put the 3,000 floor ~12 days out has clearly broken; two consecutive jumps argue the cache-thinning was transient. Comfortable headroom over the alarm.
+
+**Timing note (no action needed):** runs_logs now shows the run landing at ~13:00 UTC versus the ~10:00 UTC of the May entries. This is *not* a schedule change — the launchd job still fires at 6 AM **local** (file mtime ~06:07 local). The 3-hour UTC shift just reflects the machine clock now reading UTC-7 where May's runs were UTC-4; same daily slot in local terms. Flagging it only so the UTC stamps in runs_logs aren't misread as the schedule drifting.
