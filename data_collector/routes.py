@@ -1,7 +1,7 @@
 """
 Route list for the daily collector.
-230 routes = 131 NA-NA backbone + 91 NA-International + 8 Intra-East-Asia.
-See CONTEXT.md ("Route plan") for the rationale behind each group.
+300 routes = 230 original + 23 Tier-1 + 15 Tier-2 + 32 Tier-3 busiest-route expansion (2026-06-03).
+See CONTEXT.md ("Route plan") and documentation/route_expansion_proposal_2026-06-03.md.
 """
 
 ROUTES = [
@@ -131,4 +131,71 @@ ROUTES = [
 
     # Korea ↔ China (incl. Hong Kong) (3)
     ("ICN", "PVG"), ("ICN", "PEK"), ("ICN", "HKG"),
+
+    # ═══ Tier-1 expansion (23) — added 2026-06-03 ═══
+    # Busiest-route gaps from documentation/route_expansion_proposal_2026-06-03.md.
+    # NOTE: re-run populate_airports.py after this so new airport/city codes get
+    # coordinates, else build_features' dropna silently drops these rows.
+
+    # Hawaii (4)
+    ("LAX", "HNL"), ("SFO", "HNL"), ("SEA", "HNL"), ("HNL", "OGG"),
+
+    # Atlanta hub (4)
+    ("ATL", "MCO"), ("ATL", "FLL"), ("ATL", "LAX"), ("ATL", "MIA"),
+
+    # Taipei (3)
+    ("SFO", "TPE"), ("LAX", "TPE"), ("SEA", "TPE"),
+
+    # US → India (5)
+    ("SFO", "DEL"), ("SFO", "BOM"), ("EWR", "DEL"), ("EWR", "BOM"), ("ORD", "DEL"),
+
+    # Denver hub (3)
+    ("DEN", "PHX"), ("DEN", "LAS"), ("DEN", "ORD"),
+
+    # Puerto Rico / Caribbean (2)
+    ("MCO", "SJU"), ("JFK", "SJU"),
+
+    # Manila (2)
+    ("SFO", "MNL"), ("LAX", "MNL"),
+
+    # ═══ Tier-2 expansion (15) — added 2026-06-03 ═══
+    # Mexico/Caribbean leisure, Gulf carriers, transatlantic fill, IST/LIS.
+
+    # Cancun from southern hubs + more Mexico (5)
+    ("DFW", "CUN"), ("IAH", "CUN"), ("ORD", "CUN"), ("LAX", "GDL"), ("LAX", "SJD"),
+
+    # Middle East — Gulf carriers (3)
+    ("JFK", "DXB"), ("IAD", "DXB"), ("JFK", "DOH"),
+
+    # Transatlantic fill (4)
+    ("MIA", "LHR"), ("IAD", "LHR"), ("ATL", "LHR"), ("DFW", "LHR"),
+
+    # Istanbul / Lisbon (3)
+    ("JFK", "IST"), ("EWR", "LIS"), ("JFK", "LIS"),
+
+    # ═══ Tier-3 expansion (32) — added 2026-06-03 ═══
+    # Next-busiest, demand-ranked → brings total to 300. Caribbean/LatAm leisure
+    # (Punta Cana, Santo Domingo, Montego Bay, Lima, Medellín), Atlanta/Charlotte/
+    # Hawaii/Denver domestic, secondary Asia/India/Europe.
+
+    # Caribbean leisure (8) — NYC/Miami dominant
+    ("JFK", "PUJ"), ("MIA", "PUJ"), ("JFK", "SDQ"), ("MIA", "SDQ"),
+    ("JFK", "MBJ"), ("MIA", "AUA"), ("BOS", "SJU"), ("EWR", "SJU"),
+
+    # South America (4) — Miami hub
+    ("MIA", "LIM"), ("MIA", "MDE"), ("JFK", "EZE"), ("MIA", "SCL"),
+
+    # US domestic — Atlanta / Charlotte / Hawaii / Denver (10)
+    ("ATL", "DFW"), ("ATL", "ORD"), ("ATL", "TPA"), ("ATL", "BOS"),
+    ("CLT", "LGA"), ("CLT", "MCO"), ("LAX", "OGG"), ("SFO", "OGG"),
+    ("DEN", "SFO"), ("DEN", "SEA"),
+
+    # Secondary Asia (4)
+    ("LAX", "BKK"), ("SFO", "BKK"), ("EWR", "SIN"), ("JFK", "TPE"),
+
+    # More India (3)
+    ("SFO", "BLR"), ("JFK", "DEL"), ("IAD", "DEL"),
+
+    # More Europe — Munich / Zurich (3)
+    ("JFK", "MUC"), ("ORD", "MUC"), ("JFK", "ZRH"),
 ]

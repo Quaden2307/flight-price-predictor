@@ -2,6 +2,7 @@
 
 > **Target:** val MAPE < 0.10 by 2026-08-01 (tightened from 0.12 on 2026-06-01). Stretch goal for the deployable model.
 > **Caveat:** "val MAPE" must specify an evaluation regime — see `audit_review_opus-4-8.md`. <0.10 looks reachable in-distribution (grouped/CV: native-cat XGB already ~0.122) but is NOT currently attainable on the temporal/long-lead split (~0.16 plateau, confounded by young data). Pick the regime before treating 0.10 as pass/fail.
+> **Per-horizon error profile (2026-06-03):** see `horizon_error_profile_2026-06-03.md`. Honest (date-grouped, novel-date) MAPE by booking horizon: ~1mo 0.144, 2–5mo 0.110–0.121 (median ~0.08), 6mo 0.142, 7mo 0.209 (sparse). Median <0.10 holds 1–6 months; mean MAPE <0.10 not yet reached on novel dates. Sweet spot 2–5 months matches real booking behavior.
 >
 > One row per training run. Goal: never lose track of what changed between runs.
 >
