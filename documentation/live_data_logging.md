@@ -335,3 +335,29 @@ Quiet, clean day — **third straight clean single-run since the folder move**, 
 **Drift recovery continues.** 3,902 is +124 over yesterday's 3,778 — second straight up-day after the early-May slide (… 3,588 → 3,778 → 3,902). The downward run that once put the 3,000 floor ~12 days out has clearly broken; two consecutive jumps argue the cache-thinning was transient. Comfortable headroom over the alarm.
 
 **Timing note (no action needed):** runs_logs now shows the run landing at ~13:00 UTC versus the ~10:00 UTC of the May entries. This is *not* a schedule change — the launchd job still fires at 6 AM **local** (file mtime ~06:07 local). The 3-hour UTC shift just reflects the machine clock now reading UTC-7 where May's runs were UTC-4; same daily slot in local terms. Flagging it only so the UTC stamps in runs_logs aren't misread as the schedule drifting.
+
+---
+
+## June 3, 2026
+
+**Config change, not a run anomaly: route list expanded 230 → 300.** Added 70
+busiest-route gaps in three tiers (Tier 1: Hawaii/Atlanta/Taipei/India/Denver/
+Puerto Rico/Manila; Tier 2: Cancun-Mexico/Gulf/transatlantic fill/IST-LIS; Tier 3:
+Caribbean & S. America leisure, ATL/CLT/Hawaii/Denver domestic, secondary Asia/
+India/Europe). Rationale + full list in `route_expansion_proposal_2026-06-03.md`;
+demand-ranked from 2024–25 OAG/traffic data. `populate_airports.py` re-run →
+`airports` table 76 → 102 codes (all new codes were already in airports.csv).
+Smoke-tested at each tier (routes load + 0 dupes → CSV coverage → populate → full
+`train_lr` pipeline clean → collect.py parses). Committed + pushed.
+
+**What to expect tomorrow (first 300-route run):**
+- **Offers/day will jump** — ~30% more routes (API calls ~3,220 → ~4,200/day), so
+  expect a step-up from the ~3,900 baseline. This is the expansion, *not* a drift
+  reversal or a double-run; don't misread it.
+- **Runtime grows ~30%** (per-minute API limit, not daily, so no wall).
+- **⚠ Watch for newly-dropped city codes.** The API may return metro codes for some
+  new international routes that aren't in the table yet (likeliest **Buenos Aires
+  `EZE`→`BUE`**, Bangkok). Airport codes are covered; city codes can only be checked
+  once real offers land. After tomorrow's run, re-run the coverage check and patch
+  `populate_airports.py` `CITY_CODES` if any rows get `dropna`-silenced — same
+  failure mode as the original 91%-row-drop bug.

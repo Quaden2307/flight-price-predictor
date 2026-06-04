@@ -8,6 +8,31 @@ available proxy for future demand. This proposes a prioritized expansion based o
 
 ---
 
+## ✅ STATUS: IMPLEMENTED — 2026-06-03 (all three tiers)
+
+At the user's direction (prioritizing breadth/training coverage), **all of Tier 1,
+Tier 2, and Tier 3 were added** — not just Tier 1. Result:
+
+- **`routes.py`: 230 → 300 routes** (Tier 1: 23, Tier 2: 15, Tier 3: 32), 0 duplicates.
+- **`airports` table: 76 → 102 codes** — `populate_airports.py` re-run; every new
+  airport code was already in `airports.csv`, so no hardcoded coords were needed.
+- **Smoke tests passed** after Tier 2 and Tier 3 (routes load + dupe check → CSV
+  coverage → `populate_airports` → full `train_lr` pipeline clean at val 0.167 →
+  `collect.py` parses). This smoke-test routine is now standard for route changes.
+- **API volume: ~3,220 → ~4,200 calls/day (+30%)** → runtime grows ~30%. Limit is
+  per-minute (not daily), so no wall; still worth confirming the account ceiling.
+- **Committed + pushed** (commits incl. `4a54adb`).
+- **First collection with 300 routes: the next 6 AM run** — starts the 3-month clock.
+
+**⚠ PENDING — post-run city-code check:** the API may label some new international
+routes with metro/city codes not yet in the `airports` table (likeliest:
+**Buenos Aires `EZE`→`BUE`**, Bangkok). Airport codes are covered, but city codes
+can only be verified once real offers arrive. After the first 300-route run,
+re-check the new routes for `dropna`-silenced rows and patch `populate_airports.py`
+(`CITY_CODES`) if needed — same failure mode as the original 91%-drop bug.
+
+---
+
 ## 1. Current coverage (230 routes) and its thesis
 
 The existing list has a clear **tech-hub + Canada + East-Asia** thesis: strong US
@@ -80,7 +105,7 @@ expanding) and Canada (already has YYZ–YVR, the #1 domestic route in NA).
     ("SFO","MNL"), ("LAX","MNL"),
 ```
 
-### Tier 2 — optional next batch (~17 routes)
+### Tier 2 — added (15 routes)
 ```python
     # Cancun from southern hubs / more Mexico
     ("DFW","CUN"), ("IAH","CUN"), ("ORD","CUN"), ("LAX","GDL"), ("LAX","SJD"),
@@ -90,6 +115,25 @@ expanding) and Canada (already has YYZ–YVR, the #1 domestic route in NA).
     ("MIA","LHR"), ("IAD","LHR"), ("ATL","LHR"), ("DFW","LHR"),
     # Istanbul / Lisbon (fast-growing leisure + connecting)
     ("JFK","IST"), ("EWR","LIS"), ("JFK","LIS"),
+```
+
+### Tier 3 — added (32 routes, demand-ranked → 300 total)
+```python
+    # Caribbean leisure (8) — NYC/Miami dominant
+    ("JFK","PUJ"), ("MIA","PUJ"), ("JFK","SDQ"), ("MIA","SDQ"),
+    ("JFK","MBJ"), ("MIA","AUA"), ("BOS","SJU"), ("EWR","SJU"),
+    # South America (4) — Miami hub
+    ("MIA","LIM"), ("MIA","MDE"), ("JFK","EZE"), ("MIA","SCL"),
+    # US domestic — Atlanta / Charlotte / Hawaii / Denver (10)
+    ("ATL","DFW"), ("ATL","ORD"), ("ATL","TPA"), ("ATL","BOS"),
+    ("CLT","LGA"), ("CLT","MCO"), ("LAX","OGG"), ("SFO","OGG"),
+    ("DEN","SFO"), ("DEN","SEA"),
+    # Secondary Asia (4)
+    ("LAX","BKK"), ("SFO","BKK"), ("EWR","SIN"), ("JFK","TPE"),
+    # More India (3)
+    ("SFO","BLR"), ("JFK","DEL"), ("IAD","DEL"),
+    # More Europe — Munich / Zurich (3)
+    ("JFK","MUC"), ("ORD","MUC"), ("JFK","ZRH"),
 ```
 
 **Operational step after adding:** new airport codes (HNL, OGG, TPE, DEL, BOM,
