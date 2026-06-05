@@ -361,3 +361,21 @@ Smoke-tested at each tier (routes load + 0 dupes → CSV coverage → populate �
   once real offers land. After tomorrow's run, re-run the coverage check and patch
   `populate_airports.py` `CITY_CODES` if any rows get `dropna`-silenced — same
   failure mode as the original 91%-row-drop bug.
+
+---
+
+## June 4, 2026
+
+**First 300-route run.** Run 29: 5,026 offers, 4,200 API calls, **2 failures**, ~9h 52m runtime (13:00 → 22:52 UTC). Cumulative dataset now **110,507 rows** (105,481 after June 3 + today's 5,026). Audit clean — 0 NULLs across all six modeling-critical fields, price $49–$4,587, trip duration 0–53d, lead time 0–210d. Backup current and materialized (110,507 rows on the `Project Backups/` path, no longer evicted).
+
+The June 3 predictions held. Offers stepped up to 5,026 (the expansion, not a drift reversal — exactly as flagged), api_calls landed at the predicted 4,200 (300 × 7 × 2), and yield held at 1.20 offers/call, same as pre-expansion — so the 70 new routes are productive, not empty. Runtime grew more than the predicted ~30%: ~9h 52m is among the slowest on record, because a slow-API day compounded the larger call volume. Still finished at 15:52 local with the next run not until 6 AM, so no overlap risk — but the more-routes × slow-day interaction is the thing that will eventually approach the ~16h overlap ceiling. Worth watching as routes grow further.
+
+**Failures (first non-zero since mid-May, but trivial):** 7 attempt-1 retries fired, 5 recovered, 2 exhausted all 3 attempts → 2 final failures out of 4,200 (0.05%). All ReadTimeout/ConnectionError — transient network/API slowness, not route-specific. Notably several retries hit *new* expansion routes (JFK→TPE, SFO→BLR, ORD→MUC), but that's just slow-day noise landing on whichever calls happen to be in flight, not a problem with the new routes themselves.
+
+**Coverage check (the pre-registered June 3 follow-up) — good news and a pre-existing gap.** The feared city-code drops did **not** materialize: no `BUE` (Buenos Aires), no Bangkok metro code silently dropped. But the check surfaced a different, **mostly pre-existing** gap — 9 airport codes appear in offers yet are missing from the `airports` table: `BUR`, `CLD`, `DAL`, `HHN`, `NLU`, `SAW`, `SNA`, `TLC`, `XNB`. These affect **145 of today's 5,026 rows (2.9%)** and **1,662 rows all-time**. First-seen dates show 7 of the 9 predate the expansion (BUR/HHN/NLU/SNA/TLC since May 10, DAL May 20, CLD May 25) — only `SAW` (Istanbul Sabiha Gökçen) and `XNB` are new on June 4.
+
+Root cause refines the June 3 "airport codes are covered" assumption: the table covers the airports *named in ROUTES*, but the API substitutes nearby/secondary airports when a metro is queried — Burbank/Orange County for LA, Dallas-Love for DFW, Carlsbad for San Diego, Frankfurt-Hahn for FRA, Toluca/Felipe Ángeles for Mexico City. Those substitutions were never in the table, so they've been silently NaN-ing `distance_km` (and `is_international`) since May 10. This is exactly the `dropna`-silencing failure mode the June 3 note worried about — just from alternate *airports*, not the city codes I'd expected. `XNB` is a special case: it's a Dubai surface/bus segment code, not an airport at all — a multimodal artifact that should be filtered out, not added as an airport.
+
+**Action queued (not done today):** patch `populate_airports.py` to add the 8 real airports (BUR, CLD, DAL, HHN, NLU, SAW, SNA, TLC) with lat/long + country, then backfill so the 1,662 historical rows get a real `distance_km` instead of being dropped. Decide separately how to handle `XNB` and any other surface-segment codes — likely a filter step in `collect.py` or `features.py` rather than a fake airport row. Until then, ~2.9% of rows/day are at risk of being silently dropped in the modeling pipeline. (`distance_km` is computed downstream, so it's not one of the six fields the daily NULL audit checks — which is why this stayed invisible until the explicit coverage query.)
+
+**Timing (no action, per June 2):** runs_logs shows 13:00 UTC, still the 6 AM-local launchd slot — the machine is now on UTC-7. Not a schedule drift.
