@@ -29,7 +29,7 @@ CSV_PATH = ROOT / "data" / "airports.csv"
 
 # Real airports the API returns but ROUTES never queried. Already in the CSV,
 # so we only need to add them to the load set and let the CSV loop do the rest.
-EXTRA_AIRPORT_CODES = {"SHA", "ORL", "HOU", "ONT", "OAK", "LGB", "PAE"}
+EXTRA_AIRPORT_CODES = {"SHA", "ORL", "HOU", "ONT", "OAK", "LGB", "PAE", "SHJ"}
 
 # Metropolitan codes with no airport-level CSV row.
 # iata -> (name, city, country, latitude, longitude); coords = city's primary airport.
@@ -48,6 +48,7 @@ CITY_CODES = {
     "YMQ": ("Montreal (all airports)",   "Montreal",   "CA",  45.4706,  -73.7408),  # YUL
     "YEA": ("Edmonton (all airports)",   "Edmonton",   "CA",  53.3097, -113.5801),  # YEG
     "DTT": ("Detroit (all airports)",    "Detroit",    "US",  42.2124,  -83.3534),  # DTW
+    "BUE": ("Buenos Aires (all airports)","Buenos Aires","AR", -34.8222, -58.5358),  # EZE (added 2026-06-04, route expansion)
 }
 
 airport_set = set(EXTRA_AIRPORT_CODES)
