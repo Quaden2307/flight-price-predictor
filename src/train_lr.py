@@ -11,7 +11,6 @@ Pipeline:
               → prepare_xy()    → LinearRegression.fit() → MAPE on dollars
 """
 import sqlite3
-import time
 
 import numpy as np
 import pandas as pd
@@ -97,49 +96,31 @@ def evaluate(model, X, y_log):
 
 
 def main():
-    # time.perf_counter() is the monotonic high-resolution clock — best for
-    # measuring elapsed time (unaffected by system clock changes).
-    overall_start = time.perf_counter()
-
-    t = time.perf_counter()
     offers, airports, airlines = load_raw()
-    print(f"[1/6] load_raw         {time.perf_counter() - t:6.2f}s")
 
     # 1. Split RAW offers chronologically (BEFORE feature engineering)
-    t = time.perf_counter()
     train_offers, val_offers, test_offers = split_offers(offers)
-    print(f"[2/6] split_offers     {time.perf_counter() - t:6.2f}s")
 
     # 2. Build features — FIT route_means on train, APPLY to val/test
-    t = time.perf_counter()
     train_df, route_means = build_features(train_offers, airports, airlines, route_means=None)
     val_df,   _ = build_features(val_offers,   airports, airlines, route_means=route_means)
     test_df,  _ = build_features(test_offers,  airports, airlines, route_means=route_means)
-    print(f"[3/6] build_features   {time.perf_counter() - t:6.2f}s")
 
     # 3. Convert to (X, y). Capture train's column set so val/test align.
-    t = time.perf_counter()
     X_train, y_train, train_cols = prepare_xy(train_df, train_columns=None)
     X_val,   y_val,   _          = prepare_xy(val_df,   train_columns=train_cols)
     # test held out — don't touch until stopped tuning
-    print(f"[4/6] prepare_xy       {time.perf_counter() - t:6.2f}s")
 
     # 4. Fit
-    t = time.perf_counter()
     model = LinearRegression()
     model.fit(X_train, y_train)
-    print(f"[5/6] fit (LR)         {time.perf_counter() - t:6.2f}s")
 
     # 5. Evaluate on train + val only
-    t = time.perf_counter()
     train_mape = evaluate(model, X_train, y_train)
     val_mape   = evaluate(model, X_val,   y_val)
-    print(f"[6/6] evaluate         {time.perf_counter() - t:6.2f}s")
 
     print(f"\ntrain MAPE: {train_mape:.3f}")
     print(f"val MAPE:   {val_mape:.3f}")
-
-    print(f"\ntotal                  {time.perf_counter() - overall_start:6.2f}s")
 
 
 if __name__ == "__main__":
