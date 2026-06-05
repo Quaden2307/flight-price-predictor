@@ -40,6 +40,24 @@
 - Dummified: `airline`, `airline_type`, `day_of_week`, `month_of_year`
 - Target: `log_price` (i.e. `np.log(price)`)
 
+### baseline-v2 (proposed 2026-06-04)
+Adds the round-trip itinerary features v1 left on the table. The core realization: **v1 modeled a round-trip as if it were one-way** — only outbound `transfers`, no leg durations, no trip length.
+
+- Numeric: baseline-v1 + `duration_to`, `duration_back`, `return_transfers`, `trip_duration_days`
+- Dummified: same as v1 (`airline`, `airline_type`, `day_of_week`, `month_of_year`)
+- Target: `log_price`
+- Deliberately **NOT** included: total `duration` — per-leg times are cleaner (see Surprise 1).
+
+**Rationale (data as of 110,507 rows, 2026-06-04):**
+- All candidate columns already exist in `offers` with **0 nulls** — no computation/cleaning needed.
+- `corr(log_price, X)`: `distance_km` **+0.853** | `duration_back` +0.831 | `duration_to` +0.819 | `duration` +0.727 | `transfers` +0.495 | `return_transfers` +0.495 | `trip_duration_days` +0.299 | `lead_time_days` +0.122.
+- **Surprise 1 — per-leg durations beat total `duration`.** `duration` is NOT the sum of the legs (median 935 vs 644 min; equal only 41% of rows), so it folds in **layover/connection time**, which is noise w.r.t. price (long layovers often mean *cheaper* budget routings — they pull opposite to airtime). `duration_to`/`duration_back` are cleaner airtime and correlate better. → use the per-leg pair, not total.
+- **Surprise 2 — round-trip asymmetry.** `return_transfers` (+0.495) is as predictive as `transfers` (+0.495), but v1 used only the outbound leg; same for leg durations. v1 silently threw away the return half of a round-trip product.
+- **Why `duration` was omitted from v1:** `corr(duration, distance_km) = +0.795` — ~80% collinear with distance, which v1 already had, so it read as redundant (and v1 was a deliberate minimal first pass). But correlated ≠ redundant: duration carries routing/layover signal distance misses (audit: adding duration moved 0.402→0.173). Collinearity destabilizes *linear* coefficients (a legitimate reason the LR-based v1 dropped it) but is harmless for **trees** — so v2 + XGBoost can use distance and durations together.
+- **Independence from distance (partial corr | `distance_km`, 2026-06-04):** distance alone already explains **R²=0.728** of log-price. Most of the durations' giant raw correlations ARE distance in disguise: `duration_to` collapses +0.819→**+0.082**, `duration` +0.727→+0.154, `duration_back` +0.831→**+0.182**. Transfers are *less* distance-collinear and hold up best: `return_transfers` +0.495→**+0.181**, `transfers` +0.495→+0.173. `trip_duration_days` signal **vanishes** (+0.299→−0.017, ΔR² 0.000) — pure distance confound, **drop it**. `lead_time_days` **flips sign** (+0.122→**−0.153**): controlling for distance reveals the real within-distance effect is *negative* (book earlier → cheaper); the raw positive was a long-haul-books-earlier artifact.
+  - **Caveat:** these are LINEAR measures (single-feature incremental R² ≤ +0.009 each), so they understate value for a tree — XGBoost can still mine nonlinear/interaction signal they can't see. Tempers priors; not grounds to pre-drop features *for the tree* — except `trip_duration_days`, which is a clean drop.
+  - **Refined v2 priority:** `return_transfers` + `duration_back` carry the most distance-independent signal; `duration_to`/total `duration` are mostly redundant with distance; `trip_duration_days` out.
+
 ## Final test evaluation
 
 Touched once at the very end, on the chosen tuned model.
