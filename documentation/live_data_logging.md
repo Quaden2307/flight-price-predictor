@@ -377,3 +377,16 @@ The June 3 predictions held. Offers stepped up to 5,026 (the expansion, not a dr
 **No `populate_airports.py` change needed.** Lesson for next time: run the coverage check against the *merge key* `build_features()` actually uses (`origin`/`destination`), not the airport-level columns — checking the wrong column manufactured a 1,662-row "gap" that doesn't exist. (`distance_km` is computed downstream from the merge, so it isn't one of the six fields the daily NULL audit covers — worth a one-line post-build assertion that row count is preserved through `dropna`, so a *real* future coverage gap can't hide.)
 
 **Timing (no action, per June 2):** runs_logs shows 13:00 UTC, still the 6 AM-local launchd slot — the machine is now on UTC-7. Not a schedule drift.
+
+---
+
+## June 5, 2026
+
+**Run in progress at check time — row-level numbers deferred** (same as the May 21/22 mid-run checks). The collector (PID 30889) started at the normal 6 AM-local slot and was still running when I checked, holding the SQLite write lock — so offer count, audit, and runtime are unavailable until it finishes and releases the lock. Did **not** force the lock; interrupting a live run risks a partial write and there's no sign of trouble.
+
+What's observable from the log files + backup (none of which need the locked DB):
+- **Pipeline healthy so far** — `collector.err.log` unchanged since May 29 09:55 (the trailing `FileNotFoundError: 'python'` is the old stale traceback, not from today), so nothing is crashing. Backup/dedup/audit run only at the end, so a clean err.log mid-run is expected.
+- **Likely another slow-API day** — still running well past the 6 AM start, consistent with the recurring TravelPayouts slowness pattern.
+- **Last-known-good = 110,507 rows** (June 4's completed run, confirmed from the iCloud backup, which is a separate unlocked file; `dataless`/evicted but readable, mtime Jun 4 16:09).
+
+**TODO — update once the run finishes:** offers inserted, failures/retries, runtime, audit (NULLs / price range / lead-time range), new cumulative row count, and backup refresh confirmation.
