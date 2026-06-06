@@ -389,4 +389,14 @@ What's observable from the log files + backup (none of which need the locked DB)
 - **Likely another slow-API day** — still running well past the 6 AM start, consistent with the recurring TravelPayouts slowness pattern.
 - **Last-known-good = 110,507 rows** (June 4's completed run, confirmed from the iCloud backup, which is a separate unlocked file; `dataless`/evicted but readable, mtime Jun 4 16:09).
 
-**TODO — update once the run finishes:** offers inserted, failures/retries, runtime, audit (NULLs / price range / lead-time range), new cumulative row count, and backup refresh confirmation.
+**Update — run completed (numbers via backup + live DB, June 6):** run 30, **4,922 offers**, single run, **1 failure** (0.02%, transient), runtime **~2h 11m** (13:00:46 → 15:11:36 UTC). Audit clean — 0 NULLs, price $49–$4,587, trip 0–53d, lead 0–209d. Cumulative **115,429 rows**; backup refreshed to match. Correction: the mid-run "likely slow-API day" guess was wrong — 2h 11m is only moderately slow; it simply hadn't finished when I first checked.
+
+---
+
+## June 6, 2026
+
+Run 31: **4,851 offers**, single run, **0 failures**, ~**6h 35m** runtime (13:00:12 → 19:35:21 UTC) — a genuine slow-API day this time. Cumulative **120,280 rows** (115,429 + 4,851). Audit clean — 0 NULLs across all six modeling-critical fields, price $49–$4,587, trip 0–54d, lead 0–208d. `collector.err.log` unchanged since May 29 (backup/dedup/audit ran clean end-to-end); backup self-refreshed to 120,280, byte-for-byte matching the live DB.
+
+**Check-time note:** the run was still in flight when first queried (caught at ~6h35m elapsed, DB write-locked), then finished moments later. So both June 5's deferred numbers and today's were read from the iCloud backup's `runs_logs` (a separate, unlocked copy) and then re-confirmed against the live DB once the lock released. Reinforces the value of the backup as a read path when the live DB is locked mid-run.
+
+**Volume holding steady post-expansion:** 5,026 → 4,922 → 4,851 across June 4–6. The early-May downward drift is firmly over; the 300-route set yields a stable ~4,800–5,000/day. Single clean run each day — no recurrence of the June 4 folder-move double.
