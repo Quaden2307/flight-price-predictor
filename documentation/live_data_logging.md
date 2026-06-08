@@ -400,3 +400,13 @@ Run 31: **4,851 offers**, single run, **0 failures**, ~**6h 35m** runtime (13:00
 **Check-time note:** the run was still in flight when first queried (caught at ~6h35m elapsed, DB write-locked), then finished moments later. So both June 5's deferred numbers and today's were read from the iCloud backup's `runs_logs` (a separate, unlocked copy) and then re-confirmed against the live DB once the lock released. Reinforces the value of the backup as a read path when the live DB is locked mid-run.
 
 **Volume holding steady post-expansion:** 5,026 → 4,922 → 4,851 across June 4–6. The early-May downward drift is firmly over; the 300-route set yields a stable ~4,800–5,000/day. Single clean run each day — no recurrence of the June 4 folder-move double.
+
+---
+
+## June 7, 2026
+
+Run 32: **4,860 offers**, single run, **0 failures**, ~**3h 41m** runtime (13:12 → 16:52 UTC — note the ~12-min-late start vs the usual 13:00 slot; immaterial). Cumulative **125,140 rows** (120,280 + 4,860). Audit clean — 0 NULLs across all six modeling-critical fields, trip 0–54d, lead 0–207d. err.log unchanged since May 29; backup self-refreshed to 125,140, matching the live DB.
+
+**No business-class outlier today** — max price $3,324, well below the recurring ~$5,855 NYC→LON Air France leak that's appeared most days. It simply wasn't in today's cache pull; nothing wrong, but worth noting the outlier is intermittent (cache churn), not a fixed row carried forward.
+
+**Volume:** 5,026 → 4,922 → 4,851 → 4,860 across June 4–7 — settled into a reliable ~4,850–5,000/day on the 300-route set. Four straight single clean runs.
