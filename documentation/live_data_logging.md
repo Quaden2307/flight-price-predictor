@@ -410,3 +410,31 @@ Run 32: **4,860 offers**, single run, **0 failures**, ~**3h 41m** runtime (13:12
 **No business-class outlier today** — max price $3,324, well below the recurring ~$5,855 NYC→LON Air France leak that's appeared most days. It simply wasn't in today's cache pull; nothing wrong, but worth noting the outlier is intermittent (cache churn), not a fixed row carried forward.
 
 **Volume:** 5,026 → 4,922 → 4,851 → 4,860 across June 4–7 — settled into a reliable ~4,850–5,000/day on the 300-route set. Four straight single clean runs.
+
+---
+
+## June 8, 2026
+
+Run 33: **4,844 offers**, single run, **5 failures**, **~11h 39m runtime** (13:14 UTC → 00:53 UTC next day) — **the longest run on record** (prior worst was June 4's 9h 52m). Cumulative **129,984 rows** (125,140 + 4,844). Audit clean — 0 NULLs across all six modeling-critical fields, price $49–$3,324, trip 0–54d, lead 0–206d. err.log unchanged since May 29 (backup/dedup/audit ran clean); backup self-refreshed to 129,984, matching the live DB.
+
+Two things worth recording.
+
+**First, the 5 failures were a transient DNS blip — not a real problem.** Lots of scattered attempt-1 retries fired (ReadTimeout/ConnectionError on international routes — normal slow-day noise, all recovered), but the **5 final failures cluster on consecutive `MIA→PUJ` / `MIA→LIM` calls** with `NameResolutionError: Failed to resolve 'api.travelpayouts.com'`. That's DNS going sideways for a short window mid-run — same symptom as **May 13**. Retries can't rescue calls during a dead-resolver stretch (retrying a dead DNS just fails again), so those ~5 route-months were lost. Negligible: 5 of 4,200 calls, and volume still came in normal at 4,844 with a clean audit. Not actionable unless the DNS pattern recurs across multiple days.
+
+**Second, the runtime hit a new record (~11h 39m) and is eating into the overlap margin.** It finished at 17:53 local with the next run at 6 AM — ~12h headroom remains — but the **more-routes × slow-API-day** combination keeps stretching runtimes (8h28m May 24 → 9h52m June 4 → 11h39m today on the bad days). The May 24 entry set ~16h as the pre-overlap worry line; a bad day is now within striking distance. Pre-thinking the mitigation: a circuit-breaker that bails after N consecutive failures, or an earlier start, becomes worth implementing if a single run crosses ~14h. Watching; not urgent yet.
+
+(Third minor note: start drifted to 13:14 UTC vs the usual 13:00 — third day running ~12 min late. Immaterial, but logging the drift in case it grows.)
+
+---
+
+## June 9, 2026
+
+Run 34: **4,916 offers**, single run, **2 failures** (0.05%), ~**4h 26m** runtime (13:12 → 17:39 UTC). Cumulative dataset now **134,900 rows** (129,984 + 4,916). Audit clean — 0 NULLs across all six modeling-critical fields, price $49–$3,324, trip 0–54d, lead 0–205d. err.log unchanged since May 29 (backup/dedup/audit ran clean end-to-end); backup self-refreshed to match the live DB. 282 of 300 routes returned offers.
+
+Two things worth recording.
+
+**First, the DNS-cluster failure pattern recurred — second day in a row.** Today's 2 final failures are both consecutive `EWR→MIA` calls (Nov departures) with `NameResolutionError: Failed to resolve 'api.travelpayouts.com'` — same signature as yesterday's `MIA→PUJ`/`MIA→LIM` cluster and the original May 13 episode. 19 attempt-1 retries fired today and all but these 2 recovered; a dead resolver just can't be retried through. The June 8 entry set "recurs across multiple days" as the trigger to care, and technically it now has — but both days were tiny (5 then 2 final failures), on *different* routes, in short isolated windows, with normal volume and a clean audit each time. So I'm reading this as the same low-grade transient local-DNS flakiness surfacing intermittently, not a developing problem with TravelPayouts or with the new expansion routes. The bar for action stays where it was: a day where DNS kills a *large consecutive block* (May-13-scale, ~800 calls), not these handfuls. Still not worth a circuit breaker.
+
+**Second, the slow-API streak broke — runtime back to normal.** 4h 26m today vs yesterday's record 11h 39m. The more-routes × slow-day runtime creep I flagged June 8 (which had crept 8h28m → 9h52m → 11h39m on the bad days) didn't continue; today was a moderately-slow-to-normal day, finished ~10:39 local with a full ~19h before the next 6 AM trigger. No overlap pressure. Consistent with the long-standing pattern that slow and fast days mix unpredictably — one record-long day doesn't mean the API has shifted into permanent slow-mode.
+
+Volume holding steady post-expansion: 5,026 → 4,922 → 4,851 → 4,860 → 4,844 → 4,916 across June 4–9, six straight single clean runs in the ~4,850–5,000/day band. No business-class outlier today — max was $3,324 (NYC→SIN, UA); the recurring ~$5,855 NYC→LON AF leak wasn't in today's cache pull (intermittent cache churn, as noted June 7).
