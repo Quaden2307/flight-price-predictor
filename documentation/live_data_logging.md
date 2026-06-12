@@ -452,3 +452,17 @@ Run 35: **4,527 offers**, single run, **165 failures**, ~**3h 09m** runtime (13:
 **Impact:** those ~11 routes have **no June 10 snapshot** (a one-day hole, not permanent — tomorrow's run resumes them). This fully accounts for the volume dip: 4,527 is ~320 below the ~4,850 baseline, ≈ 165 lost calls × ~2 offers/call. So the dip is *lost calls, not cache thinning* — don't misread it as the old drift returning. Updated volume line: 4,851 → 4,860 → 4,844 → 4,916 → **4,527** (June 6–10).
 
 **Action (was "watch", now "do"):** the targeted fix is an **end-of-run retry sweep** — accumulate the failed `(route, depart_month, offset)` tuples during the main loop and re-attempt them after it finishes. DNS had fully recovered by run end (the back half of the run succeeded), so a second pass would have recovered nearly all 165 with negligible extra runtime. This is better than a circuit-breaker (which would only *stop* the run, not recover the data) and better than nothing (which leaves route-day holes). Secondary hardening if it persists: pin a reliable resolver (1.1.1.1 / 8.8.8.8) and/or prevent the machine sleeping mid-run. Logged as the next collector-side task.
+
+---
+
+## June 11, 2026
+
+Run 36: **5,089 offers**, single run, **5 failures** (0.12%), ~**3h 12m** runtime (13:12 → 16:24 UTC). Cumulative dataset now **144,516 rows** (139,427 + 5,089). Audit clean — 0 NULLs across all six modeling-critical fields, 0 range violations, dedup found 0 duplicate groups. err.log unchanged since May 29 (backup/dedup/audit ran clean end-to-end); backup self-refreshed to 144,516 rows, matching the live DB exactly.
+
+Two things worth recording.
+
+**First, the DNS-cluster pattern is now four consecutive days (5 → 2 → 165 → 5), but today de-escalated back to a handful.** All 5 final failures are one contiguous block — five consecutive `JFK→HKG` calls (Aug–Oct months), 100% `NameResolutionError`, same signature as June 8/9/10. The resolver died for one short window and recovered; 24 attempt-1 retries fired across the run and everything outside the DNS window recovered. Impact: JFK→HKG is missing 5 of its 14 route-month calls for today — a partial one-day hole, resumed tomorrow. Yesterday's 165-failure spike did not recur, but four days running confirms this is a standing low-grade local-DNS flakiness, not one-off noise. **The end-of-run retry sweep logged June 10 remains the right fix and is still unimplemented** — today's 5 would all have been recovered by it, since DNS was healthy again well before run end.
+
+**Second, 5,089 is the highest single-run offer count on record**, beating June 4's 5,026. Yesterday's 4,527 dip is fully explained as lost calls (the 165-failure block), not cache thinning — today's bounce-back confirms it. Volume line since expansion: 5,026 → 4,922 → 4,851 → 4,860 → 4,844 → 4,916 → 4,527 → **5,089**. The 300-route set is healthy.
+
+(Minor: start time 13:12 UTC — the ~12-min-late start drift noted June 8 continues on most days, still immaterial. No business-class outlier today; max price within normal range.)
