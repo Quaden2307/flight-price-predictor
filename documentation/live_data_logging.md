@@ -478,3 +478,13 @@ Run 37: **5,165 offers**, single run, **10 failures** (all `NameResolutionError`
 **Volume trending up, drift firmly dead.** Post-expansion line: 5,026 → 4,922 → 4,851 → 4,860 → 4,844 → 4,916 → 4,527 → 5,089 → **5,165**. The 300-route set is yielding ~5k/day and climbing.
 
 (Minor: start 13:06 UTC — the ~12-min-late drift continues, immaterial. Project otherwise paused for the learning-project detour; collector remains fully hands-off.)
+
+---
+
+## June 13, 2026
+
+Run 38: **5,327 offers**, single run, **0 failures**, ~**4h 48m** runtime (13:08 → 17:56 UTC). Cumulative **155,008 rows** — crossed 155k. Audit clean — 0 NULLs across all six modeling-critical fields, price $75–$3,324, trip 0–57d, lead 0–201d. err.log unchanged since May 29; backup self-refreshed to 155,008, matching the live DB.
+
+Cleanest day in a week. **The DNS trickle stopped**: failures went 2 → 165 → 5 → 10 → **0** (Jun 8–13), confirming it was transient local-network flakiness, not a systemic issue — end-of-run retry sweep stays a nice-to-have, not urgent. **Volume hit a third straight post-expansion high**: 5,089 → 5,165 → **5,327**. The 300-route set is healthy and climbing.
+
+**Storage note (not a data issue): the DB is now 216 MB and the `raw_offer` JSON column is ~110 MB = 50% of the file.** Per the 2026-06-11 audit, all 16 `raw_offer` keys are already extracted into typed columns (and `link` has its own column), so `raw_offer` is now pure redundancy — the original "escape hatch for un-extracted fields" turned out empty. Nulling it + `VACUUM` would roughly halve the file. Deferred (it's the documented escape hatch; decision for when modeling resumes), but it's the lever if GUI viewers keep hitting size limits.
