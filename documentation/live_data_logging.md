@@ -466,3 +466,15 @@ Two things worth recording.
 **Second, 5,089 is the highest single-run offer count on record**, beating June 4's 5,026. Yesterday's 4,527 dip is fully explained as lost calls (the 165-failure block), not cache thinning — today's bounce-back confirms it. Volume line since expansion: 5,026 → 4,922 → 4,851 → 4,860 → 4,844 → 4,916 → 4,527 → **5,089**. The 300-route set is healthy.
 
 (Minor: start time 13:12 UTC — the ~12-min-late start drift noted June 8 continues on most days, still immaterial. No business-class outlier today; max price within normal range.)
+
+---
+
+## June 12, 2026
+
+Run 37: **5,165 offers**, single run, **10 failures** (all `NameResolutionError`), ~**4h 11m** runtime (13:06 → 17:17 UTC). Cumulative **149,681 rows** (144,516 + 5,165) — crossed 145k. Audit clean — 0 NULLs across all six modeling-critical fields, price $75–$3,324, trip 0–55d, lead 0–202d. err.log unchanged since May 29 (backup/dedup/audit ran clean); backup self-refreshed to 149,681, matching the live DB.
+
+**The DNS failures are now a confirmed low-grade chronic pattern, not isolated incidents.** Five straight days, all `NameResolutionError`: 2 → **165** → 5 → 10 (Jun 8–12). The Jun 10 spike (165, ~11 routes wiped) was the outlier; since then it's a steady trickle of ~5–10 lost route-months/day. Volume is unaffected (today's 5,165 is the new post-expansion high, beating Jun 11's 5,089), so the cost is negligible — but the pattern is now persistent enough that the **end-of-run retry sweep** (logged as the collector task on Jun 10) is the right fix whenever collector-hardening resumes: it would recover essentially all of these, since DNS is back by run's end. Not urgent.
+
+**Volume trending up, drift firmly dead.** Post-expansion line: 5,026 → 4,922 → 4,851 → 4,860 → 4,844 → 4,916 → 4,527 → 5,089 → **5,165**. The 300-route set is yielding ~5k/day and climbing.
+
+(Minor: start 13:06 UTC — the ~12-min-late drift continues, immaterial. Project otherwise paused for the learning-project detour; collector remains fully hands-off.)
