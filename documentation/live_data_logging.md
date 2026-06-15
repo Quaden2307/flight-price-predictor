@@ -488,3 +488,17 @@ Run 38: **5,327 offers**, single run, **0 failures**, ~**4h 48m** runtime (13:08
 Cleanest day in a week. **The DNS trickle stopped**: failures went 2 → 165 → 5 → 10 → **0** (Jun 8–13), confirming it was transient local-network flakiness, not a systemic issue — end-of-run retry sweep stays a nice-to-have, not urgent. **Volume hit a third straight post-expansion high**: 5,089 → 5,165 → **5,327**. The 300-route set is healthy and climbing.
 
 **Storage note (not a data issue): the DB is now 216 MB and the `raw_offer` JSON column is ~110 MB = 50% of the file.** Per the 2026-06-11 audit, all 16 `raw_offer` keys are already extracted into typed columns (and `link` has its own column), so `raw_offer` is now pure redundancy — the original "escape hatch for un-extracted fields" turned out empty. Nulling it + `VACUUM` would roughly halve the file. Deferred (it's the documented escape hatch; decision for when modeling resumes), but it's the lever if GUI viewers keep hitting size limits.
+
+---
+
+## June 14, 2026
+
+Run 39: **5,361 offers**, single run, **0 failures**, **4,200 api_calls**, ~**9m 51s** runtime (13:00:05 → 13:09:56 UTC). Cumulative **160,369 rows** (155,008 + 5,361) — crossed 160k. Audit clean — 0 NULLs across all six modeling-critical fields, price $71–$2,146, trip 0–57d, lead 0–200d, 280 distinct routes. err.log unchanged since May 29; backup self-refreshed to 160,369, matching the live DB exactly.
+
+**The headline is runtime: ~10 minutes vs the usual 3–5 hours, for the highest offer count on record.** Run 38 did 5,327 offers in 4h48m; today did *more* (5,361) in under 10. Same 4,200 api_calls, all clean, no retry backoff (0 failures, DNS fully healthy — only ~1 retry the whole run). The most likely read is simply a fast-API day with zero failure-retry stalls, and the data is complete and valid (highest count ever, audit clean, 280 routes present), so this is not a data-quality concern — but a 25–30× swing is large enough to keep an eye on; if it persists it's worth confirming the collector isn't short-circuiting calls. Flagging, not alarming.
+
+**Second straight zero-failure day; DNS trickle stays dead.** Failures: 165 → 5 → 10 → 0 → **0** (Jun 10–14). Two clean days running confirms the June 8–12 `NameResolutionError` cluster was transient local flakiness — end-of-run retry sweep remains a nice-to-have, not urgent.
+
+**Fourth straight post-expansion volume high.** Line: 5,089 → 5,165 → 5,327 → **5,361**. The 300-route set keeps climbing. Top price $2,146 (SFO→TYO, AA, economy) — within normal range, no business-class outlier.
+
+(Minor: start 13:00:05 UTC — the ~12-min-late drift noted since June 8 was *not* present today; run fired on schedule. Project otherwise paused for the learning-project detour; collector remains fully hands-off.)
