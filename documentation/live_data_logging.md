@@ -502,3 +502,17 @@ Run 39: **5,361 offers**, single run, **0 failures**, **4,200 api_calls**, ~**9m
 **Fourth straight post-expansion volume high.** Line: 5,089 → 5,165 → 5,327 → **5,361**. The 300-route set keeps climbing. Top price $2,146 (SFO→TYO, AA, economy) — within normal range, no business-class outlier.
 
 (Minor: start 13:00:05 UTC — the ~12-min-late drift noted since June 8 was *not* present today; run fired on schedule. Project otherwise paused for the learning-project detour; collector remains fully hands-off.)
+
+---
+
+## June 15, 2026
+
+Run 40: **5,360 offers**, single run, **10 failures** (`NameResolutionError`), **4,200 api_calls**, ~**4h 27m** runtime (13:04 → 17:31 UTC). Cumulative **165,729 rows** (160,369 + 5,360) — crossed 165k. Audit clean — 0 NULLs across all six modeling-critical fields, price $71–$2,149, trip 0–57d, lead 0–199d, 278 distinct routes. err.log unchanged since May 29; backup self-refreshed to 165,729, matching the live DB exactly.
+
+**Yesterday's ~10-minute runtime was a one-off — resolved.** Today is back to the normal ~4.5h for the same 4,200 calls, confirming June 14 was just a fast-API day and the collector is not short-circuiting calls. No further action on that flag.
+
+**DNS trickle resumed after two clean days.** Failures: 165 → 5 → 10 → 0 → 0 → **10** (Jun 10–15). Two zero-days didn't mean it was gone — this is the same standing low-grade `NameResolutionError` flakiness, costing ~10 route-months today. End-of-run retry sweep stays the right fix whenever collector-hardening resumes; not urgent.
+
+**Volume leveled off.** Line: 5,089 → 5,165 → 5,327 → 5,361 → **5,360** — the four-day climb has plateaued around ~5,360. Top price $2,149 (NYC→IST, TK, economy) — normal range, no business-class outlier.
+
+(Minor: start 13:04 UTC — the ~12-min-late drift is back today, immaterial. Collector remains fully hands-off during the learning-project pause.)
