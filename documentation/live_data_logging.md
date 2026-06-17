@@ -516,3 +516,24 @@ Run 40: **5,360 offers**, single run, **10 failures** (`NameResolutionError`), *
 **Volume leveled off.** Line: 5,089 → 5,165 → 5,327 → 5,361 → **5,360** — the four-day climb has plateaued around ~5,360. Top price $2,149 (NYC→IST, TK, economy) — normal range, no business-class outlier.
 
 (Minor: start 13:04 UTC — the ~12-min-late drift is back today, immaterial. Collector remains fully hands-off during the learning-project pause.)
+
+---
+
+## June 16, 2026
+
+Run 41: **5,404 offers**, single run, **4 failures** (`NameResolutionError`), **4,200 api_calls**, ~**4h 03m** runtime (13:10 → 17:13 UTC). Cumulative **171,133 rows** (165,729 + 5,404) — crossed 170k, new single-run volume high. Audit clean on the six modeling-critical fields — 0 NULLs, trip 0–57d, lead 0–198d, 280 distinct routes. err.log unchanged since May 29; backup self-refreshed to 171,133, matching the live DB exactly. DNS trickle quieting: 10 → **4**.
+
+**⚠️ MAJOR DATA-QUALITY FINDING — `flight_class` is a dead field (constant = 0 across all 171,133 rows).** Surfaced by today's top fare: **$3,977 YTO→NYC on AC, labeled economy** — implausible for a ~1.5h short-haul. Investigation shows the collector has **never** recorded a non-zero `flight_class`: every row in the DB is `flight_class=0`. The field carries zero information, and as a result genuinely premium-cabin fares sit in the data wearing an economy label with nothing to distinguish them. This is the same pattern as the earlier ~$5,855 NYC→LON AF case — not a one-off, a structural issue.
+
+**Scale of the contamination (whole DB):**
+- Economy-labeled rows priced >$1,500: **3,457 = 2.0%** of all rows.
+- Rows >$3,000: **43 = 0.025%**.
+- Clear mislabeled-premium offenders (short/medium routes, economy label): NYC→LON $5,855, NYC→PAR $5,647, YTO→NYC $4,587, NYC→WAS $4,328, NYC→SIN $3,324.
+
+**Impact assessment:** small by row count (~2%), but **high-leverage on a price model** — these are extreme upper-tail values, exactly where an MSE/mean-based price target gets distorted. Compounding problem: because `flight_class` is constant, you **cannot filter to economy-only or use cabin as a feature** to isolate them cleanly. The bulk (~98%) of the data is unaffected and valid.
+
+**Remediation:**
+- *Modeling-time (sufficient for existing data):* winsorize/cap the price tail, filter implausible fare-per-route-distance, or use a robust loss. Do NOT trust `flight_class`.
+- *Collector-side (proper long-term fix):* capture the actual cabin class from the API response into `flight_class` going forward. Not urgent — deferred to when collection-hardening / modeling resumes. **Flagged here so it isn't forgotten at feature-engineering time.**
+
+**Volume new high, failures low.** Line: 5,165 → 5,327 → 5,361 → 5,360 → **5,404**. Healthy and ticking up; DNS trickle down to 4.
