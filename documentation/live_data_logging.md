@@ -549,3 +549,15 @@ Run 42: **5,303 offers**, single run, **5 failures** (`NameResolutionError`), **
 **`flight_class` leak persists — same `$3,977 YTO→NYC AC "economy"` fare reappeared, identical value to Jun 16.** Confirms it's a stable mislabeled-premium route fare, not a transient. No new info beyond the June 16 finding (flight_class constant = 0 across the whole DB; ~2% of rows are economy-labeled >$1,500); just verifies day-to-day consistency. Still deferred to modeling-time handling.
 
 **Volume dipped slightly, coverage broadest yet.** Line: 5,361 → 5,360 → 5,404 → **5,303** (−101). Route coverage up to **283**, the widest on record. DNS trickle quiet at 5.
+
+---
+
+## June 18, 2026
+
+Run 43: **5,250 offers**, single run, **0 failures**, **4,200 api_calls**, ~**9m 42s** runtime (13:00 → 13:09 UTC). Cumulative **181,686 rows** (176,436 + 5,250) — crossed 180k. Audit clean on the six modeling-critical fields — 0 NULLs, price $53–$3,977, trip 0–57d, lead 0–196d, **284 distinct routes** (new high). err.log unchanged since May 29; backup self-refreshed to 181,686, matching the live DB exactly.
+
+**Runtime↔failures link now confirmed.** Second ~10-minute run (Jun 14 was the first), and both fast days had **0 failures**. Slow days (Jun 17 ~7h) carry the retry stalls; fast days run clean straight through. So the extreme runtime swing (10 min ↔ 7h this week) tracks upstream API health, not the collector — and data is complete and audit-clean at both ends. Runtime is officially a non-signal for data quality.
+
+**`flight_class` leak persists — `$3,977 YTO→NYC AC "economy"` for the third straight day**, identical value. Stable mislabeled-premium fare; no new info beyond the June 16 finding (flight_class constant = 0 DB-wide). Deferred to modeling-time handling.
+
+**Volume drifting gently down, coverage still widening.** Line: 5,404 → 5,303 → **5,250**. Mild dip, within normal range; route coverage up to **284** (new high), so it's fewer offers per route, not lost routes. DNS clean (0 failures).
