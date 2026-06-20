@@ -561,3 +561,15 @@ Run 43: **5,250 offers**, single run, **0 failures**, **4,200 api_calls**, ~**9m
 **`flight_class` leak persists — `$3,977 YTO→NYC AC "economy"` for the third straight day**, identical value. Stable mislabeled-premium fare; no new info beyond the June 16 finding (flight_class constant = 0 DB-wide). Deferred to modeling-time handling.
 
 **Volume drifting gently down, coverage still widening.** Line: 5,404 → 5,303 → **5,250**. Mild dip, within normal range; route coverage up to **284** (new high), so it's fewer offers per route, not lost routes. DNS clean (0 failures).
+
+---
+
+## June 19, 2026
+
+Run 44: **5,253 offers**, single run, **5 failures** (`NameResolutionError`), **4,200 api_calls**, ~**8h 29m** runtime (13:01 → 21:30 UTC) — longest on record. Cumulative **186,939 rows** (181,686 + 5,253) — crossed 185k. Audit clean on the six modeling-critical fields — 0 NULLs, price **$53–$2,199**, trip 0–58d, lead 0–195d, 282 distinct routes. err.log unchanged since May 29; backup self-refreshed to 186,939, matching the live DB exactly.
+
+**Slow-API day, longest runtime yet (~8.5h), 5 failures — fits the confirmed pattern.** Slow days carry retry stalls; data complete and audit-clean regardless. Week's runtime range now 10 min ↔ 8.5h, all upstream API latency, no collector signal.
+
+**`flight_class` leak fare absent today — the leak is intermittent, not constant.** Top price is a clean **$2,199 (NYC→IST, AF)**; all top-5 fares are normal long-haul range, no YTO→NYC $3,977 (present Jun 16–18, gone today). The field is still dead (flight_class constant = 0 DB-wide) — today simply didn't surface an extreme outlier. Refines the June 16 finding: the mislabeled-premium fares come and go on a route rather than appearing every day.
+
+**Volume flat, holding steady.** Line: 5,404 → 5,303 → 5,250 → **5,253**. Settled around ~5,250 after the gentle dip; route coverage 282, normal.
