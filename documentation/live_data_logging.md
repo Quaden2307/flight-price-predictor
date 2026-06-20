@@ -573,3 +573,15 @@ Run 44: **5,253 offers**, single run, **5 failures** (`NameResolutionError`), **
 **`flight_class` leak fare absent today — the leak is intermittent, not constant.** Top price is a clean **$2,199 (NYC→IST, AF)**; all top-5 fares are normal long-haul range, no YTO→NYC $3,977 (present Jun 16–18, gone today). The field is still dead (flight_class constant = 0 DB-wide) — today simply didn't surface an extreme outlier. Refines the June 16 finding: the mislabeled-premium fares come and go on a route rather than appearing every day.
 
 **Volume flat, holding steady.** Line: 5,404 → 5,303 → 5,250 → **5,253**. Settled around ~5,250 after the gentle dip; route coverage 282, normal.
+
+---
+
+## June 20, 2026
+
+Run 45: **5,146 offers**, single run, **0 failures**, **4,200 api_calls**, ~**5h 36m** runtime (13:15 → 18:51 UTC). Cumulative **192,085 rows** (186,939 + 5,146) — crossed 190k. Audit clean on the six modeling-critical fields — 0 NULLs, price **$53–$2,199**, trip 0–58d, lead 0–194d, 278 distinct routes. err.log unchanged since May 29; backup self-refreshed to 192,085, matching the live DB exactly.
+
+**Runtime↔failures link is loose, not strict.** Today: moderate ~5.5h runtime but **0 failures** — clean days aren't always fast (Jun 14/18 were ~10 min at 0 failures; today is 0 failures at 5.5h). Confirms runtime is upstream API latency only *loosely* coupled to failure count — not a reliable signal in either direction. Data complete and audit-clean regardless.
+
+**`flight_class` leak fare absent 2nd straight day.** Top price clean at $2,199 (NYC→IST, AF); YTO→NYC appears only at a normal $2,078 (PD), not the $3,977 economy outlier. Reinforces that the mislabeled-premium fare is intermittent. Field still dead (flight_class constant = 0 DB-wide).
+
+**Volume downtrend continuing (mild), coverage dipped too.** Line: 5,303 → 5,250 → 5,253 → **5,146**, and route coverage down to **278** (from 282–284). First day this week that offers *and* coverage both fell together. Still well within normal range (~4,500–5,000 pre-expansion), so not a concern yet — worth watching if the slide continues.
