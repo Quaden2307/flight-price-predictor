@@ -585,3 +585,15 @@ Run 45: **5,146 offers**, single run, **0 failures**, **4,200 api_calls**, ~**5h
 **`flight_class` leak fare absent 2nd straight day.** Top price clean at $2,199 (NYC→IST, AF); YTO→NYC appears only at a normal $2,078 (PD), not the $3,977 economy outlier. Reinforces that the mislabeled-premium fare is intermittent. Field still dead (flight_class constant = 0 DB-wide).
 
 **Volume downtrend continuing (mild), coverage dipped too.** Line: 5,303 → 5,250 → 5,253 → **5,146**, and route coverage down to **278** (from 282–284). First day this week that offers *and* coverage both fell together. Still well within normal range (~4,500–5,000 pre-expansion), so not a concern yet — worth watching if the slide continues.
+
+---
+
+## June 21, 2026
+
+Run 46: **5,294 offers**, single run, **0 failures**, **4,200 api_calls**, ~**9m 59s** runtime (13:00 → 13:10 UTC). Cumulative **197,379 rows** (192,085 + 5,294) — approaching 200k. Audit clean on the six modeling-critical fields — 0 NULLs, price **$53–$2,306**, trip 0–58d, lead 0–193d, 280 distinct routes. err.log unchanged since May 29; backup self-refreshed to 197,379, matching the live DB exactly.
+
+**Yesterday's volume/coverage dip was noise — resolved.** Offers rebounded to 5,294 (from 5,146) and coverage back to 280 (from 278). No downtrend; the "watch if the slide continues" flag is cleared. Volume continues to vary day-to-day around ~5,250.
+
+**Third fast day (~10 min), 0 failures** — consistent with the fast-day-is-clean pattern (Jun 14/18/21). Runtime is upstream API latency, nothing new.
+
+**`flight_class` leak fare absent 3rd straight day.** Top price clean at $2,306 (NYC→IST, TK) — normal long-haul, no $3,977 outlier. Pattern is now clear: present Jun 16–18, absent Jun 19–21 — the mislabeled-premium fare comes and goes on the route. Field still dead (flight_class constant = 0 DB-wide), deferred to modeling-time handling.
