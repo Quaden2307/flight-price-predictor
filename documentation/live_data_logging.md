@@ -597,3 +597,17 @@ Run 46: **5,294 offers**, single run, **0 failures**, **4,200 api_calls**, ~**9m
 **Third fast day (~10 min), 0 failures** — consistent with the fast-day-is-clean pattern (Jun 14/18/21). Runtime is upstream API latency, nothing new.
 
 **`flight_class` leak fare absent 3rd straight day.** Top price clean at $2,306 (NYC→IST, TK) — normal long-haul, no $3,977 outlier. Pattern is now clear: present Jun 16–18, absent Jun 19–21 — the mislabeled-premium fare comes and goes on the route. Field still dead (flight_class constant = 0 DB-wide), deferred to modeling-time handling.
+
+---
+
+## June 22, 2026
+
+Run 47: **5,211 offers**, single run, **3 failures** (`NameResolutionError`), **4,200 api_calls**, ~**7h 40m** runtime (13:13 → 20:53 UTC). Cumulative **202,590 rows** — **crossed 200k** 🎯. Audit clean on the six modeling-critical fields — 0 NULLs, price **$53–$2,306**, trip 0–58d, lead 0–192d, 276 distinct routes. err.log unchanged since May 29; backup self-refreshed to 202,590, matching the live DB exactly.
+
+**Milestone: 200k rows.** Was ~155k on Jun 13 → ~47k added in 9 days at ~5,250/day. Collector remains fully hands-off during the learning-project pause.
+
+**Slow-API day (~7.5h), 3 failures** — fits the confirmed pattern (slow runtime = upstream latency + light retry stalls). Data complete and audit-clean regardless.
+
+**`flight_class` leak fare absent 4th straight day.** Top price clean at $2,306 (NYC→IST, TK); YTO→NYC only at a normal $2,078. Holds present-Jun16–18 / absent-since. Field still dead (flight_class constant = 0 DB-wide).
+
+**Coverage edged down, volume steady.** Offers 5,211 (normal, ~5,200 band). Route count: 282 → 284 → 278 → 280 → 276 over the week — drifting a bit more than the offer count, but no structural loss. Minor wobble worth a passing note, not a concern.
