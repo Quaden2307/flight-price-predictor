@@ -611,3 +611,15 @@ Run 47: **5,211 offers**, single run, **3 failures** (`NameResolutionError`), **
 **`flight_class` leak fare absent 4th straight day.** Top price clean at $2,306 (NYC→IST, TK); YTO→NYC only at a normal $2,078. Holds present-Jun16–18 / absent-since. Field still dead (flight_class constant = 0 DB-wide).
 
 **Coverage edged down, volume steady.** Offers 5,211 (normal, ~5,200 band). Route count: 282 → 284 → 278 → 280 → 276 over the week — drifting a bit more than the offer count, but no structural loss. Minor wobble worth a passing note, not a concern.
+
+---
+
+## June 23, 2026
+
+Run 48: **5,054 offers**, single run, **0 failures**, **4,200 api_calls**, ~**9m 57s** runtime (13:00 → 13:10 UTC). Cumulative **207,644 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, price **$53–$2,306**, trip 0–58d, lead 0–191d, 279 distinct routes. err.log unchanged since May 29; backup self-refreshed to 207,644, matching the live DB exactly.
+
+**Fourth fast/clean day** (~10 min, 0 failures) — consistent, nothing new.
+
+**`flight_class` leak fare absent 5th straight day** (top $2,306 NYC→IST, normal). Absent since Jun 19. Field still dead (flight_class constant = 0 DB-wide).
+
+**⚠️ Offer count now a soft downtrend — flagging as a trend to confirm, not daily noise.** Week's line: 5,404 → 5,303 → 5,250 → 5,253 → 5,146 → 5,294 → 5,211 → **5,054** (lowest in the stretch, ~−6% off the Jun 16 peak). Route coverage is healthy (279, ~280 band), so this is **offers-per-route declining, not routes dropping out**. Still comfortably within normal range (~4,500–5,000 pre-expansion) and gradual, so not a fault — most likely the upstream API returning fewer offers per query (market/seasonal). But it's now ~8 days of gentle slide rather than noise; track whether it continues below ~5,000.
