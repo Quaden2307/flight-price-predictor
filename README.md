@@ -22,7 +22,7 @@ This public repo covers the data pipeline, feature engineering, and EDA.
 | EDA — Phase 1 (domestic US) | Complete |
 | EDA — Phase 2 (live international) | Complete |
 | Feature engineering (`src/features.py`) | In progress |
-| Train/val/test split (`src/split.py`) | Planned |
+| Train/val/test split (`src/split.py`) | Complete |
 | XGBoost model training | In progress |
 | Prediction API / frontend | Planned |
 
