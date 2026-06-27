@@ -653,3 +653,15 @@ Run 51: **4,938 offers**, single run, **8 failures** (`NameResolutionError`), **
 **Downtrend resumed below 5,000 — Jun 24's uptick was the noise, not the trend.** Line: 5,054 → 5,078 → **4,934 → 4,938**. The single Jun 24 up-day didn't hold; offers are now two straight days under 5k. Route coverage still healthy (283–285), so it's offers-per-route softening, not routes dropping. Gradual, not a fault, but the slide is real — keep watching.
 
 **`flight_class` leak fare absent since Jun 19** (now 7th straight day). Today's top is $2,437 SFO→SIN (economy label, but a ~17h ultra-long-haul, so plausible — not the $3,977-type outlier); YTO→NYC only at a normal $2,151. Field still dead (flight_class constant = 0 DB-wide).
+
+---
+
+## June 27, 2026
+
+Run 52: **4,968 offers**, single run, **0 failures**, **4,200 api_calls**, ~**9m 46s** runtime (13:00 → 13:09 UTC). Cumulative **227,562 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, price **$57–$2,437**, trip 0–60d, lead 0–187d, 283 distinct routes.
+
+**Backup infrastructure healthy — Jun 26 disk fix held.** err.log unchanged (still 5,179 bytes / Jun 25, no new backup error this morning); disk **37 GB free / 81%**; backup current (live == backup, 227,562 rows). The `~/.cache/pyserini` cleanup gave the morning backup wide margin — issue resolved, confirmed stable.
+
+**Offer count stabilized just under 5k — slide plateaued, not continuing.** Line: 5,078 → 4,934 → 4,938 → **4,968**. After crossing below 5,000 on Jun 25, offers have settled in a ~4,950 band rather than falling further — reads as a settled lower level, not a developing fault. Coverage steady at 283 routes.
+
+**`flight_class` leak fare absent 8th straight day** — top $2,437 SFO→SIN (economy label, ~17h ultra-long-haul, plausible), no $3,977-type outlier. Field still dead (flight_class constant = 0 DB-wide).
