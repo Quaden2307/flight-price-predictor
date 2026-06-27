@@ -13,3 +13,5 @@ documentation/architecture.svg
 documentation/considerations.md
 documentation/modeling_roadmap.md
 documentation/pre_training_audit_2026-06-11.md
+# tooling config (local only)
+.codex/

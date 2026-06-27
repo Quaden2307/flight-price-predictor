@@ -633,3 +633,23 @@ Run 49: **5,078 offers**, single run, **0 failures**, 4,200 api_calls, ~**10m** 
 **Downtrend flag (from June 23) did not continue — slight uptick.** 5,054 → **5,078**. The week's gentle slide paused rather than breaking below ~5,000. Still watching, but one up-day argues it's drift/noise within the ~5k band, not a developing fault.
 
 **Leak fare absent 6th straight day** (top $2,306, NYC→IST, normal). trip-duration max ticked to 60d — the full 0–60 collection window is now represented. Otherwise a clean, fast single run; nothing new.
+
+---
+
+## June 25, 2026
+
+Run 50: **4,934 offers**, single run, **0 failures** (collection-side), **4,200 api_calls**, ~**4h 17m** runtime (13:04 → 17:21 UTC). Cumulative **217,656 rows**. Audit clean — 0 NULLs across the six modeling-critical fields, 285 distinct routes. Collected data is complete and valid.
+
+**⚠️ Backup FAILED silently (discovered Jun 26).** First write to `collector.err.log` since May 29: the post-collection iCloud backup raised `OSError: [Errno 28] No space left on device` writing `flights.db.tmp`. `failures=0` because that counter only tracks API calls — the backup step sits outside it, so a clean-looking run still left the iCloud copy **one day stale**. Live DB was fine; only the off-site backup lagged. Root cause was disk-full, not the collector (see Jun 26). No `.tmp` left behind.
+
+---
+
+## June 26, 2026
+
+Run 51: **4,938 offers**, single run, **8 failures** (`NameResolutionError`), **4,200 api_calls**, ~**6h 34m** runtime (13:06 → 19:40 UTC). Cumulative **222,594 rows** — crossed 220k. Audit clean on the six modeling-critical fields — 0 NULLs, price **$53–$2,437**, trip 0–60d, lead 0–188d, 283 distinct routes. Backup self-recovered today (live == backup, 222,594 rows / 333,172,736 bytes, mtime Jun 26 12:40) — June 26's snapshot caught up June 25's rows, so no data lost, just a ~24h backup gap.
+
+**🔴 Root cause of the Jun 25 backup failure: disk at 97% (~635 MB free).** Live DB is 333 MB; the atomic temp+rename backup needs ~333 MB transient free space every morning, so at ~635 MB free it was a coin-flip — lost Jun 25, squeaked through Jun 26. **Resolved same day:** cleared `~/.cache/pyserini` (34 GB of regenerable prebuilt search indexes) → free space **635 MB → 35 GB, 97% → 81%**. Backup risk gone with wide margin. (The other 6 err.log entries — 5× `Resource deadlock`, 1× `python` not found — are all old project-path / pre-fix code, historical, already resolved.)
+
+**Downtrend resumed below 5,000 — Jun 24's uptick was the noise, not the trend.** Line: 5,054 → 5,078 → **4,934 → 4,938**. The single Jun 24 up-day didn't hold; offers are now two straight days under 5k. Route coverage still healthy (283–285), so it's offers-per-route softening, not routes dropping. Gradual, not a fault, but the slide is real — keep watching.
+
+**`flight_class` leak fare absent since Jun 19** (now 7th straight day). Today's top is $2,437 SFO→SIN (economy label, but a ~17h ultra-long-haul, so plausible — not the $3,977-type outlier); YTO→NYC only at a normal $2,151. Field still dead (flight_class constant = 0 DB-wide).
