@@ -19,18 +19,22 @@ from sklearn.metrics import mean_absolute_percentage_error
 
 from src.split import split_offers
 from src.features import build_features
+from src.config import SNAPSHOT_DATE
 
 
 def load_raw():
     """
     Open data/flights.db and read offers, airports, airlines into DataFrames.
+    `offers` is frozen to the SNAPSHOT_DATE capture window (see src/config.py).
     Return (offers, airports, airlines).
     """
-    # TODO: sqlite3.connect("data/flights.db")
-    # TODO: pd.read_sql("SELECT * FROM offers", conn) for each table
-    
     conn = sqlite3.connect("data/flights.db")
-    offers = pd.read_sql("SELECT * FROM offers", conn)
+    # Snapshot freeze: only offers captured on or before SNAPSHOT_DATE, so the
+    # training set doesn't grow between runs. Reference tables aren't time-keyed.
+    offers = pd.read_sql(
+        "SELECT * FROM offers WHERE substr(captured_at, 1, 10) <= ?",
+        conn, params=[SNAPSHOT_DATE],
+    )
     airports = pd.read_sql("SELECT * FROM airports", conn)
     airlines = pd.read_sql("SELECT * FROM airlines", conn)
     return offers, airports, airlines

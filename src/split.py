@@ -10,10 +10,14 @@ parameters are computed on train only, then reused for val/test/inference.
 """
 import pandas as pd
 
+from src.config import VAL_CUTOFF, TEST_CUTOFF
+
 def split_offers(offers):
     departure = pd.to_datetime(offers["departure_at"].str[:19])
-    val_cutoff = departure.quantile(0.70)
-    test_cutoff = departure.quantile(0.85)
+    # Frozen calendar cutoffs (src/config.py) instead of live quantiles, so the
+    # split boundaries don't drift as the DB grows.
+    val_cutoff = pd.Timestamp(VAL_CUTOFF)
+    test_cutoff = pd.Timestamp(TEST_CUTOFF)
 
     train = offers[departure < val_cutoff]
     val = offers[(departure >= val_cutoff) & (departure < test_cutoff)]
