@@ -665,3 +665,17 @@ Run 52: **4,968 offers**, single run, **0 failures**, **4,200 api_calls**, ~**9m
 **Offer count stabilized just under 5k — slide plateaued, not continuing.** Line: 5,078 → 4,934 → 4,938 → **4,968**. After crossing below 5,000 on Jun 25, offers have settled in a ~4,950 band rather than falling further — reads as a settled lower level, not a developing fault. Coverage steady at 283 routes.
 
 **`flight_class` leak fare absent 8th straight day** — top $2,437 SFO→SIN (economy label, ~17h ultra-long-haul, plausible), no $3,977-type outlier. Field still dead (flight_class constant = 0 DB-wide).
+
+---
+
+## June 28, 2026
+
+Run 53: **4,719 offers**, single run, **0 failures**, **4,200 api_calls**, ~**5h 44m** runtime (13:05 → 18:49 UTC). Cumulative **232,281 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, price **$57–$2,437**, trip 0–60d, lead 0–186d, **273 distinct routes**. Infra healthy — err.log unchanged (Jun 25), disk 32 GB free / 83%, backup current (232,281).
+
+**Slide resumed — Jun 27 "plateau" call was premature.** Offers dropped to **4,719** (new stretch low), and for the first time **route coverage fell with it: 273 vs the usual ~280–285**.
+- Offers: 5,078 → 4,934 → 4,938 → 4,968 → **4,719**
+- Routes: 285 → 285 → 283 → 283 → **273**
+
+So ~10–12 queried routes returned **zero** offers today, on top of fewer offers per route. Still not a collector fault (clean run, 0 failures, audit passes, infra healthy) → upstream is returning less, both thinner per-route and fully empty on some routes. Reads as market/seasonal supply tightening, not a bug — but offers *and* coverage now moving down together makes it a real trend, not noise. **Escalating the watch:** if route count keeps falling, some routes may be going persistently empty, which would matter for modeling coverage. Next step if it continues: diff today's empty routes against the standing query set.
+
+**`flight_class` leak fare absent 9th straight day** — top $2,437 SFO→SIN (economy, ~17h ultra-long-haul, plausible); SFO→SIN took 3 of the top 5 today, all plausible long-haul. Field still dead (flight_class constant = 0 DB-wide).
