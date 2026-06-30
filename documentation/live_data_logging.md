@@ -679,3 +679,20 @@ Run 53: **4,719 offers**, single run, **0 failures**, **4,200 api_calls**, ~**5h
 So ~10–12 queried routes returned **zero** offers today, on top of fewer offers per route. Still not a collector fault (clean run, 0 failures, audit passes, infra healthy) → upstream is returning less, both thinner per-route and fully empty on some routes. Reads as market/seasonal supply tightening, not a bug — but offers *and* coverage now moving down together makes it a real trend, not noise. **Escalating the watch:** if route count keeps falling, some routes may be going persistently empty, which would matter for modeling coverage. Next step if it continues: diff today's empty routes against the standing query set.
 
 **`flight_class` leak fare absent 9th straight day** — top $2,437 SFO→SIN (economy, ~17h ultra-long-haul, plausible); SFO→SIN took 3 of the top 5 today, all plausible long-haul. Field still dead (flight_class constant = 0 DB-wide).
+
+---
+
+## June 29, 2026
+
+Run 54: **4,800 offers**, single run, **3 failures** (`NameResolutionError`), **4,200 api_calls**, ~**2h 56m** runtime (13:06 → 16:01 UTC). Cumulative **237,081 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, price **$56–$2,437**, trip 0–60d, lead 0–185d, 279 distinct routes. Infra healthy — err.log unchanged (Jun 25), disk 31 GB free / 84%, backup current (237,081).
+
+**Offers and routes both ticked back up** (4,719 → 4,800, 273 → 279) — yesterday's dip didn't deepen; wobbling in the ~4,800 band.
+
+**Empty-route diff resolves the Jun 28 coverage worry — it's benign thin-route churn, not a fault.** Standing query set = **302 routes** (union seen Jun 22–28); ~273–285 return offers daily, so ~17–29 are empty on any day — a stable flicker, not a growing hole (29 empty Jun 28 → **25 today**). The routes that go empty are the **long tail of low-availability secondary city pairs**, not trunk routes:
+- Small-airport heavy: 6× ONT (Ontario CA: ONT-LON/MEX/SEL/TPE/GDL/ORL), plus SJC, LGB, OAK, YMQ, YVR routes.
+- Thin domestic short-hauls: ATL-CLT, ATL-RDU, CHI-RDU, SFO-CLT, SFO-NYC.
+- **Every major trunk route present** (NYC-LON, SFO-TYO, NYC-IST, SFO-SIN, etc.).
+
+So the route-count movement is expected churn from a fixed query set that includes thin secondary routes — **de-escalates the Jun 28 flag**. The mid-June offer-count softening is real but gradual and upstream (supply), not a collector problem. Next-if-needed: check whether the *same* thin routes go empty repeatedly (chronic low availability) vs rotating — but not worth acting on while trunk coverage is intact.
+
+**`flight_class` leak fare absent 10th straight day** — top $2,437 SFO→SIN (plausible long-haul). Field still dead (flight_class constant = 0 DB-wide).
