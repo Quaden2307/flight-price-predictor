@@ -696,3 +696,17 @@ Run 54: **4,800 offers**, single run, **3 failures** (`NameResolutionError`), **
 So the route-count movement is expected churn from a fixed query set that includes thin secondary routes — **de-escalates the Jun 28 flag**. The mid-June offer-count softening is real but gradual and upstream (supply), not a collector problem. Next-if-needed: check whether the *same* thin routes go empty repeatedly (chronic low availability) vs rotating — but not worth acting on while trunk coverage is intact.
 
 **`flight_class` leak fare absent 10th straight day** — top $2,437 SFO→SIN (plausible long-haul). Field still dead (flight_class constant = 0 DB-wide).
+
+---
+
+## June 30, 2026
+
+Run 55: **4,701 offers**, single run, **2 failures** (`NameResolutionError`), **4,200 api_calls**, ~**3h 27m** runtime (13:00 → 16:27 UTC). Cumulative **241,782 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, price **$56–$2,437**, trip 0–60d, lead 0–184d, 274 distinct routes. Infra healthy — err.log unchanged (Jun 25), disk 31 GB free / 84%, backup current (241,782).
+
+**Routine day, nothing to flag.** Offers 4,701 / routes 274 — both at the low end of the recent band but squarely within the characterized churn envelope (offers ~4,700–4,800, routes ~273–285). Per the Jun 29 finding, a route wobble in this range is thin secondary-airport tail flicker, not a fault — not re-flagging. Offer count has settled around ~4,750 for the back third of June. Leak fare absent 11th straight day (top $2,437 SFO→SIN).
+
+### June 2026 wrap-up
+- **Volume:** ~155k rows (Jun 13) → **241,782** (Jun 30). Daily offers ran a slow arc: post-expansion highs ~5,300–5,400 (mid-June) settling to a ~4,750 band by month-end — gradual upstream supply softening, not a collector issue.
+- **Reliability:** collector fully hands-off the whole month (learning-project pause). DNS `NameResolutionError` trickle stayed low (0–10/day); runtime swung wildly (10 min ↔ 8.5h) purely on upstream API latency — never a data-quality signal.
+- **Two real incidents, both resolved:** (1) **Disk-full → silent iCloud backup failure** Jun 25 (`ENOSPC`); root-caused to 97% disk, fixed Jun 26 by clearing 34 GB `~/.cache/pyserini` (→ 35 GB free). (2) **`flight_class` discovered dead** (constant 0 DB-wide) Jun 16 via a $3,977 mislabeled-premium fare — deferred to modeling-time handling, not a collector fix.
+- **Data quality:** every day passed the six-field NULL audit; backup matched live DB on every successful run.
