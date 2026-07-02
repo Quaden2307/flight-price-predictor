@@ -710,3 +710,13 @@ Run 55: **4,701 offers**, single run, **2 failures** (`NameResolutionError`), **
 - **Reliability:** collector fully hands-off the whole month (learning-project pause). DNS `NameResolutionError` trickle stayed low (0–10/day); runtime swung wildly (10 min ↔ 8.5h) purely on upstream API latency — never a data-quality signal.
 - **Two real incidents, both resolved:** (1) **Disk-full → silent iCloud backup failure** Jun 25 (`ENOSPC`); root-caused to 97% disk, fixed Jun 26 by clearing 34 GB `~/.cache/pyserini` (→ 35 GB free). (2) **`flight_class` discovered dead** (constant 0 DB-wide) Jun 16 via a $3,977 mislabeled-premium fare — deferred to modeling-time handling, not a collector fix.
 - **Data quality:** every day passed the six-field NULL audit; backup matched live DB on every successful run.
+
+---
+
+## July 1, 2026
+
+Run 56: **4,705 offers**, single run, **0 failures**, **4,200 api_calls**, ~**7h 29m** runtime (13:01 → 20:30 UTC). Cumulative **246,487 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, price **$46–$2,437**, trip 0–60d, 275 distinct routes. Infra healthy — err.log unchanged (Jun 25), disk 30 GB free / 84%, backup current (246,487).
+
+**Notable: max `lead_time_days` jumped 184 → 212 at the month boundary.** All June it decreased ~1/day (200 on Jun 14 → 184 on Jun 30) — the signature of querying a **fixed set of future target dates** getting closer each day. Today it jumped **+28**, meaning the collector's date-generation rolled forward and added a new batch of further-out departure dates. Min lead still 0, so the window now spans **0–212 days** (wider forward coverage). Almost certainly benign — query window advancing into July, not a fault — and it *widens* the `lead_time_days` range for modeling. But it's a real distributional shift in a trained-on feature: **June data tops out ~200d lead, July reaches further.** Exact date-gen behavior not yet confirmed against code (offered, deferred).
+
+**Otherwise routine.** Offers 4,705 / routes 275 — within the established churn band. Min price $46 (new low, just a cheap short-haul — not an outlier concern). Runtime ~7.5h with 0 failures (loose runtime↔failure coupling again — upstream latency). Leak fare absent 12th straight day (top $2,437 SFO→SIN); field still dead (flight_class constant = 0 DB-wide).
