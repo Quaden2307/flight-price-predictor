@@ -30,10 +30,11 @@ The same model scores very differently depending on the split. **Never compare a
 | # | Date | Commit | Split / regime | Rows (tr/val) | Features (tier) | Model | Train | Val | Val CI | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 7 | 2026-06-30 | 95363c1 | chronological, **FROZEN** (cutoffs Aug 6 / Sep 12; snapshot 2026-06-28) | 162241/34972 | baseline-v1 (Tier-A+B) | LR (defaults) | 0.169 | 0.167 | — | **Re-baseline on the frozen split** (freeze in `config.py` / `split.py` / `train_lr.py`). ≈ unchanged from the pre-freeze 0.166 → the freeze stabilized the split **without distorting** it. train ≈ val → no overfit, LR generalizes cleanly. NOTE: still the *chronological + Tier-B* anchor; the honest date-grouped number arrives in the next runs. |
+| 8 | 2026-07-02 | 5c4b621 +dirty | same as #7 | 162241/34972 | baseline-v1 (Tier-A+B) | LR (defaults) | 0.169 | 0.167 | **0.162–0.171** | **Measurement-only run: itinerary-clustered bootstrap CI** (new `src/metrics.py`; `itinerary_id` label in `features.py`, wired in `train_lr.py`). Train/val **identical to #7** → confirms nothing leaked into the model. 1,000 draws over 5,860 val itineraries (~6 rows each), seed=0, deterministic. Half-width **±0.0045** ≈ the deep-dive's predicted ±0.005 → **tie threshold now measured, not assumed: deltas < ~0.005 are noise.** |
 
 ## Up next (the plan — one variable per run)
 - [x] **#7 — freeze split + re-baseline** (this run).
-- [ ] **#8 — itinerary-clustered bootstrap CI** in `evaluate()` → establishes the ±0.005 band / 0.006 tie threshold.
+- [x] **#8 — itinerary-clustered bootstrap CI** → measured: 95% CI 0.162–0.171 (±0.0045 band; deltas < ~0.005 are ties).
 - [ ] **#9 — date-grouped split**, adopt as the model-selection regime (report flight-grouped as the ceiling).
 - [ ] **#10 — Tier-A-only run** on the date-grouped gate → the decisive deployable number (expect ~0.14–0.16).
 - *Later:* OOF + thin-route-smoothed route encoding · sin/cos month · CatBoost / native-cat XGB · MdAPE + log-RMSE + horizon bands · prediction intervals + cold-start confidence flag.

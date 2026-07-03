@@ -104,12 +104,21 @@ def build_features(offers_df, airports_df, airlines_df, route_means=None):
     )
     df = df.merge(route_means_df, on=["origin", "destination"], how="left")
 
-    # 10. Drop rows with NaN in critical columns (log_price, distance_km, lead_time_days)
+    # 10. itinerary_id: which physical round-trip this row is a capture of.
+    #     A grouping LABEL for clustered evaluation (metrics.py), NOT a model
+    #     feature — prepare_xy drops it before X is built.
+    df["itinerary_id"] = (
+        df["origin"] + "|" + df["destination"] + "|"
+        + df["departure_at"] + "|" + df["return_at"]
+    )
+
+    # 11. Drop rows with NaN in critical columns (log_price, distance_km, lead_time_days)
     df = df.dropna(subset=["log_price", "distance_km", "lead_time_days", "route_mean_log_price"])
 
-    # 11. Select final columns: target + features
+    # 12. Select final columns: target + features (+ itinerary_id label)
     FINAL_COLUMNS = [
         "log_price",
+        "itinerary_id",
         "distance_km",
         "lead_time_days",
         "day_of_week",

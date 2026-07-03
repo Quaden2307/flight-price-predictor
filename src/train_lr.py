@@ -19,6 +19,7 @@ from sklearn.metrics import mean_absolute_percentage_error
 
 from src.split import split_offers
 from src.features import build_features
+from src.metrics import bootstrap_mape_ci
 from src.config import SNAPSHOT_DATE
 
 
@@ -62,8 +63,10 @@ def prepare_xy(df, train_columns=None):
     """
     # 1. Separate target from features. log_price is what we're predicting,
     #    so it can't be in X — that'd be target leakage (trivial perfect fit).
+    #    itinerary_id is a grouping label for the bootstrap CI, not a feature,
+    #    so it goes too (before get_dummies, or it'd explode into ~6k columns).
     y = df["log_price"]
-    X = df.drop(columns=["log_price"])
+    X = df.drop(columns=["log_price", "itinerary_id"])
 
     # 2. Dummify string/categorical columns so LR can consume them.
     # Alt encoding for month_of_year (option B): sin/cos pair instead of dummies.
@@ -123,8 +126,15 @@ def main():
     train_mape = evaluate(model, X_train, y_train)
     val_mape   = evaluate(model, X_val,   y_val)
 
+    # 6. Error bar on the val score: itinerary-clustered bootstrap CI.
+    #    Same inverse-log transform as evaluate(); rows of X_val line up 1:1
+    #    with val_df, so val_df["itinerary_id"] labels the predictions.
+    dollar_pred = np.exp(model.predict(X_val))
+    dollar_true = np.exp(y_val)
+    ci_low, ci_high = bootstrap_mape_ci(dollar_true, dollar_pred, val_df["itinerary_id"])
+
     print(f"\ntrain MAPE: {train_mape:.3f}")
-    print(f"val MAPE:   {val_mape:.3f}")
+    print(f"val MAPE:   {val_mape:.3f}  (95% CI: {ci_low:.3f} – {ci_high:.3f})")
 
 
 if __name__ == "__main__":
