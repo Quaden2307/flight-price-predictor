@@ -720,3 +720,17 @@ Run 56: **4,705 offers**, single run, **0 failures**, **4,200 api_calls**, ~**7h
 **Notable: max `lead_time_days` jumped 184 → 212 at the month boundary.** All June it decreased ~1/day (200 on Jun 14 → 184 on Jun 30) — the signature of querying a **fixed set of future target dates** getting closer each day. Today it jumped **+28**, meaning the collector's date-generation rolled forward and added a new batch of further-out departure dates. Min lead still 0, so the window now spans **0–212 days** (wider forward coverage). Almost certainly benign — query window advancing into July, not a fault — and it *widens* the `lead_time_days` range for modeling. But it's a real distributional shift in a trained-on feature: **June data tops out ~200d lead, July reaches further.** Exact date-gen behavior not yet confirmed against code (offered, deferred).
 
 **Otherwise routine.** Offers 4,705 / routes 275 — within the established churn band. Min price $46 (new low, just a cheap short-haul — not an outlier concern). Runtime ~7.5h with 0 failures (loose runtime↔failure coupling again — upstream latency). Leak fare absent 12th straight day (top $2,437 SFO→SIN); field still dead (flight_class constant = 0 DB-wide).
+
+---
+
+## July 2, 2026
+
+Run 57: **4,604 offers**, single run, **38 failures** (`NameResolutionError`), **4,200 api_calls**, ~**15h 21m** runtime (13:14 Jul 2 → 04:35 Jul 3 UTC). Cumulative **251,091 rows** — crossed 250k. Audit clean on the six modeling-critical fields — 0 NULLs, trip 0–60d, lead 0–211d, 274 distinct routes. Infra healthy — err.log unchanged (Jun 25), disk 30 GB free / 84%, backup current (251,091). Collected data complete and valid; today's issues are upstream/operational, not data corruption.
+
+**⚠️ Rough-API day — 38 failures + ~15.5h runtime, same root cause.** Failures spiked to 38 (norm 0–3; largest since the Jun 10 DNS cluster) — still <1% of 4,200 calls, so not damaging, but a genuinely flaky upstream/network day. Those 38 `NameResolutionError`s trigger retry backoff, which is what stretched runtime to ~15.5h (previous max ~8.5h).
+
+**⚠️ Runtime is now the thing to watch — next-run collision risk.** Run finished 04:35, ~8.5h before the next 13:00 launch — no collision this time, but the margin is shrinking. A day ~8h worse would still be running when launchd fires the next run = double-run failure mode. **Threshold: sustained >20h runs → act** (retry caps / runtime ceiling). Not there yet.
+
+**`flight_class` leak fare is BACK — bigger, after 12 days absent (Jun 19–Jul 1).** YTO→NYC premium-mislabeled-as-economy resurfaced, taking the top 3 spots at **$4,612 / $4,557 / $4,063** (was $3,977 in mid-June). Same known dead-field issue, same route, values drift upward — confirms intermittent recurrence. Max price jumped $2,437 → $4,612 purely from this. Nothing new to fix; documented for modeling-time handling (flight_class constant = 0 DB-wide).
+
+**Volume/coverage normal:** offers 4,604, routes 274 — within the established band.
