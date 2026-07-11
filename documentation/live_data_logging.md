@@ -734,3 +734,31 @@ Run 57: **4,604 offers**, single run, **38 failures** (`NameResolutionError`), *
 **`flight_class` leak fare is BACK — bigger, after 12 days absent (Jun 19–Jul 1).** YTO→NYC premium-mislabeled-as-economy resurfaced, taking the top 3 spots at **$4,612 / $4,557 / $4,063** (was $3,977 in mid-June). Same known dead-field issue, same route, values drift upward — confirms intermittent recurrence. Max price jumped $2,437 → $4,612 purely from this. Nothing new to fix; documented for modeling-time handling (flight_class constant = 0 DB-wide).
 
 **Volume/coverage normal:** offers 4,604, routes 274 — within the established band.
+
+---
+
+## July 3–9, 2026 (retrospective — checked and logged July 10)
+
+First gap in daily checking since the log started; the week was reviewed in one pass on July 10. Runs 58–64 all fired on schedule — one per day, no missed days, 4,200 api_calls each. Volumes **4,366–4,645** / routes **271–283**, inside the established band all week. Cumulative rows at Jul 9 EOD: **282,431**.
+
+**Failures by day: 2 / 37 / 0 / 3 / 4 / 0 / 2.** ⚠️ Jul 4 spiked to **37** — second rough-API day in three days (Jul 2 was 38), with the same runtime coupling (~11.9h). Per-failure breakdown for Jul 4 not pulled from the log. Jul 9's two failures were both EWR→SFO Nov buckets (`NameResolutionError` after 3 attempts) — two month-buckets lost for that day only. Runtimes ranged 1.7h–11.9h; nothing near the >20h collision threshold set in the Jul 2 entry.
+
+**Data quality clean across the window:** full-table audit passed (0 NULLs in the six modeling-critical fields, ranges sane); **0 exact-key duplicates** in Jul 3–9 rows; per-day avg price $519–533; ~100 distinct airlines and a single currency every day. Max `lead_time_days` resumed its ~1/day decay (212 → 206), confirming Jul 1's +28 jump was a one-time window roll-forward. Max `trip_duration_days` stepped 60 → 56 on Jul 6 — query-window edge effect as departure months roll, not a fault.
+
+**Leak fare handoff:** YTO→NYC $4,612 held the top spot through Jul 4, then vanished. From Jul 5 onward the DB-wide max is **BOS→LON $4,753** — see Jul 10 entry; suspected new leak-fare instance.
+
+**Coverage tail:** 15 routes that had offers in late June returned zero offers all seven days (ONT-heavy plus SJC/LGB/OAK thin tail — e.g. ONT→SEL, ONT→TYO, SJC→NYC, LGB→HNL). Consistent with the known ~8% thin-tail churn; noted but not investigated further.
+
+---
+
+## July 10, 2026
+
+Run 65: **4,630 offers**, single run, **0 failures**, **4,200 api_calls**, ~**10m** runtime (13:00 → 13:10 UTC). Cumulative **287,061 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, trip 0–56d, lead 0–205d, 278 distinct routes. Infra healthy — err.log unchanged (Jun 25), backup current and byte-identical to live DB (446,935,040 bytes, written 13:10 UTC). Collector code unchanged (git clean).
+
+**Notable: fastest run on record (~10 minutes)** — the other extreme of the runtime story, vs 1.7–15.4h every other day this month. With code unchanged, this is upstream latency being unusually good, confirming runtime is purely an API-latency artifact in both directions. Because a 10-minute sweep raised a stale-cache concern, ran a staleness check: day-over-day identical-price rate on matched itineraries was **98.1%** for Jul 9→10 vs 97.9–98.4% for the two prior day-pairs — squarely baseline, no staleness signal. Gates (39), airlines (100), and price distribution (avg $515, min $50) all match recent days.
+
+**Leak fare moved to a new route.** BOS→LON has exactly **one** offer today: BA at **$4,753** (departing Jul 29, ~19d lead) — a single implausible-for-economy fare standing alone on its route, the same dead-field signature as YTO→NYC. First time the leak fare appears on a route other than YTO→NYC. Meanwhile YTO→NYC is back to normal: 73 offers, max $955. Same modeling-time handling applies (flight_class constant = 0 DB-wide).
+
+**⚠️ Disk drifting down again:** 26 GB free / 86%, from 30 GB / 84% on Jul 2 (~0.5 GB/day; DB + iCloud local copy grow ~40 MB/day each). Not urgent, but the Jun 25 ENOSPC incident started the same way — worth clearing space before it gets under ~10 GB.
+
+**Volume/coverage normal:** offers 4,630, routes 278 — within the established band.
