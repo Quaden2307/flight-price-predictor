@@ -762,3 +762,17 @@ Run 65: **4,630 offers**, single run, **0 failures**, **4,200 api_calls**, ~**10
 **⚠️ Disk drifting down again:** 26 GB free / 86%, from 30 GB / 84% on Jul 2 (~0.5 GB/day; DB + iCloud local copy grow ~40 MB/day each). Not urgent, but the Jun 25 ENOSPC incident started the same way — worth clearing space before it gets under ~10 GB.
 
 **Volume/coverage normal:** offers 4,630, routes 278 — within the established band.
+
+---
+
+## July 11, 2026
+
+Run 66: **4,634 offers**, single run, **0 failures**, **4,200 api_calls**, ~**10.5m** runtime (13:00 → 13:10 UTC). Cumulative **291,695 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, trip 0–56d, lead 0–204d, 275 distinct routes. Infra healthy — err.log unchanged (Jun 25), backup current and byte-identical to live DB (455,118,848 bytes).
+
+**Second consecutive ~10-minute run — fast now looks like the API's new normal, not a fluke.** Staleness check repeated: day-over-day identical-price rate Jul 10→11 was **98.4%**, at the top of but inside the 97.9–98.4% baseline — no cache signal. Distributions match recent days: 38 gates, 98 airlines, avg $517, min $53.
+
+**Leak fare persists:** BOS→LON BA **$4,753** still the DB-wide max, 7th straight day since appearing Jul 5. YTO→NYC remains normal.
+
+**⚠️ Disk drift accelerating:** 24 GB free / 87%, down 2 GB in one day — far more than DB + backup growth (~16 MB/day combined) explains, so something *outside* this project is consuming space. Watch item upgraded: identify the consumer before free space approaches the Jun 25 ENOSPC territory.
+
+**Volume/coverage normal:** offers 4,634, routes 275 — within the established band.
