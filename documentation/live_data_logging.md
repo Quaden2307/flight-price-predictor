@@ -776,3 +776,13 @@ Run 66: **4,634 offers**, single run, **0 failures**, **4,200 api_calls**, ~**10
 **⚠️ Disk drift accelerating:** 24 GB free / 87%, down 2 GB in one day — far more than DB + backup growth (~16 MB/day combined) explains, so something *outside* this project is consuming space. Watch item upgraded: identify the consumer before free space approaches the Jun 25 ENOSPC territory.
 
 **Volume/coverage normal:** offers 4,634, routes 275 — within the established band.
+
+---
+
+## July 12, 2026
+
+Run 67: **4,658 offers**, single run, **0 failures**, **4,200 api_calls**, ~**10m** runtime (13:00 → 13:10 UTC) — third consecutive ~10-minute run; fast is firmly the new normal. Cumulative **296,353 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, trip 0–56d, lead 0–203d. Staleness at baseline (**98.5%** identical-price Jul 11→12). Distributions normal: 39 gates, 98 airlines, avg $531, min $53. Infra healthy — err.log unchanged (Jun 25), backup current and byte-identical (463,433,728 bytes). Disk recovered to **25 GB free / 87%** (+1 GB) — yesterday's drift paused; keep watching.
+
+**Leak fare cleared after exactly 7 days.** BOS→LON BA $4,753 (Jul 5–11) vanished today — same intermittent pattern as YTO→NYC's earlier episodes. Max price back to a normal-looking **SFO→TYO UA $2,567**.
+
+**⚠️ Watch: MIA-BOG dropped to zero.** Route count dipped to **266**, just below the 271–283 band. Ten routes went silent vs Jul 11; nine are usual thin-tail churn (1–2 offers: Canadian secondaries, ONT, SJC). MIA-BOG is different — steady daily coverage for two weeks (4–26 offers/day, 12 on Jul 11), then zero today with **0 call failures** = API genuinely returned no offers (upstream gap, not collector). First sustained-loss candidate for a well-covered route if it stays empty; re-check next run.
