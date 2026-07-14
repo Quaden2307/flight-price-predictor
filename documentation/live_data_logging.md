@@ -786,3 +786,13 @@ Run 67: **4,658 offers**, single run, **0 failures**, **4,200 api_calls**, ~**10
 **Leak fare cleared after exactly 7 days.** BOS→LON BA $4,753 (Jul 5–11) vanished today — same intermittent pattern as YTO→NYC's earlier episodes. Max price back to a normal-looking **SFO→TYO UA $2,567**.
 
 **⚠️ Watch: MIA-BOG dropped to zero.** Route count dipped to **266**, just below the 271–283 band. Ten routes went silent vs Jul 11; nine are usual thin-tail churn (1–2 offers: Canadian secondaries, ONT, SJC). MIA-BOG is different — steady daily coverage for two weeks (4–26 offers/day, 12 on Jul 11), then zero today with **0 call failures** = API genuinely returned no offers (upstream gap, not collector). First sustained-loss candidate for a well-covered route if it stays empty; re-check next run.
+
+---
+
+## July 13, 2026
+
+Run 68: **4,604 offers**, single run, **28 failures**, **4,200 api_calls**, ~**9.5h** runtime (13:06 → 22:34 UTC). Cumulative **300,957 rows** — **crossed 300k**. Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, trip 0–56d, lead 0–202d. Staleness 97.8% (hair below the 97.9–98.4 band — slightly more price movement, healthy direction). Distributions normal: 38 gates, 97 airlines, avg $524, min $50, max $2,567 (leak fare still absent). Infra healthy — err.log unchanged (Jun 25), backup byte-identical (471,642,112), disk 24 GB free / 87%.
+
+**Rough-API day, but the 28 failures cost zero data.** Third latency episode of the month (Jul 2: 38, Jul 4: 37) — 27 `NameResolutionError` + 1 `ConnectionError`, retry backoff stretched runtime to ~9.5h (well under the 20h collision threshold). All 28 failures cluster on three YUL-origin routes (YUL→YOW 14, YUL→JFK 9, YUL→YYC 5) — a DNS window that hit while the collector iterated Montreal. **YUL-origin routes have never returned an offer in the entire DB** (Montreal comes through the YMQ metro code), so every failed bucket would have been empty anyway.
+
+**Watch items:** MIA-BOG **back but thin** — 1 offer vs its usual 12–26; downgraded from sustained-loss candidate, still watching. Route count **265** — second consecutive day just below the 271–283 band (266 → 265); volume normal, so thin-tail breadth sag, not a collection fault; watch for further drift.
