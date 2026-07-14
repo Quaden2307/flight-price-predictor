@@ -66,7 +66,7 @@ def prepare_xy(df, train_columns=None):
     #    itinerary_id is a grouping label for the bootstrap CI, not a feature,
     #    so it goes too (before get_dummies, or it'd explode into ~6k columns).
     y = df["log_price"]
-    X = df.drop(columns=["log_price", "itinerary_id"])
+    X = df.drop(columns=["log_price", "itinerary_id", "airline", "airline_type", "transfers"])
 
     # 2. Dummify string/categorical columns so LR can consume them.
     # Alt encoding for month_of_year (option B): sin/cos pair instead of dummies.
@@ -76,7 +76,7 @@ def prepare_xy(df, train_columns=None):
     # Useful when the chronological split leaves some months only in test —
     # sin/cos interpolates while dummies just zero out. Baseline uses dummies;
     # revisit if test-set months mostly fall outside train coverage.
-    X = pd.get_dummies(X, columns=["airline", "airline_type", "day_of_week", "month_of_year"])
+    X = pd.get_dummies(X, columns=["day_of_week", "month_of_year"])
 
     # 3. On val/test, force X to match train's column set (same names, same order).
     #    Missing columns -> filled with 0. New columns in val/test -> dropped.
