@@ -1,30 +1,34 @@
 """
-XGBoost run for the flight price predictor (run #2).
+XGBoost run for the flight price predictor (run #11).
 
 Deliberately the same pipeline as the LR baseline (src/train_lr.py) — identical
-split, features, (X, y) prep, and dollar-space MAPE eval — so the ONLY thing
-that changes is the model. That isolates the question this run exists to answer:
-what does a gradient-boosted tree buy us over linear regression?
+split, features, (X, y) prep, dollar-space MAPE, and itinerary-clustered CI —
+so the ONLY thing that changes is the model. That isolates the question this
+run exists to answer: what does a gradient-boosted tree buy us over LR?
 
-Number to beat: the LR baseline at val MAPE 0.166 (LR re-run on full data after
-the airport-coverage fix; was 0.257 on the pre-fix 6k subset).
+Number to beat: the deployable baseline at val MAPE 0.171 (run #10 — LR,
+Tier-A features, date-grouped gate, CI 0.166–0.175).
 
 The shared pipeline pieces (load_raw / prepare_xy / evaluate) are imported from
 src.train_lr rather than copied, so the two runs can't silently drift apart and
 there's one source of truth for "the pipeline."
 """
+import numpy as np
 from xgboost import XGBRegressor
 
-from src.split import split_offers
+from src.split import split_offers_grouped
 from src.features import build_features
+from src.metrics import bootstrap_mape_ci
 from src.train_lr import load_raw, prepare_xy, evaluate
 
 
 def main():
     offers, airports, airlines = load_raw()
 
-    # 1. Same chronological split as the baseline (by departure_at).
-    train_offers, val_offers, test_offers = split_offers(offers)
+    # 1. Same date-grouped split as run #10: whole trips dealt randomly to
+    #    train/val; test untouched (chronological, departures ≥ Sep 12).
+    train_offers, val_offers, test_offers = split_offers_grouped(offers)
+    print(f"rows: train={len(train_offers)}, val={len(val_offers)}, test={len(test_offers)}")
 
     # 2. Same features — FIT route_means on train, APPLY to val. Test held out.
     train_df, route_means = build_features(train_offers, airports, airlines, route_means=None)
@@ -53,9 +57,14 @@ def main():
     train_mape = evaluate(model, X_train, y_train)
     val_mape   = evaluate(model, X_val,   y_val)
 
+    # 6. Error bar on the val score — same itinerary-clustered bootstrap as LR.
+    dollar_pred = np.exp(model.predict(X_val))
+    dollar_true = np.exp(y_val)
+    ci_low, ci_high = bootstrap_mape_ci(dollar_true, dollar_pred, val_df["itinerary_id"])
+
     print(f"\ntrain MAPE: {train_mape:.3f}")
-    print(f"val MAPE:   {val_mape:.3f}")
-    print(f"(baseline to beat: val 0.166)")
+    print(f"val MAPE:   {val_mape:.3f}  (95% CI: {ci_low:.3f} – {ci_high:.3f})")
+    print(f"(baseline to beat: val 0.171)")
 
 
 if __name__ == "__main__":
