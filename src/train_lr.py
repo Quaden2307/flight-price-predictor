@@ -7,7 +7,7 @@ if XGBoost can't outperform a linear baseline, something's wrong with the
 features or the split.
 
 Pipeline:
-    raw offers → split_offers() → build_features() (FIT on train, APPLY to val/test)
+    raw offers → split_offers_grouped() → build_features() (FIT on train, APPLY to val/test)
               → prepare_xy()    → LinearRegression.fit() → MAPE on dollars
 """
 import sqlite3
@@ -17,7 +17,7 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_percentage_error
 
-from src.split import split_offers
+from src.split import split_offers_grouped
 from src.features import build_features
 from src.metrics import bootstrap_mape_ci
 from src.config import SNAPSHOT_DATE
@@ -105,8 +105,10 @@ def evaluate(model, X, y_log):
 def main():
     offers, airports, airlines = load_raw()
 
-    # 1. Split RAW offers chronologically (BEFORE feature engineering)
-    train_offers, val_offers, test_offers = split_offers(offers)
+    # 1. Split RAW offers (BEFORE feature engineering) — date-grouped regime:
+    #    random deal of whole trips into train/val; test stays chronological.
+    train_offers, val_offers, test_offers = split_offers_grouped(offers)
+    print(f"rows: train={len(train_offers)}, val={len(val_offers)}, test={len(test_offers)}")
 
     # 2. Build features — FIT route_means on train, APPLY to val/test
     train_df, route_means = build_features(train_offers, airports, airlines, route_means=None)
