@@ -796,3 +796,13 @@ Run 68: **4,604 offers**, single run, **28 failures**, **4,200 api_calls**, ~**9
 **Rough-API day, but the 28 failures cost zero data.** Third latency episode of the month (Jul 2: 38, Jul 4: 37) — 27 `NameResolutionError` + 1 `ConnectionError`, retry backoff stretched runtime to ~9.5h (well under the 20h collision threshold). All 28 failures cluster on three YUL-origin routes (YUL→YOW 14, YUL→JFK 9, YUL→YYC 5) — a DNS window that hit while the collector iterated Montreal. **YUL-origin routes have never returned an offer in the entire DB** (Montreal comes through the YMQ metro code), so every failed bucket would have been empty anyway.
 
 **Watch items:** MIA-BOG **back but thin** — 1 offer vs its usual 12–26; downgraded from sustained-loss candidate, still watching. Route count **265** — second consecutive day just below the 271–283 band (266 → 265); volume normal, so thin-tail breadth sag, not a collection fault; watch for further drift.
+
+---
+
+## July 14, 2026
+
+Run 69: **4,758 offers** — monthly volume high — single run, **11 failures**, **4,200 api_calls**, ~**8.1h** runtime (13:07 → 21:12 UTC). Cumulative **305,715 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, trip 0–56d, lead 0–201d, **272 routes — back inside the 271–283 band** (two-day sag over). Staleness at baseline (98.4%). Distributions normal: 40 gates, 97 airlines, avg $529, min $51, max $2,567 (leak fare absent 3rd day). Infra healthy — err.log unchanged (Jun 25), backup byte-identical (480,096,256), disk 23 GB free / 88% (slow ~1 GB/day drift resumed — still watching).
+
+**Second consecutive zero-cost DNS cluster, Toronto edition.** 11 failures, 10+ `NameResolutionError`, all on YYZ-origin routes (YYZ→MCO 9, YYZ→YUL 1, YYZ→LAX 1). Like YUL yesterday, **YYZ-origin routes have never returned an offer DB-wide** (Toronto's coverage comes via the YTO metro code) — so both days' failure spikes landed exclusively on dead airport-code routes and cost zero rows. Observation for someday: YUL/YYZ airport-code entries in routes.py are ~90 guaranteed-empty calls/day; pruning would de-noise failure stats, but leaving them costs nothing.
+
+**Watch items:** MIA-BOG present but thin 2nd day (1 offer vs 12–26 historical). Disk drift resumed.
