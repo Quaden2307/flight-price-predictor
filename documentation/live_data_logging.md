@@ -806,3 +806,13 @@ Run 69: **4,758 offers** — monthly volume high — single run, **11 failures**
 **Second consecutive zero-cost DNS cluster, Toronto edition.** 11 failures, 10+ `NameResolutionError`, all on YYZ-origin routes (YYZ→MCO 9, YYZ→YUL 1, YYZ→LAX 1). Like YUL yesterday, **YYZ-origin routes have never returned an offer DB-wide** (Toronto's coverage comes via the YTO metro code) — so both days' failure spikes landed exclusively on dead airport-code routes and cost zero rows. Observation for someday: YUL/YYZ airport-code entries in routes.py are ~90 guaranteed-empty calls/day; pruning would de-noise failure stats, but leaving them costs nothing.
 
 **Watch items:** MIA-BOG present but thin 2nd day (1 offer vs 12–26 historical). Disk drift resumed.
+
+---
+
+## July 15, 2026
+
+Run 70: **4,784 offers** — second consecutive monthly volume high — single run, **4 failures**, **4,200 api_calls**, ~**7.2h** runtime (13:15 → 20:27 UTC). Cumulative **310,499 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, trip 0–56d, lead 0–200d, 270 routes (one under the band floor — trivial wobble, volume fine). Staleness at baseline (98.1%). Distributions normal: 41 gates, 102 airlines, avg $536, min $48, max $2,567 (leak fare absent 4th day). Infra healthy — err.log unchanged (Jun 25), backup byte-identical (488,583,168).
+
+**Zero-cost failure streak, day three.** All 4 failures were LGA→DFW buckets in one contiguous window — and **LGA-origin routes have never returned an offer DB-wide** (NYC coverage comes via NYC/JFK/EWR metro codes). After YUL (Jul 13) and YYZ (Jul 14), that's three straight days of DNS windows landing entirely on dead airport-code routes in the fixed iteration order. No rows lost any day.
+
+**Watch items resolving:** MIA-BOG recovering — 1 → 1 → **4 offers**; reading it as churn, not loss, if the climb continues. Disk **downgraded from watch item**: 24 GB free, oscillating (26→24→25→24→23→24) rather than falling — cache turnover, not a leak; re-flag only if it breaks ~20 GB.
