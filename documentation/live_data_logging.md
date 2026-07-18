@@ -816,3 +816,17 @@ Run 70: **4,784 offers** — second consecutive monthly volume high — single r
 **Zero-cost failure streak, day three.** All 4 failures were LGA→DFW buckets in one contiguous window — and **LGA-origin routes have never returned an offer DB-wide** (NYC coverage comes via NYC/JFK/EWR metro codes). After YUL (Jul 13) and YYZ (Jul 14), that's three straight days of DNS windows landing entirely on dead airport-code routes in the fixed iteration order. No rows lost any day.
 
 **Watch items resolving:** MIA-BOG recovering — 1 → 1 → **4 offers**; reading it as churn, not loss, if the climb continues. Disk **downgraded from watch item**: 24 GB free, oscillating (26→24→25→24→23→24) rather than falling — cache turnover, not a leak; re-flag only if it breaks ~20 GB.
+
+---
+
+## July 16, 2026
+
+Run 71: **4,976 offers** — third consecutive monthly volume record — single run, **12 failures**, **4,200 api_calls**, ~**11.5h** runtime (13:00 → 00:31 UTC; longest since Jul 2, under the 20h threshold). Cumulative **315,475 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, trip 0–56d, lead 0–197d, 280 routes (in band). Distributions: 40 gates, avg $544, min $48, max $2,567 (leak fare absent 5th day). Infra healthy — err.log unchanged (Jun 25), backup byte-identical (497,422,336).
+
+**⚠️ CORRECTION — Jul 13–15 "zero-cost failure streak" reasoning was wrong.** Those entries claimed YUL/YYZ/LGA-origin routes "never returned an offer DB-wide." False: the DB stores the API's **city codes** in `origin`/`destination` (YMQ/YTO/NYC), with airport codes in `origin_airport` — so `WHERE origin='YUL'` can never match anything, and those queries are in fact productive (103 non-empty YUL/YYZ/LGA buckets in today's run alone). The routes.py "dead weight / ~90 wasted calls" observation is retracted. Re-measured against the correct city pairs, actual losses were still immaterial: Jul 13 ≈ 5–8 rows (YMQ→YOW 1→0, YMQ→NYC ~26→22), Jul 14 ≈ 0 (YTO→MCO genuinely empty all week), Jul 15 a few rows at most (NYC-DFW already in decline). Conclusions survive; the reasoning didn't. **Schema note for modeling:** multiple queried airports (JFK/LGA/EWR) feed one city pair — `origin`/`destination` are city-level, use `origin_airport`/`destination_airport` for airport-level work.
+
+**Today's 12 failures** (JFK→ZRH 7, YVR→JFK 5, ReadTimeout/ConnectionError) cost ~0–3 rows — NYC-ZRH (3) and YVR-NYC (4) both landed inside their normal daily ranges.
+
+**Trend: broad inventory growth.** Volume 4,604 → 4,658 → 4,758 → 4,784 → 4,976 over five days, spread across major pairs (NYC-CHI +33, TYO-SHA +27, NYC-MIA +22); distinct departure dates 3,783 → 4,037 in four days; **107 airlines** (above the 97–102 recent range); staleness **97.5%** — below the 97.9–98.4 baseline floor, i.e. more genuine price movement. Reads as real market/API inventory expansion, not a fault — but it's a mild distributional shift in the training window worth remembering at modeling time.
+
+**Watch items:** MIA-BOG **closed** — recovered 1 → 1 → 4 → **6 offers**; standard churn after all. Disk **21 GB free** (−3 GB in a day, new low) — one more drop like that breaks the 20 GB threshold and re-flags.
