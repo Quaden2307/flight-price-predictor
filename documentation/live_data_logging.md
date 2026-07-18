@@ -830,3 +830,13 @@ Run 71: **4,976 offers** — third consecutive monthly volume record — single 
 **Trend: broad inventory growth.** Volume 4,604 → 4,658 → 4,758 → 4,784 → 4,976 over five days, spread across major pairs (NYC-CHI +33, TYO-SHA +27, NYC-MIA +22); distinct departure dates 3,783 → 4,037 in four days; **107 airlines** (above the 97–102 recent range); staleness **97.5%** — below the 97.9–98.4 baseline floor, i.e. more genuine price movement. Reads as real market/API inventory expansion, not a fault — but it's a mild distributional shift in the training window worth remembering at modeling time.
 
 **Watch items:** MIA-BOG **closed** — recovered 1 → 1 → 4 → **6 offers**; standard churn after all. Disk **21 GB free** (−3 GB in a day, new low) — one more drop like that breaks the 20 GB threshold and re-flags.
+
+---
+
+## July 17, 2026
+
+Run 72: **4,978 offers** — fourth consecutive volume record (barely, +2) — single run, **3 failures**, **4,200 api_calls**, ~**5.4h** runtime (13:05 → 18:29 UTC). Cumulative **320,453 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, trip 0–56d, lead 0–196d, 281 routes (in band). Distributions: 40 gates, 107 airlines, min $48, max $2,567 (leak fare absent 6th day; now a three-way tie NYC→TYO / SFO→TYO / NYC→IST). Failures: BOS→CDG Sep/Oct buckets ≈ **0–2 rows lost** (BOS-PAR city pair at 3 vs 4–5 recent; its Sep buckets historically empty). Infra — err.log unchanged (Jun 25), backup byte-identical (506,331,136).
+
+**Staleness swung high: 99.1%** — above the 97.9–98.4 baseline ceiling, a metric record, one day after the 97.5 record low. Matched itineraries also jumped (~3,700–3,900 → 4,417): after yesterday's inventory surge the API served nearly the same expanded inventory at nearly identical prices. Volume plateaued at the new level (4,976 → 4,978). Avg price continues its five-day climb ($524 → $529 → $536 → $544 → $549) — consistent with the inventory-expansion trend, worth remembering at modeling time.
+
+**⚠️ Disk re-flagged — threshold broken:** **17 GB free / 91%**, −4 GB in one day, −7 GB over three days (24 → 21 → 17). DB + backup account for ~18 MB/day, so an external consumer is eating ~3–4 GB/day. At this rate, ENOSPC territory (the Jun 25 silent-backup-failure mode) in ~4 days. Action needed soon: identify the consumer (macOS storage settings / `du` on ~/Library, caches, simulators) before the backup starts failing silently again.
