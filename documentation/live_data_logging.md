@@ -840,3 +840,13 @@ Run 72: **4,978 offers** — fourth consecutive volume record (barely, +2) — s
 **Staleness swung high: 99.1%** — above the 97.9–98.4 baseline ceiling, a metric record, one day after the 97.5 record low. Matched itineraries also jumped (~3,700–3,900 → 4,417): after yesterday's inventory surge the API served nearly the same expanded inventory at nearly identical prices. Volume plateaued at the new level (4,976 → 4,978). Avg price continues its five-day climb ($524 → $529 → $536 → $544 → $549) — consistent with the inventory-expansion trend, worth remembering at modeling time.
 
 **⚠️ Disk re-flagged — threshold broken:** **17 GB free / 91%**, −4 GB in one day, −7 GB over three days (24 → 21 → 17). DB + backup account for ~18 MB/day, so an external consumer is eating ~3–4 GB/day. At this rate, ENOSPC territory (the Jun 25 silent-backup-failure mode) in ~4 days. Action needed soon: identify the consumer (macOS storage settings / `du` on ~/Library, caches, simulators) before the backup starts failing silently again.
+
+---
+
+## July 18, 2026
+
+Run 73: **4,921 offers**, single run, **0 failures**, **4,200 api_calls**, ~**8.0h** runtime (13:06 → 21:06 UTC). Cumulative **325,374 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, trip 0–56d, lead 0–195d, 281 routes (in band). Volume settling at the new plateau (4,976 → 4,978 → 4,921). Infra healthy — err.log unchanged (Jun 25), backup byte-identical (515,055,616).
+
+**Staleness settling at 98.6%** between the week's whipsaw extremes (97.5 → 99.1 → 98.6) — reads as a new baseline forming around the expanded inventory. Distributions: 37 gates, **108 airlines** (record), min $48, max $2,567 (same three-way tie; leak fare absent 7th day). **Avg price up a sixth straight day: $524 → $529 → $536 → $544 → $549 → $558** — sustained market/inventory drift, account for it at modeling time.
+
+**Disk: plunge paused.** 18 GB free (+1 GB overnight) — the 3–4 GB/day consumer stopped on its own. Still below the 20 GB comfort line, so the Jun 25 silent-backup-failure mode stays a live risk if it resumes; keep the flag at reduced urgency.
