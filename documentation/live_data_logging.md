@@ -850,3 +850,15 @@ Run 73: **4,921 offers**, single run, **0 failures**, **4,200 api_calls**, ~**8.
 **Staleness settling at 98.6%** between the week's whipsaw extremes (97.5 → 99.1 → 98.6) — reads as a new baseline forming around the expanded inventory. Distributions: 37 gates, **108 airlines** (record), min $48, max $2,567 (same three-way tie; leak fare absent 7th day). **Avg price up a sixth straight day: $524 → $529 → $536 → $544 → $549 → $558** — sustained market/inventory drift, account for it at modeling time.
 
 **Disk: plunge paused.** 18 GB free (+1 GB overnight) — the 3–4 GB/day consumer stopped on its own. Still below the 20 GB comfort line, so the Jun 25 silent-backup-failure mode stays a live risk if it resumes; keep the flag at reduced urgency.
+
+---
+
+## July 19–22, 2026 (retrospective — checked and logged July 22)
+
+Runs 74–77, one per day, no missed days, 4,200 api_calls each. Volumes **4,933 / 4,869 / 4,904 / 4,969** — post-expansion plateau holding. Routes **279 / 281 / 286 / 284** — Jul 21's 286 is a new breadth record above the old 271–283 band; the band is shifting up with the inventory expansion. Runtimes 5.6h / 2.9h / 10m / 4.2h — usual swing. Failures **0 / 7 / 0 / 5**. Cumulative **345,049 rows**. Audit clean on the six modeling-critical fields; **0 duplicates** in the window; backup byte-identical every day (550,141,952 at Jul 22); err.log unchanged (Jun 25).
+
+**All 12 failures ≈ zero rows lost** (verified against city pairs, per the Jul 16 correction method): Jul 20 = six SJC→PHX winter buckets (pair empty every day regardless) + one LAX→SEA bucket (pair held at its normal 11); Jul 22 = five JFK→SFO fall/winter buckets (NYC-SFO at 104 vs 103–117 recent — EWR/LGA cover the pair).
+
+**Distribution notes:** Avg price **peaked Jul 20 at $560 and eased to $546** — the six-day climb resolved into a plateau, not sustained drift. Staleness **97.8 / 98.6 / 98.4 / 96.8** — Jul 22 is a new record low; the metric's range keeps widening post-expansion (old 97.9–98.4 baseline is obsolete; genuine repricing, not a fault). New record-low fare **$33 ATL→TPA F9** (Oct 1 dep, 4d trip) — legitimate promo, not corruption. Leak fare absent 11th straight day (max $2,567 all window). Minor: max-lead decay blipped +1 on Jul 22 (194 → 193 → 192 → 193) — a far-out bucket returned an offer again; trivial.
+
+**Disk recovered: 20 GB free** — the 3–4 GB/day consumer never resumed; back at the comfort line. Flag closed unless it re-breaks.
