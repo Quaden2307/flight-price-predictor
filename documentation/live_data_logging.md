@@ -862,3 +862,13 @@ Runs 74–77, one per day, no missed days, 4,200 api_calls each. Volumes **4,933
 **Distribution notes:** Avg price **peaked Jul 20 at $560 and eased to $546** — the six-day climb resolved into a plateau, not sustained drift. Staleness **97.8 / 98.6 / 98.4 / 96.8** — Jul 22 is a new record low; the metric's range keeps widening post-expansion (old 97.9–98.4 baseline is obsolete; genuine repricing, not a fault). New record-low fare **$33 ATL→TPA F9** (Oct 1 dep, 4d trip) — legitimate promo, not corruption. Leak fare absent 11th straight day (max $2,567 all window). Minor: max-lead decay blipped +1 on Jul 22 (194 → 193 → 192 → 193) — a far-out bucket returned an offer again; trivial.
 
 **Disk recovered: 20 GB free** — the 3–4 GB/day consumer never resumed; back at the comfort line. Flag closed unless it re-breaks.
+
+---
+
+## July 23, 2026
+
+Run 78: **4,829 offers**, single run, **0 failures**, **4,200 api_calls**, ~**10m** runtime (13:00 → 13:10 UTC). Cumulative **349,878 rows** — next run crosses 350k. Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, lead 0–192d, 284 routes (elevated post-expansion breadth holding). Infra healthy — err.log unchanged (Jun 25), backup byte-identical (558,735,360).
+
+**Staleness back to mid-range (98.3%)** after Jul 22's record-low 96.8 — oscillating in its new wider band, not trending. Distributions: 40 gates, 107 airlines, avg $535, min $33 (ATL→TPA F9 promo persists). Max still $2,567 but the top-3 turned over — both TYO fares dropped out; now NYC→IST $2,567 (TK), NYC→BER $2,321 (AF), NYC→SHA $2,190 (AA). Leak fare absent 12th day. **Max trip duration popped back to 60d** (sat at 56 since Jul 6) — far-out long-trip bucket returning offers again, consistent with inventory expansion.
+
+**Disk: 18 GB free** — oscillating 17–20 GB rather than draining; no flag unless it breaks meaningfully lower.
