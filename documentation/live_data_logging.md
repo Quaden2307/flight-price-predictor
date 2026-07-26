@@ -872,3 +872,15 @@ Run 78: **4,829 offers**, single run, **0 failures**, **4,200 api_calls**, ~**10
 **Staleness back to mid-range (98.3%)** after Jul 22's record-low 96.8 — oscillating in its new wider band, not trending. Distributions: 40 gates, 107 airlines, avg $535, min $33 (ATL→TPA F9 promo persists). Max still $2,567 but the top-3 turned over — both TYO fares dropped out; now NYC→IST $2,567 (TK), NYC→BER $2,321 (AF), NYC→SHA $2,190 (AA). Leak fare absent 12th day. **Max trip duration popped back to 60d** (sat at 56 since Jul 6) — far-out long-trip bucket returning offers again, consistent with inventory expansion.
 
 **Disk: 18 GB free** — oscillating 17–20 GB rather than draining; no flag unless it breaks meaningfully lower.
+
+---
+
+## July 24–25, 2026
+
+Runs 79–80, one per day, 4,200 api_calls each. Volumes **4,870 / 4,926**, routes **282 / 279** — plateau holding. Failures **5 / 0**. Cumulative **359,674 rows** (crossed 350k on Jul 24). Audit clean on the six modeling-critical fields; **0 duplicates**; backups byte-identical both days (576,253,952 at Jul 25); err.log unchanged (Jun 25).
+
+**Jul 24's 5 failures cost ~3–4 rows — a real (if tiny) loss, not the usual coincidental zero.** All five were YYZ→LAS summer buckets (near-term, normally productive). The YTO→LAS city pair dropped to **1 offer** that day vs 4–6 on surrounding days (5/5/4/**1**/6 across Jul 21–25), then fully recovered Jul 25. First failure cluster this month to hit a productive pair rather than an empty one.
+
+**Distributions:** staleness 97.5 / 98.6 — oscillating in the new post-expansion band, no trend. **Avg price eased $530 → $522**, continuing down from the Jul 20 peak of $560 — the six-day climb has clearly reversed into a gentle decline. Max stepped down to **$2,458** (from $2,567). **$33 ATL→TPA F9 promo still live — 4th straight day**, unusually persistent for a promo. Leak fare absent 14 days. Trip-duration max holding at restored 60d; lead decay normal (191 → 190).
+
+**Disk: 17 GB free** — bottom of the 17–20 GB oscillation, not draining; no flag.
