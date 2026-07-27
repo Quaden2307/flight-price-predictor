@@ -884,3 +884,15 @@ Runs 79–80, one per day, 4,200 api_calls each. Volumes **4,870 / 4,926**, rout
 **Distributions:** staleness 97.5 / 98.6 — oscillating in the new post-expansion band, no trend. **Avg price eased $530 → $522**, continuing down from the Jul 20 peak of $560 — the six-day climb has clearly reversed into a gentle decline. Max stepped down to **$2,458** (from $2,567). **$33 ATL→TPA F9 promo still live — 4th straight day**, unusually persistent for a promo. Leak fare absent 14 days. Trip-duration max holding at restored 60d; lead decay normal (191 → 190).
 
 **Disk: 17 GB free** — bottom of the 17–20 GB oscillation, not draining; no flag.
+
+---
+
+## July 26, 2026
+
+Run 81: **5,148 offers — new volume record, first day ever over 5,000** (prev high 4,978 on Jul 17) — single run, **0 failures**, **4,200 api_calls**, ~**8h 17m** runtime (13:03 → 21:20 UTC). Cumulative **364,822 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, lead 0–189d, trip 0–59d, **286 routes (ties the Jul 21 breadth record)**. Infra healthy — err.log unchanged (Jun 25), backup ran post-completion and is byte-identical (585,486,336).
+
+**Distributions:** staleness 98.4% (mid-band, no trend). Avg price **$524 — flat at the low end**; the Jul 14–20 climb ($524→$560) and subsequent easing have fully resolved into a plateau. **$33 ATL→TPA F9 promo ended after 4 days** — floor back to $40. Top-3 turned over again: NYC→BUE $2,458 (AV), MIA→LON $2,282 (TP), NYC→SHA $2,190 (AA). Leak fare absent 15th day.
+
+**⚠️ Operational note — long run overlapped the check → transient "database is locked."** Run started 06:03 PDT and was still writing at ~14:16 PDT (~8h in, slow-API day) when the daily check ran; the first audit pass hit `database is locked (5)` because the collector held the write lock. **Not a fault** — confirmed in-progress via live log appends + DB mtime tracking the current second + only 80 `Done:` lines; no DB/process intervention taken. Resolved on its own when the run finished 14:20 PDT (Run 81's `Done:` = 81st), then the full audit ran clean. **Takeaway: runs that stretch past ~8h now risk overlapping an early-afternoon manual check** (collector fires 06:00 PDT); the ~5h margin before the *next* 06:00 launch is still safe, so this is a check-timing nuisance, not the collision risk flagged Jul 2. If it recurs, wait for the `Done:` line before auditing.
+
+**Disk: 28 GB free / 85%** — recovery held (~12 GB freed vs Jul 25's 17 GB); watch item firmly clear.
