@@ -896,3 +896,15 @@ Run 81: **5,148 offers — new volume record, first day ever over 5,000** (prev 
 **⚠️ Operational note — long run overlapped the check → transient "database is locked."** Run started 06:03 PDT and was still writing at ~14:16 PDT (~8h in, slow-API day) when the daily check ran; the first audit pass hit `database is locked (5)` because the collector held the write lock. **Not a fault** — confirmed in-progress via live log appends + DB mtime tracking the current second + only 80 `Done:` lines; no DB/process intervention taken. Resolved on its own when the run finished 14:20 PDT (Run 81's `Done:` = 81st), then the full audit ran clean. **Takeaway: runs that stretch past ~8h now risk overlapping an early-afternoon manual check** (collector fires 06:00 PDT); the ~5h margin before the *next* 06:00 launch is still safe, so this is a check-timing nuisance, not the collision risk flagged Jul 2. If it recurs, wait for the `Done:` line before auditing.
 
 **Disk: 28 GB free / 85%** — recovery held (~12 GB freed vs Jul 25's 17 GB); watch item firmly clear.
+
+---
+
+## July 27, 2026
+
+Run 82: **5,125 offers** (second straight day over 5,000) — single run, **6 failures**, **4,200 api_calls**, ~**11h 47m** runtime (13:13 Jul 27 → 01:00 Jul 28 UTC; finished 18:00 PDT, ~35m before the check — no lock this time, but the 2nd straight ~8–12h slow-API day). Cumulative **369,947 rows**. Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, lead 0–188d, trip 0–59d, 280 routes. Infra healthy — err.log unchanged (Jun 25), backup byte-identical post-completion (594,743,296), disk 28 GB free / 85% (recovery holding).
+
+**⚠️ flight_class leak fare RE-EMERGING on YTO→NYC — and it's been ramping.** Today's DB-wide top fare is **$2,601 YYZ→JFK on SK (SAS)**, flight 3958, nonstop outbound, `flight_class=0` — 3–4× the legit Toronto–NYC fares directly beneath it (WestJet $674, AC $654, AA $633). No economy fare on a ~1.5h route is $2,601; it's premium cabin mislabeled economy, the canonical dead-field signature, on its canonical route. **Not a spike — an 8-day ramp:** YTO→NYC daily max 632 → 908 → 1,041 → 908 → 1,415 → 1,415 → **2,601** (Jul 20→27). Corrects the framing of recent "leak absent N days" notes: those were true only because the DB-wide max sat on legit long-hauls; the YTO→NYC contamination was building underneath and has now retaken the top. Passes audit (real fare < $50k), so it's a **modeling-time filtering concern, not a collector fault** — flag for the eventual price-outlier/leak handling (flight_class constant = 0 DB-wide).
+
+**6 failures ≈ 0 rows lost** (city-pair verified): 2 ATL→MCO hit the ATL→ORL pair which still grew to 9 offers today; 3 YYZ→PHL + 1 YYZ→DFW map to smaller YTO pairs (a couple rows at most).
+
+**Otherwise normal:** staleness 97.6% (low end of band, no trend). Avg price $526 — flat plateau. Floor $40 ($33 F9 promo ended). 2nd/3rd fares NYC→BUE $2,458, MIA→LON $2,282.
