@@ -16,3 +16,7 @@ documentation/pre_training_audit_2026-06-11.md
 # tooling config (local only)
 .codex/
 CLAUDE.md
+
+# Rendered launchd job — machine-specific absolute paths.
+# The .template beside it is committed; render with the sed line in its header.
+data_collector/local.flightpricepredictor.collector.plist

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Template for the daily collector's launchd job. The rendered file is
+  gitignored (it holds machine-specific absolute paths); this template is the
+  copy that survives a wiped machine.
+
+  Render it, install it, load it:
+
+    cd <repo root>
+    sed "s|__REPO_ROOT__|$PWD|g" \
+      data_collector/local.flightpricepredictor.collector.plist.template \
+      > data_collector/local.flightpricepredictor.collector.plist
+
+    cp data_collector/local.flightpricepredictor.collector.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.flightpricepredictor.collector.plist
+    launchctl enable  gui/$(id -u)/local.flightpricepredictor.collector
+
+  Verify it is armed (not just present):
+
+    launchctl print gui/$(id -u)/local.flightpricepredictor.collector | grep -E "state|last exit|runs ="
+
+  `last exit code = 78: EX_CONFIG` means launchd could not set the job up at
+  all — almost always the repo living somewhere TCC-protected. See the
+  WorkingDirectory note below.
+
+  To reload after editing: launchctl bootout gui/$(id -u)/local.flightpricepredictor.collector
+  first, then bootstrap again.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>local.flightpricepredictor.collector</string>
+
+    <!-- collect.py opens "data/flights.db" relatively, which is why
+         WorkingDirectory below has to be the repo root. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Library/Frameworks/Python.framework/Versions/3.12/bin/python3</string>
+        <string>data_collector/collect.py</string>
+    </array>
+
+    <!-- Must stay OUTSIDE ~/Desktop, ~/Documents, ~/Downloads and iCloud Drive.
+         macOS protects those by category (TCC); a LaunchAgent cannot chdir into
+         them and launchd fails with EX_CONFIG (78) before Python ever starts.
+         That silently cost the 2026-07-29 and 07-30 runs. ~/Developer is fine. -->
+    <key>WorkingDirectory</key>
+    <string>__REPO_ROOT__</string>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>6</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- Absolute; launchd opens these before applying WorkingDirectory. -->
+    <key>StandardOutPath</key>
+    <string>__REPO_ROOT__/logs/collector.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>__REPO_ROOT__/logs/collector.err.log</string>
+
+    <!-- MUST stay false. True fires a run the moment you bootstrap, which can
+         put two captures on the same UTC day (captured_at is UTC, and the
+         scheduled run is 13:00 UTC). dedupe.py will NOT catch that, since its
+         9-column key includes captured_at. -->
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>
