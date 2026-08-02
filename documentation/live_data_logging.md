@@ -944,3 +944,24 @@ Run 84: **5,367 offers — new volume record, third consecutive** (5,148 → 5,2
 **Be precise about the limit of this, though — Kiwi.com is not broadly inflated.** It holds only **7 of the top-50** fares (behind Trip.com and City.Travel at 8 each), and its average is unremarkable among high-priced gates: Kiwi.com **$604** (n=318) vs City.Travel **$607** (n=414) and Aviakassa **$620** (n=313). So the signal is *not* "Kiwi.com fares run high" — it is that the **short-haul extremes concentrate there**. A gate-plus-route-distance rule would likely catch both known cases; a gate-only filter would be both over-broad and wrong.
 
 **Leak fares frozen for a third capture:** NYC→WAS $3,634 (Jul 31, Aug 1) and YTO→NYC $2,601 (Jul 27, Jul 31, Aug 1) — unchanged prices, consistent with the high staleness above. Still `flight_class=0`, still passing audit, still a modeling-time filtering concern rather than a collector fault.
+
+---
+
+## August 2, 2026
+
+Run 85: **5,265 offers** (third-highest on record; the three-day record streak ends) — single run, **0 failures**, **4,200 api_calls**, ~**8h 39m** runtime (13:01 → 21:40 UTC; finished 14:40 PDT). Cumulative **385,872 rows** (380,607 + 5,265 — reconciles exactly). Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, lead 0–208d, trip 0–58d, 278 routes (low end of the 271–286 band, no concern); **0 duplicates**; `flight_class` still constant. Distributions: **43 gates (new high**, prev 41), 107 airlines, avg **$539.51**, floor **$39** (holding a third day). Infra healthy — err.log unchanged (Jun 25). `lead_max` 209 → 208: **normal 1/day decay resumed** after yesterday's calendar-flip step, confirming that step was the rolling-window artifact and not a new regime.
+
+**Both watch items from the Aug 1 entry resolved — no action on either.**
+
+- **Staleness back to 98.1%** (4,420 matched, normal). Aug 1's near-record 99.2% was ordinary oscillation in the widened post-expansion band, **not** the onset of a stale-cache stretch. Closing that watch.
+- **The $3,634 NYC→WAS fare cleared.** Route max is back to **$1,702** — still above its $738–$1,191 July band, so not fully normalized, but no longer a ~5× break and out of the DB-wide top spot. Keep a light eye on the route rather than a flag.
+
+**YTO→NYC $2,601 frozen for a fourth capture** (Jul 27, 31, Aug 1, 2 — identical price, same SK 3958, Kiwi.com) and back to being the DB-wide top fare now that NYC→WAS receded. The Aug 1 Kiwi.com read continues to hold: today's top two are both Kiwi.com short-haul NA routes (YTO→NYC $2,601, YMQ→NYC $2,494), while the rest of the top six are long-hauls on other gates at plausible prices.
+
+**Runtime easing, second straight zero-failure run: 12h 24m → 9h 16m → 8h 39m.** Two clean runs with code unchanged further support the environmental (sleep/network) read of the Jul 31 failures over any API-side fault. Still far off the ~10-minute runs of Jul 21/23, so the long-run condition itself is unresolved.
+
+**⚠️ Disk fell 13 GB in one day — 75 GB free / 64% → 62 GB free / 70%.** Localized enough to rule out this project: the DB grew only ~3 MB, the whole repo is 1.3 GB (data 638 MB, logs 14 MB), and `tmutil listlocalsnapshots /` returns nothing. **Unverified hypothesis:** iCloud re-materializing files after the recent machine rebuild, which would consume steadily for a few days then stop by itself. **Why this matters rather than being idle trivia:** the Jun 25 silent-backup failure was caused by disk-full, and `failures=0` did not catch it — that counter only tracks API calls, so the backup step can fail while the run still logs clean. If the drop continues, that is the failure mode to expect first. Re-check tomorrow; if free space keeps falling ~13 GB/day, find the consumer before it reaches single digits.
+
+**Backup byte-size unverified for a third consecutive run.** Completion is still provable (the unguarded copy at collect.py:198-199 would have killed the process before dedup/audit, and both ran), but the size check that every earlier entry carries is now missing three days running, and the disk trend above is exactly the condition under which it would matter. **Closing this needs Full Disk Access for the iCloud path, or a manual Finder check** confirming the file is a real ~617 MB file and not an evicted placeholder.
+
+**Check-timing note (updates the Jul 26 and Aug 1 guidance):** the run again overlapped the afternoon check, and today `mode=ro` **plus** a 180s `busy_timeout` still failed outright on one attempt, then succeeded seconds later on a retry. So the workaround is read-only URI + busy_timeout **+ a short retry loop**, not the first two alone. Run 85 also printed its `Done:` line partway through this check, so treat run-in-progress detection as a snapshot that can go stale mid-session — re-read `grep -c '^Done:'` rather than trusting an earlier count.
