@@ -965,3 +965,29 @@ Run 85: **5,265 offers** (third-highest on record; the three-day record streak e
 **Backup byte-size unverified for a third consecutive run.** Completion is still provable (the unguarded copy at collect.py:198-199 would have killed the process before dedup/audit, and both ran), but the size check that every earlier entry carries is now missing three days running, and the disk trend above is exactly the condition under which it would matter. **Closing this needs Full Disk Access for the iCloud path, or a manual Finder check** confirming the file is a real ~617 MB file and not an evicted placeholder.
 
 **Check-timing note (updates the Jul 26 and Aug 1 guidance):** the run again overlapped the afternoon check, and today `mode=ro` **plus** a 180s `busy_timeout` still failed outright on one attempt, then succeeded seconds later on a retry. So the workaround is read-only URI + busy_timeout **+ a short retry loop**, not the first two alone. Run 85 also printed its `Done:` line partway through this check, so treat run-in-progress detection as a snapshot that can go stale mid-session — re-read `grep -c '^Done:'` rather than trusting an earlier count.
+
+---
+
+## August 3, 2026
+
+Run 86: **5,121 offers**, single run, **32 failures**, **4,200 api_calls**, ~**9h 51m** runtime (13:01 → 22:52 UTC; finished 15:52 PDT). Cumulative **390,993 rows** (385,872 + 5,121 — reconciles exactly). Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, lead 0–207d, trip 0–58d, 278 routes; **0 duplicates**; `flight_class` still constant. Distributions: 41 gates, 109 airlines, avg **$544.48**, floor **$39** (fourth straight day). Staleness **98.8%** (4,224 matched) — mid-band, no signal. `lead_max` 208 → 207, normal 1/day decay. err.log unchanged (Jun 25).
+
+**⚠️ 32 failures cost ≈185 rows — the largest failure-driven loss recorded, and the first where the city-pair check comes back clearly negative.** All 32 are `NameResolutionError` (DNS), in a single dropout window spanning three consecutive routes. City-pair verified:
+
+| Failed route | City pair | Today | Recent band | Loss |
+|---|---|---|---|---|
+| LGA→MIA ×14 | NYC→MIA | **245** | 305–383 | **~135** |
+| LGA→MCO ×12 | NYC→ORL | **53** | 98–105 | **~50** |
+| EWR→ORD ×6 | NYC→CHI | 186 | 163–186 | ~0 |
+
+**The generalizable lesson is airport coverage, not failure count.** EWR→ORD failing is harmless — JFK and LGA also feed NYC→CHI, which is why the same route failing on Jul 31 and again today produced ~40–60 rows then and ~0 now. But **LGA is the primary airport for NYC→MIA and NYC→ORL**, so losing it strips most of those pairs' inventory. Failure impact is therefore a function of *which* airport dropped, not how many buckets failed: 6 failures cost nothing here while 12 cost ~50. Future failure triage should check whether the failed origin is single-airport-dominant for its city pair before assuming the usual coincidental zero.
+
+**Volume dip fully explained by the above** — ~5,306 adjusted for the loss, squarely in line with Aug 1–2. Not a market or inventory change, and not a reason to read the three-day record streak as having broken on demand grounds.
+
+**Both leak fares cleared on their own — closing that thread.** NYC→WAS $3,634 → $1,702 → **$770**, back inside its $738–$1,191 July band. YTO→NYC, frozen at $2,601 for four captures, dropped to **$1,694**. DB-wide top fare is down to **$2,494** (YMQ→NYC, TS, Kiwi.com) — the lowest daily max of this stretch, and nothing is in outlier territory today. The Kiwi.com short-haul read still holds at the top spot but no longer describes an anomaly; treat it as a known characteristic rather than an open flag, and revive it only if a short-haul fare breaks its route band again.
+
+**Disk watch closed — 61 GB free / 70%, down only 1 GB.** The Aug 2 single-day 13 GB drop did not continue, consistent with the iCloud re-materialization hypothesis completing. No further action unless it resumes.
+
+**Backup byte-size unverified for a fourth consecutive run** — same Full Disk Access limitation on the iCloud path. Completion remains provable via the unguarded-copy argument, but the size/materialization check is now the single longest-standing gap in this log.
+
+**⚠️ Method correction — the run log is NOT a progress indicator.** The first read of this run reported "44% complete, 32 failures so far" and projected ~70 failures. That was wrong: the run had already finished and 32 was the final count. The same stdout buffering that splices dedup/audit output mid-log also makes the parent flush its route lines **in chunks**, so counting flushed `: N offers` lines measures buffer state, not progress. **Offer and failure counts extracted from a log block are only valid once that block's `Done:` line exists**; before then, the only trustworthy in-progress signals are DB mtime and `runs_logs`. Prior entries that eyeballed mid-run progress this way should be read with that caveat.
