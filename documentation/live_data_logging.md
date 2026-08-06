@@ -1023,3 +1023,29 @@ Run 87: **5,366 offers**, single run, **0 failures**, **4,200 api_calls**, ~**1h
 **Not urgent — ~11 days of headroom at 5 GB/day — but the failure mode is specific:** disk-full caused the **Jun 25 silent backup failure**, and `failures=0` did not catch it because that counter only tracks API calls. A run can log perfectly clean while the off-machine backup silently goes stale.
 
 **The two open items share one root cause and one fix.** Backup byte-size (now unverified for a **fifth** consecutive run) and the iCloud disk measurement are both blocked by the same missing Full Disk Access on the iCloud path. Granting the terminal Full Disk Access (System Settings → Privacy & Security), or one manual Finder look at `Project Backups/flight-price-predictor-backup/`, closes both at once and would restore the longest-broken series in this log.
+
+---
+
+## August 5, 2026
+
+Run 88: **5,466 offers — new volume record** (prev 5,367 on Aug 1) — single run, **30 failures**, **4,200 api_calls**, ~**12h 04m** runtime (13:13 Aug 5 → 01:17 Aug 6 UTC; finished 18:17 PDT). **Cumulative 401,825 rows — crossed 400k** (396,359 + 5,466, reconciles exactly). Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, lead 0–205d, trip 0–54d, 270 routes; **0 duplicates**; `flight_class` still constant. Distributions: 40 gates, **113 airlines (second consecutive record**, 111 → 113), avg **$542.40**, floor **$47** (holding). `lead_max` 206 → 205, normal decay. err.log unchanged (Jun 25).
+
+**⚠️ First complete city-pair loss on record — NYC→DEN erased, not merely thinned.** Zero rows today against a 6–10/day band. The cause is structural, and it generalizes: **NYC→DEN has been served by JFK and only JFK across all 1,123 rows it has ever produced**, so the 14 JFK→DEN failures took the whole pair with them. A single-airport pair fails **binary — all or nothing** — with no sibling airport to absorb the outage.
+
+| Failed route | City pair | Today | Band | Loss |
+|---|---|---|---|---|
+| JFK→DEN ×14 | NYC→DEN | **0** | 6–10 | **~8 (100%)** |
+| JFK→ATL ×9 | NYC→ATL | 22 | 35–45 | ~20 |
+| YYZ→FLL ×1 | YTO→FLL | 12 | 16–20 | ~5 |
+| YYZ→MIA ×4 | YTO→MIA | 11 | 13–17 | ~3 |
+| JFK→LAS ×2 | NYC→LAS | 61 | 60–71 | ~0 |
+
+**≈36 rows lost from 30 failures — versus ~185 from 32 failures on Aug 3.** A 5× difference in damage from an almost identical failure count. This settles the framing started Aug 3: **failure count is nearly uninformative; impact is a function of which pairs were hit and how many airports serve them.** Triage order should be (1) is the failed origin the *only* airport for its city pair → expect total loss, (2) is it the dominant one → expect heavy partial loss, (3) otherwise → expect ~0. Worth eventually deriving the single-airport pair list from `ROUTES` so this is a lookup rather than a per-incident investigation.
+
+**Routes 270 — first reading below the 271–286 band floor.** NYC→DEN vanishing accounts for exactly one; the remainder is ordinary coverage variance (275 → 270). Notable mainly because it coincides with a *record* offer count: inventory concentrated into fewer routes rather than thinning.
+
+**Two smaller movements, neither a flag.** `trip_duration_days` max dropped **58 → 54**, first change after five days pinned at 58 — consistent with the far-out long-trip inventory behaviour prior entries have tracked, not structural. Staleness **97.2% on only 3,989 matched** itineraries — both at the low end (usual match count 4,150–4,500); the route dropouts plausibly explain the low match count and the softer rate as one story rather than two signals.
+
+**Late start observed, but it does NOT explain runtime.** Run 88 fired at 13:13 UTC rather than the usual 13:01 — a 12-minute deferral, the signature of launchd waiting for the machine to wake from sleep. Tempting as a free proxy for the open runtime question, but the record refutes it: Jul 31, Aug 1, Aug 2 and Aug 3 all started at 13:01 exactly and still ran 8–12h, while Aug 4 started on time and ran 1h 26m. **Start delay predicts nothing about runtime**; per-call timing (still unlogged) remains the only thing that would discriminate sleep-suspension from upstream latency.
+
+**Disk 58 GB free / 72% — up 2 GB, the first increase in this stretch** (−13, −1, −5, **+2**). That argues against a runaway consumer and fits the iCloud re-materialization reading. **Deliberately not closing the watch on one good day** — that is precisely the error made on Aug 3 and amended on Aug 4. **Backup byte-size unverified for a sixth consecutive run**; the path still returns `Operation not permitted`, so the Full Disk Access fix noted in the Aug 4 entry remains outstanding and is now the longest-broken series here.
