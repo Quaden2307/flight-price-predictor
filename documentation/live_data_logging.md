@@ -986,8 +986,40 @@ Run 86: **5,121 offers**, single run, **32 failures**, **4,200 api_calls**, ~**9
 
 **Both leak fares cleared on their own — closing that thread.** NYC→WAS $3,634 → $1,702 → **$770**, back inside its $738–$1,191 July band. YTO→NYC, frozen at $2,601 for four captures, dropped to **$1,694**. DB-wide top fare is down to **$2,494** (YMQ→NYC, TS, Kiwi.com) — the lowest daily max of this stretch, and nothing is in outlier territory today. The Kiwi.com short-haul read still holds at the top spot but no longer describes an anomaly; treat it as a known characteristic rather than an open flag, and revive it only if a short-haul fare breaks its route band again.
 
-**Disk watch closed — 61 GB free / 70%, down only 1 GB.** The Aug 2 single-day 13 GB drop did not continue, consistent with the iCloud re-materialization hypothesis completing. No further action unless it resumes.
+**Disk watch closed — 61 GB free / 70%, down only 1 GB.** The Aug 2 single-day 13 GB drop did not continue, consistent with the iCloud re-materialization hypothesis completing. No further action unless it resumes. **[Amended Aug 4 — this close was premature; it was called on a single quiet day and the drop resumed at −5 GB the next. See the Aug 4 entry.]**
 
 **Backup byte-size unverified for a fourth consecutive run** — same Full Disk Access limitation on the iCloud path. Completion remains provable via the unguarded-copy argument, but the size/materialization check is now the single longest-standing gap in this log.
 
 **⚠️ Method correction — the run log is NOT a progress indicator.** The first read of this run reported "44% complete, 32 failures so far" and projected ~70 failures. That was wrong: the run had already finished and 32 was the final count. The same stdout buffering that splices dedup/audit output mid-log also makes the parent flush its route lines **in chunks**, so counting flushed `: N offers` lines measures buffer state, not progress. **Offer and failure counts extracted from a log block are only valid once that block's `Done:` line exists**; before then, the only trustworthy in-progress signals are DB mtime and `runs_logs`. Prior entries that eyeballed mid-run progress this way should be read with that caveat.
+
+---
+
+## August 4, 2026
+
+Run 87: **5,366 offers**, single run, **0 failures**, **4,200 api_calls**, ~**1h 26m** runtime (13:01 → 14:27 UTC; finished 07:27 PDT). Cumulative **396,359 rows** (390,993 + 5,366 — reconciles exactly). Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, lead 0–206d, trip 0–58d, 275 routes; **0 duplicates**; `flight_class` still constant. Distributions: 41 gates, **111 airlines (new record**, prev 109), avg **$533.48**, 201 distinct departure dates. Staleness **98.7%** (4,481 matched) — mid-band. `lead_max` 207 → 206, normal decay. err.log unchanged (Jun 25).
+
+**Runtime collapsed 9h 51m → 1h 26m — fastest since Jul 23. It does NOT settle the cause.** The tempting read is that DNS failures drive the long runs, but the full stretch refutes it:
+
+| Date | Runtime | Failures |
+|---|---|---|
+| Jul 31 | 12h 24m | 20 |
+| Aug 1 | 9h 16m | **0** |
+| Aug 2 | 8h 39m | **0** |
+| Aug 3 | 9h 51m | 32 |
+| Aug 4 | **1h 26m** | 0 |
+
+**Aug 1 and Aug 2 were both long runs with zero failures**, so DNS errors are *sufficient* to make a run slow but plainly not *necessary* — something makes runs take 8–9h with a completely clean network. That is precisely the shape the Jul 10/11 entries described as upstream API latency. **The "purely an API-latency artifact" note therefore stands; it is not superseded.** Today is one fast clean run against three slow ones, two of which were also clean — a single data point, not a resolution. What would actually discriminate: per-call timing (currently unlogged), which would separate "waiting on the API" from "process suspended while the machine slept."
+
+**Volume recovered to 5,366, second-highest on record** — confirms the Aug 3 dip to 5,121 was entirely the ~185 rows lost to that run's failure cluster, not a market or inventory change. The adjusted Aug 3 figure (~5,306) and today's 5,366 sit together at the top of the range.
+
+**Two minor distribution moves, neither a flag.** Routes came in at **275**, the lowest of this stretch — and with 0 failures it is a genuine coverage dip rather than a failure artifact, though still comfortably inside the 271–286 band. The **$39 floor broke after four straight days**; min is now **$47**. Top fare **$2,819 NYC→TYO (TK, OneTwoTrip)** — a long-haul on a gate that has not featured before, so it does *not* fit the short-haul Kiwi.com outlier pattern and reads as a plausible fare. No leak candidates today.
+
+**⚠️ Disk watch REOPENED — the Aug 3 close was wrong.** 56 GB free / 72%, down another 5 GB. The real trend is **−13, −1, −5 GB ≈ −19 GB over three days**; closing on the strength of one quiet day was premature and is amended above. New diagnostic work narrows it considerably:
+
+- **APFS local snapshots ruled out** — `tmutil listlocalsnapshots` returns empty for *both* `/` and `/System/Volumes/Data`. (The Aug 2 check only covered `/`, which was an incomplete test.)
+- `diskutil` reports **153.8 GB used** while `du` can account for only **37 GB** — a **~117 GB gap**.
+- That gap is almost certainly **iCloud Drive**: `~/Library/Mobile Documents/` is TCC-protected, so `du` skips it *silently*, which is exactly why it never shows up in any breakdown. This is consistent with the original Aug 2 hypothesis (iCloud re-materializing content after the machine rebuild) and should end when sync completes.
+
+**Not urgent — ~11 days of headroom at 5 GB/day — but the failure mode is specific:** disk-full caused the **Jun 25 silent backup failure**, and `failures=0` did not catch it because that counter only tracks API calls. A run can log perfectly clean while the off-machine backup silently goes stale.
+
+**The two open items share one root cause and one fix.** Backup byte-size (now unverified for a **fifth** consecutive run) and the iCloud disk measurement are both blocked by the same missing Full Disk Access on the iCloud path. Granting the terminal Full Disk Access (System Settings → Privacy & Security), or one manual Finder look at `Project Backups/flight-price-predictor-backup/`, closes both at once and would restore the longest-broken series in this log.
