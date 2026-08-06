@@ -17,9 +17,9 @@ import numpy as np
 from xgboost import XGBRegressor
 
 from src.split import split_offers_grouped
-from src.features import build_features
+from src.features import build_features, prepare_xy
 from src.metrics import bootstrap_mape_ci
-from src.train_lr import load_raw, prepare_xy, evaluate
+from src.train_lr import load_raw, evaluate
 
 
 def main():

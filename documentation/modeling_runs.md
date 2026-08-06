@@ -24,6 +24,7 @@ The same model scores very differently depending on the split. **Never compare a
 - Always log the **split/regime** and the **CI**, not just a point estimate.
 - MAPE = fraction (0.167 means 16.7%).
 - Test column stays blank until the FINAL run on the chosen tuned model (section at bottom).
+- **Deploy builds are NOT runs.** `src/build_deploy_model.py` refits the chosen model on all data through build day (no frozen snapshot, no holdout) and writes `models/`. Its numbers are never comparable to this sheet and never get a row — the deployed error claim is carried forward from the measured run named in `models/metadata.json` (currently #11).
 
 ## Runs
 

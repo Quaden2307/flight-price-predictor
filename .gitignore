@@ -3,6 +3,8 @@ __pycache__/
 .env
 data/
 *.csv
+# deploy model bundle — built at deploy time by src/build_deploy_model.py
+models/
 .DS_Store
 venv/
 CONTEXT.md

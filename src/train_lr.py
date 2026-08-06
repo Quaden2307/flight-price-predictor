@@ -11,6 +11,7 @@ Pipeline:
               → prepare_xy()    → LinearRegression.fit() → MAPE on dollars
 """
 import sqlite3
+import time
 
 import numpy as np
 import pandas as pd
@@ -18,74 +19,45 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_percentage_error
 
 from src.split import split_offers_grouped
-from src.features import build_features
+from src.features import build_features, prepare_xy  # prepare_xy re-exported for train_xgb
 from src.metrics import bootstrap_mape_ci
 from src.config import SNAPSHOT_DATE
 
 
-def load_raw():
+def load_raw(snapshot=SNAPSHOT_DATE):
     """
     Open data/flights.db and read offers, airports, airlines into DataFrames.
-    `offers` is frozen to the SNAPSHOT_DATE capture window (see src/config.py).
+    `offers` is capped to captures on or before `snapshot`. The default is the
+    frozen SNAPSHOT_DATE (src/config.py) so experiment runs stay comparable;
+    deploy builds (src/build_deploy_model.py) pass today's date instead to
+    train on everything collected so far.
     Return (offers, airports, airlines).
     """
-    conn = sqlite3.connect("data/flights.db")
-    # Snapshot freeze: only offers captured on or before SNAPSHOT_DATE, so the
-    # training set doesn't grow between runs. Reference tables aren't time-keyed.
+    # Read-only + retry: the daily collector can hold the write lock for hours
+    # (documented in documentation/live_data_logging.md). A plain connect()
+    # fails with "database is locked" while it runs; training only reads.
+    for attempt in range(6):
+        try:
+            conn = sqlite3.connect("file:data/flights.db?mode=ro", uri=True, timeout=30)
+            break
+        except sqlite3.OperationalError:
+            if attempt == 5:
+                raise
+            time.sleep(5)
     offers = pd.read_sql(
         "SELECT * FROM offers WHERE substr(captured_at, 1, 10) <= ?",
-        conn, params=[SNAPSHOT_DATE],
+        conn, params=[snapshot],
     )
     airports = pd.read_sql("SELECT * FROM airports", conn)
     airlines = pd.read_sql("SELECT * FROM airlines", conn)
     return offers, airports, airlines
-    
 
 
-def prepare_xy(df, train_columns=None):
-    """
-    Split modeling DataFrame into (X, y) and make X numeric for LR.
 
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Output of build_features — has log_price + feature columns.
-    train_columns : pd.Index or None
-        On train: pass None, function returns the dummified column set.
-        On val/test: pass train's columns so the shapes line up.
-
-    Returns
-    -------
-    (X, y, columns)
-        X : numeric DataFrame ready for LinearRegression
-        y : log_price Series
-        columns : the column set used (return so val/test can reuse it)
-    """
-    # 1. Separate target from features. log_price is what we're predicting,
-    #    so it can't be in X — that'd be target leakage (trivial perfect fit).
-    #    itinerary_id is a grouping label for the bootstrap CI, not a feature,
-    #    so it goes too (before get_dummies, or it'd explode into ~6k columns).
-    y = df["log_price"]
-    X = df.drop(columns=["log_price", "itinerary_id", "airline", "airline_type", "transfers"])
-
-    # 2. Dummify string/categorical columns so LR can consume them.
-    # Alt encoding for month_of_year (option B): sin/cos pair instead of dummies.
-    #   X["month_sin"] = np.sin(2*np.pi * X["month_of_year"] / 12)
-    #   X["month_cos"] = np.cos(2*np.pi * X["month_of_year"] / 12)
-    # Dummies treat Dec and Jan as unrelated buckets; sin/cos preserves adjacency.
-    # Useful when the chronological split leaves some months only in test —
-    # sin/cos interpolates while dummies just zero out. Baseline uses dummies;
-    # revisit if test-set months mostly fall outside train coverage.
-    X = pd.get_dummies(X, columns=["day_of_week", "month_of_year"])
-
-    # 3. On val/test, force X to match train's column set (same names, same order).
-    #    Missing columns -> filled with 0. New columns in val/test -> dropped.
-    #    On train (train_columns=None), skip this — X.columns IS the source of truth.
-    if train_columns is not None:
-        X = X.reindex(columns=train_columns, fill_value=0)
-
-    return X, y, X.columns
-
+# prepare_xy moved to src/features.py (2026-08-05) so the serving path and both
+# trainers share one implementation — same reason train_xgb imports from here
+# instead of copying: one source of truth, no silent drift. Import above keeps
+# `from src.train_lr import prepare_xy` working.
 
 
 def evaluate(model, X, y_log):
