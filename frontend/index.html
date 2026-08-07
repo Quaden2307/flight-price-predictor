@@ -734,23 +734,82 @@
   // =====================================================================
   // Fair-price checker UI (canned model outputs; real app calls backend)
   // =====================================================================
-  const KNOWN_AIRPORTS = ["JFK","EWR","LAX","SEA","SFO","YYZ","YVR","LHR","CDG","NRT","HND","ICN","CUN","MEX","BCN"];
-  const ROUTE_PRICES = {
-    "JFK-NRT": 1124, "NRT-JFK": 1124,
-    "YYZ-LHR": 636,  "LHR-YYZ": 648,
-    "JFK-LHR": 583,  "LHR-JFK": 574,
-    "JFK-CDG": 612,  "CDG-JFK": 605,
-    "LAX-NRT": 948,  "NRT-LAX": 931,
-    "YYZ-NRT": 1052, "NRT-YYZ": 1067,
-    "SEA-NRT": 884,  "NRT-SEA": 869,
-    "LAX-LHR": 702,  "LHR-LAX": 715,
-    "YYZ-CDG": 645,  "CDG-YYZ": 652,
-    "JFK-LAX": 288,  "LAX-JFK": 292,
-    "SEA-LAX": 174,  "LAX-SEA": 171,
-    "JFK-ICN": 998,  "ICN-JFK": 1010,
-    "JFK-CUN": 384,  "CUN-JFK": 391,
-    "YYZ-CUN": 412,  "CUN-YYZ": 405
+  // ---- REAL data from the trained model bundle (models/) ----
+  // ROUTE_MEANS: all 357 routes the model trained on, keyed by IATA
+  // CITY code pair; value = typical round-trip price in dollars.
+  // AIRPORT_TO_CITY: fares are priced by metro area — JFK and EWR both map
+  // to NYC, the same route to the model. Codes not listed map to themselves.
+  const AIRPORT_TO_CITY = {
+    "AZA":"PHX","BFI":"SEA","BUR":"LAX","CDG":"PAR","CLD":"SAN","DAL":"DFW","DCA":"WAS","DMK":"BKK",
+    "DTW":"DTT","EOH":"MDE","EWR":"NYC","EZE":"BUE","FCO":"ROM","GRU":"SAO","HHN":"FRA","HND":"TYO",
+    "IAD":"WAS","IAH":"HOU","ICN":"SEL","JFK":"NYC","LGA":"NYC","LHR":"LON","MCO":"ORL","NLU":"MEX",
+    "NRT":"TYO","ORD":"CHI","PEK":"BJS","PVG":"SHA","SAW":"IST","SNA":"LAX","TLC":"MEX","TSA":"TPE",
+    "XNB":"DXB","YEG":"YEA","YUL":"YMQ","YYZ":"YTO","ZMU":"MUC","ZYA":"AMS"
   };
+  const ROUTE_MEANS = {
+    "ATL-BOS":230,"ATL-CHI":200,"ATL-CLT":292,"ATL-DFW":164,"ATL-FLL":157,"ATL-LAX":284,
+    "ATL-LON":911,"ATL-MIA":158,"ATL-ONT":322,"ATL-ORL":143,"ATL-RDU":154,"ATL-TPA":111,
+    "AUS-DFW":349,"BOS-AMS":772,"BOS-BCN":686,"BOS-DUB":632,"BOS-LON":797,"BOS-PAR":767,
+    "BOS-SJU":369,"BOS-WAS":322,"CHI-AMS":863,"CHI-BCN":841,"CHI-BER":801,"CHI-BJS":1092,
+    "CHI-CUN":387,"CHI-DEL":1183,"CHI-DFW":241,"CHI-DTT":302,"CHI-FLL":222,"CHI-FRA":897,
+    "CHI-HOU":216,"CHI-LON":903,"CHI-MIA":271,"CHI-MSP":195,"CHI-MUC":990,"CHI-PAR":840,
+    "CHI-RDU":304,"CHI-SEL":1346,"CHI-SHA":1189,"CHI-TYO":1271,"CLT-NYC":245,"CLT-ORL":232,
+    "DEN-CHI":196,"DEN-LAS":169,"DEN-PHX":174,"DEN-SEA":250,"DEN-SFO":230,"DEN-SJC":409,
+    "DFW-CUN":360,"DFW-LON":1178,"FLL-AUA":516,"FLL-BOG":440,"FLL-CUN":465,"FLL-LON":1091,
+    "FLL-MDE":423,"FLL-SAO":667,"FLL-SCL":734,"FLL-SDQ":425,"HNL-OGG":177,"HOU-CUN":333,
+    "LAX-AMS":1042,"LAX-AUS":270,"LAX-BJS":1085,"LAX-BKK":869,"LAX-CHI":279,"LAX-CUN":331,
+    "LAX-DEN":182,"LAX-DFW":269,"LAX-FLL":396,"LAX-FRA":912,"LAX-GDL":300,"LAX-HKG":1065,
+    "LAX-HNL":391,"LAX-LAS":147,"LAX-LON":951,"LAX-MEX":292,"LAX-MIA":315,"LAX-MNL":838,
+    "LAX-OGG":423,"LAX-ORL":275,"LAX-PAR":942,"LAX-PDX":215,"LAX-PHX":136,"LAX-SAN":254,
+    "LAX-SEA":236,"LAX-SEL":964,"LAX-SHA":931,"LAX-SIN":817,"LAX-SJD":333,"LAX-TPE":883,
+    "LAX-TYO":1032,"LGB-CHI":338,"LGB-HNL":344,"LGB-LAS":196,"LGB-OGG":406,"LGB-PDX":185,
+    "LGB-PHX":193,"LGB-SEA":211,"MIA-AUA":511,"MIA-BOG":316,"MIA-CUN":377,"MIA-LIM":467,
+    "MIA-LON":976,"MIA-MDE":409,"MIA-MEX":350,"MIA-PUJ":363,"MIA-SAO":619,"MIA-SCL":635,
+    "MIA-SDQ":359,"NYC-AMS":843,"NYC-ATL":231,"NYC-AUS":488,"NYC-BCN":748,"NYC-BER":840,
+    "NYC-BJS":1275,"NYC-BOG":612,"NYC-BOM":1355,"NYC-BOS":215,"NYC-BUE":1113,"NYC-CHI":263,
+    "NYC-CUN":466,"NYC-DEL":1100,"NYC-DEN":362,"NYC-DFW":350,"NYC-DOH":1188,"NYC-DTT":316,
+    "NYC-DUB":709,"NYC-DXB":859,"NYC-FLL":284,"NYC-FRA":788,"NYC-HKG":1143,"NYC-HOU":368,
+    "NYC-IST":931,"NYC-LAS":360,"NYC-LAX":434,"NYC-LIS":798,"NYC-LON":790,"NYC-MAD":722,
+    "NYC-MBJ":547,"NYC-MEX":417,"NYC-MIA":301,"NYC-MSP":383,"NYC-MUC":862,"NYC-OAK":540,
+    "NYC-ONT":425,"NYC-ORL":265,"NYC-PAR":752,"NYC-PHL":367,"NYC-PHX":380,"NYC-PUJ":563,
+    "NYC-RDU":242,"NYC-ROM":688,"NYC-SAO":884,"NYC-SDQ":511,"NYC-SEA":443,"NYC-SEL":1235,
+    "NYC-SFO":417,"NYC-SHA":1227,"NYC-SHJ":999,"NYC-SIN":1255,"NYC-SJC":432,"NYC-SJU":365,
+    "NYC-TPE":1225,"NYC-TYO":1268,"NYC-WAS":597,"NYC-ZRH":773,"OAK-AUS":231,"OAK-FRA":1123,
+    "OAK-HNL":451,"OAK-MIA":404,"OAK-OGG":396,"OAK-PAR":1313,"OAK-RDU":339,"OAK-SAN":224,
+    "OAK-SEA":234,"OAK-SEL":1023,"ONT-AUS":271,"ONT-BJS":1676,"ONT-BKK":873,"ONT-CHI":314,
+    "ONT-CUN":349,"ONT-DEN":118,"ONT-DFW":284,"ONT-FRA":716,"ONT-GDL":448,"ONT-HKG":1424,
+    "ONT-HNL":445,"ONT-LAS":129,"ONT-LON":977,"ONT-MEX":324,"ONT-MIA":344,"ONT-MNL":964,
+    "ONT-OGG":447,"ONT-ORL":329,"ONT-PAR":1138,"ONT-PDX":271,"ONT-PHX":204,"ONT-SAN":355,
+    "ONT-SEA":219,"ONT-SEL":1107,"ONT-SHA":1428,"ONT-SIN":1169,"ONT-SJD":358,"ONT-TPE":850,
+    "ONT-TYO":1292,"ORL-SJU":273,"PAE-LAS":220,"PAE-TYO":1533,"SEA-AUS":348,"SEA-BJS":1073,
+    "SEA-CHI":305,"SEA-DEN":215,"SEA-DFW":302,"SEA-HKG":1017,"SEA-HNL":485,"SEA-LAS":203,
+    "SEA-MSP":299,"SEA-PDX":272,"SEA-RDU":353,"SEA-SEL":1015,"SEA-SHA":1010,"SEA-TPE":1030,
+    "SEA-TYO":1133,"SEL-BJS":295,"SEL-HKG":230,"SEL-SHA":289,"SFO-AMS":1076,"SFO-AUS":308,
+    "SFO-BJS":1132,"SFO-BKK":1089,"SFO-BLR":1252,"SFO-BOM":1086,"SFO-BOS":418,"SFO-CHI":336,
+    "SFO-CLT":416,"SFO-DEL":1146,"SFO-DEN":275,"SFO-FLL":513,"SFO-FRA":866,"SFO-HKG":936,
+    "SFO-HNL":450,"SFO-HOU":338,"SFO-LAS":184,"SFO-LAX":168,"SFO-LON":941,"SFO-MIA":304,
+    "SFO-MNL":895,"SFO-MSP":325,"SFO-NYC":524,"SFO-OGG":473,"SFO-ONT":116,"SFO-PAR":983,
+    "SFO-PDX":227,"SFO-PHX":232,"SFO-RDU":375,"SFO-SAN":155,"SFO-SEA":254,"SFO-SEL":876,
+    "SFO-SHA":1026,"SFO-SIN":1069,"SFO-TPE":1054,"SFO-TYO":1088,"SJC-AUS":305,"SJC-BKK":1157,
+    "SJC-BOS":437,"SJC-CHI":359,"SJC-CLT":442,"SJC-DEN":207,"SJC-FRA":996,"SJC-HNL":429,
+    "SJC-LAS":218,"SJC-LAX":127,"SJC-LON":764,"SJC-MIA":326,"SJC-NYC":459,"SJC-OGG":429,
+    "SJC-ONT":132,"SJC-PHX":194,"SJC-SAN":175,"SJC-SEA":323,"SJC-SEL":1368,"TYO-BJS":501,
+    "TYO-HKG":350,"TYO-SEL":291,"TYO-SHA":440,"WAS-DEL":1095,"WAS-DXB":943,"WAS-LON":781,
+    "WAS-SHJ":1216,"YMQ-BOS":340,"YMQ-FLL":381,"YMQ-LAX":480,"YMQ-LON":768,"YMQ-MIA":368,
+    "YMQ-NYC":353,"YMQ-ONT":506,"YMQ-PAR":577,"YMQ-YOW":355,"YMQ-YYC":351,"YOW-NYC":372,
+    "YOW-ORL":395,"YTO-AMS":575,"YTO-ATL":521,"YTO-BJS":1340,"YTO-BOS":276,"YTO-CHI":281,
+    "YTO-DFW":491,"YTO-FLL":272,"YTO-FRA":726,"YTO-HKG":1197,"YTO-LAS":327,"YTO-LAX":415,
+    "YTO-LON":699,"YTO-MIA":376,"YTO-NYC":317,"YTO-ONT":538,"YTO-ORL":311,"YTO-PAR":584,
+    "YTO-PHL":482,"YTO-SEA":443,"YTO-SEL":1129,"YTO-SFO":472,"YTO-SHA":1220,"YTO-SJC":610,
+    "YTO-TYO":1349,"YTO-WAS":309,"YTO-YEA":315,"YTO-YHZ":211,"YTO-YMQ":252,"YTO-YOW":271,
+    "YTO-YVR":348,"YTO-YYC":281,"YVR-DEN":361,"YVR-LAS":283,"YVR-LAX":218,"YVR-LON":908,
+    "YVR-NYC":503,"YVR-ONT":411,"YVR-PAR":698,"YVR-PDX":273,"YVR-PHX":246,"YVR-SEA":335,
+    "YVR-SEL":830,"YVR-SFO":311,"YVR-SHA":857,"YVR-SJC":563,"YVR-TYO":875,"YVR-YEA":142,
+    "YVR-YMQ":387,"YVR-YYC":137,"YYC-LAS":381,"YYC-LAX":300,"YYC-ONT":467,"YYC-PHX":325,
+    "YYC-SEA":276,"YYC-SFO":303,"YYC-YEA":189
+  };
+  const KNOWN_CODES = new Set(["AMS", "ATL", "AUA", "AUS", "AZA", "BCN", "BER", "BFI", "BJS", "BKK", "BLR", "BOG", "BOM", "BOS", "BUE", "BUR", "CDG", "CHI", "CLD", "CLT", "CUN", "DAL", "DCA", "DEL", "DEN", "DFW", "DMK", "DOH", "DTT", "DTW", "DUB", "DXB", "EOH", "EWR", "EZE", "FCO", "FLL", "FRA", "GDL", "GRU", "HHN", "HKG", "HND", "HNL", "HOU", "IAD", "IAH", "ICN", "IST", "JFK", "LAS", "LAX", "LGA", "LGB", "LHR", "LIM", "LIS", "LON", "MAD", "MBJ", "MCO", "MDE", "MEX", "MIA", "MNL", "MSP", "MUC", "NLU", "NRT", "NYC", "OAK", "OGG", "ONT", "ORD", "ORL", "PAE", "PAR", "PDX", "PEK", "PHL", "PHX", "PUJ", "PVG", "RDU", "ROM", "SAN", "SAO", "SAW", "SCL", "SDQ", "SEA", "SEL", "SFO", "SHA", "SHJ", "SIN", "SJC", "SJD", "SJU", "SNA", "TLC", "TPA", "TPE", "TSA", "TYO", "WAS", "XNB", "YEA", "YEG", "YHZ", "YMQ", "YOW", "YTO", "YUL", "YVR", "YYC", "YYZ", "ZMU", "ZRH", "ZYA"]);
+  const COLD_START = 461;    // fallback typical price for routes the model has not seen
   const MAPE_KNOWN = 0.146;   // run #11 val CI midpoint, carried in metadata.json
   const MAPE_UNSEEN = 0.205;  // chronological-split caveat: wider band off-distribution
 
@@ -795,20 +854,26 @@
     const quoted = quotedRaw ? Number(quotedRaw) : null;
 
     for (const code of [from, to]) {
-      if (!KNOWN_AIRPORTS.includes(code)) {
-        return fail(`"${code || "—"}" isn't an airport we cover yet. Try one from the list — JFK, LAX, YYZ, LHR, NRT…`);
+      if (!KNOWN_CODES.has(code)) {
+        return fail(`"${code || "—"}" isn't an airport we cover yet. Try one like JFK, LAX, YYZ, LHR, NRT…`);
       }
     }
     if (from === to) return fail("Origin and destination are the same — pick two different airports.");
+    // same translation step as the real serving path: fares are priced per metro area
+    const cityFrom = AIRPORT_TO_CITY[from] || from;
+    const cityTo = AIRPORT_TO_CITY[to] || to;
+    if (cityFrom === cityTo) {
+      return fail(`${from} and ${to} serve the same city, so there's no fare between them to predict.`);
+    }
     if (!dep) return fail("Pick a departure date.");
     if (dep < depInput.min) return fail("That departure is in the past — the model only prices future flights.");
     if (quotedRaw && (!Number.isFinite(quoted) || quoted <= 0)) {
       return fail("The price you found should be a number, like 980.");
     }
 
-    const key = from + "-" + to;
-    const unseen = !(key in ROUTE_PRICES);
-    const base = unseen ? 407 : ROUTE_PRICES[key];
+    const key = cityFrom + "-" + cityTo;
+    const unseen = !(key in ROUTE_MEANS);
+    const base = unseen ? COLD_START : ROUTE_MEANS[key];
     const pred = base * dateWiggle(dep + key);
     const err = unseen ? MAPE_UNSEEN : MAPE_KNOWN;
     const lo = pred * (1 - err), hi = pred * (1 + err);
