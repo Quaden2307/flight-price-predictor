@@ -1,12 +1,13 @@
 # Flight Price Predictor
 
-End-to-end flight price prediction system covering 200+ routes across 55+ airports in North America, Europe, and Asia.
-
-Two phases: an automated data pipeline (running daily) and an XGBoost price model (in active development). The pipeline has been live since early May 2026 and has accumulated 60,000+ flight offers across 16 daily runs so far. Modeling work is informed by ~18 plots of documented EDA across two data phases.
-
-This public repo covers the data pipeline, feature engineering, and EDA.
+A machine learning project that predicts what a flight should cost. It has three parts: a data pipeline that has collected real airfares every day since May 2026, a trained price model with an honestly measured error rate, and a web frontend.
 
 **Live frontend:** https://flight-price-predictor-eosin.vercel.app/ — design preview with sample predictions; the model-serving backend is in progress.
+
+**The numbers:**
+- **401,825** flight offers collected, growing by ~4,000 per day
+- **200+ routes** across 55+ airports in North America, Europe, and Asia
+- Model predictions land within **14.6%** of the actual price on average, measured on flights the model never saw during training
 
 ![System architecture](diagrams/architecture.svg)
 
@@ -18,18 +19,15 @@ This public repo covers the data pipeline, feature engineering, and EDA.
 
 | Component | Status |
 |---|---|
-| Data pipeline — domestic (Phase 1) | Complete |
-| Data pipeline — live international (Phase 2) | Complete |
-| Data-quality scripts (dedup + audit) | Complete |
-| EDA — Phase 1 (domestic US) | Complete |
-| EDA — Phase 2 (live international) | Complete |
-| Feature engineering (`src/features.py`) | In progress |
-| Train/val/test split (`src/split.py`) | Complete |
-| XGBoost model training | In progress |
+| Data pipeline (runs daily, unattended) | Running since May 2026 |
+| Data-quality checks (duplicate removal + daily audit) | Complete |
+| Exploratory data analysis (2 phases, ~18 documented plots) | Complete |
+| Feature engineering | Complete |
+| Baseline model (linear regression) | Complete — 17.1% average error |
+| XGBoost model | Trained — 14.6% average error |
+| Deployable model export | Complete |
 | Frontend ([live on Vercel](https://flight-price-predictor-eosin.vercel.app/)) | Design preview live |
-| Prediction API (model backend) | Planned |
-
-Target modeling start: end of May 2026, once feature engineering and the split strategy are locked in. Goal metric: MAPE on a held-out test set, targeting sub-10%. Will update with the measured number once a baseline is in place.
+| Prediction API (model backend) | In progress |
 
 ---
 
@@ -40,6 +38,7 @@ Target modeling start: end of May 2026, once feature engineering and the split s
 - **Modeling:** Scikit-learn, XGBoost
 - **Visualization:** Matplotlib, Seaborn
 - **Notebooks:** Jupyter
+- **Frontend:** Hand-written HTML/CSS/JS with a WebGL night-sky background, hosted on Vercel
 
 ---
 
@@ -49,23 +48,22 @@ Target modeling start: end of May 2026, once feature engineering and the split s
 flight-price-predictor/
 ├── data_collector/                # Daily ingestion pipeline
 │   ├── collect.py                 # Main collector — calls the API, writes to SQLite
-│   ├── dedupe.py                  # Exact-key duplicate guard (9-column key)
+│   ├── dedupe.py                  # Duplicate guard (9-column exact key)
 │   ├── audit.py                   # Daily NULL/range/volume audit
 │   ├── routes.py                  # 200+ origin-destination pairs to query
 │   ├── schema.sql                 # Database schema
-│   ├── populate_airports.py       # One-time airport reference table loader
-│   └── populate_airlines.py       # One-time airline reference table loader
-├── notebooks/                     # EDA notebooks
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_data_visualization.ipynb        # Phase 1 EDA (domestic)
-│   ├── 03_live_data_visualization.ipynb   # Phase 2 EDA (live international)
-│   └── 04_airline_analysis.ipynb
-├── src/                           # Feature engineering and modeling code
-│   ├── features.py                # build_features() — single source of truth
-│   └── ...                        # split.py, train_lr.py (LR baseline), train_xgb.py
-├── documentation/                 # Design notes, checklists, daily run logs
-├── plots_observations             # EDA findings — Phase 1
-├── plots_observations_phase2      # EDA findings — Phase 2
+│   ├── populate_airports.py       # Airport reference table loader
+│   └── populate_airlines.py       # Airline reference table loader
+├── notebooks/                     # EDA notebooks (4)
+├── src/                           # Feature engineering and modeling
+│   ├── features.py                # Feature building — shared by training and serving
+│   ├── split.py                   # Train/validation/test split
+│   ├── train_lr.py                # Linear regression baseline
+│   ├── train_xgb.py               # XGBoost training run
+│   ├── metrics.py                 # Error measurement with confidence intervals
+│   └── build_deploy_model.py      # Exports the trained model for deployment
+├── frontend/                      # The live site (single self-contained page)
+├── documentation/                 # Design notes, experiment log, daily run logs
 ├── data/                          # SQLite DB (gitignored)
 └── requirements.txt
 ```
@@ -74,21 +72,21 @@ flight-price-predictor/
 
 ## Data Pipeline
 
-The pipeline runs daily via launchd, pulling round-trip flight offers from a commercial pricing API and writing them to a local SQLite database. One row per offer.
+The pipeline runs daily on a schedule (macOS launchd), pulling round-trip flight offers from a commercial pricing API into a local SQLite database. One row per offer. It has run unattended since early May 2026, including through slow-API days, and has accumulated **400,000+ offers**.
 
 **What it does each day:**
-- ~3,200 API calls per run (200+ routes × 7 departure months × 2 trip-duration offsets)
+- ~3,200 API calls per run (200+ routes × 7 departure months × 2 trip lengths)
 - ~4,000 offers inserted per day
-- Retry-with-backoff on `RequestException` — 3 attempts, exponential backoff starting at 2s. Has cleanly handled multiple slow-API days with zero final failures.
-- Per-run logging to a `runs_logs` table (start/finish, calls, inserts, failures)
-- Daily backup of the SQLite file to a cloud folder
+- Retries failed calls up to 3 times with increasing wait times — multiple slow-API days handled with zero final failures
+- Logs every run to a `runs_logs` table (start/finish, calls, inserts, failures)
+- Backs up the database to a cloud folder
 
-**Post-collection data-quality checks** (`dedupe.py`, `audit.py`):
-- 9-column exact-key dedup guard (dry-run by default; `--apply` to delete)
-- NULL audit on modeling-critical columns (`price`, `airline`, `departure_at`, `return_at`, `trip_duration_days`, `lead_time_days`)
-- Range audit (impossible values like negative prices or trip durations >365 days)
-- Volume-drop detection: relative (flags days >25% below a 3-day rolling baseline) and absolute (flags 2+ consecutive days below a hard floor)
-- Exits non-zero on any anomaly so launchd's stderr log captures the alert
+**After each run, two quality checks** (`dedupe.py`, `audit.py`):
+- Removes exact duplicate rows
+- Flags missing values in columns the model depends on
+- Flags impossible values (negative prices, trip durations over a year)
+- Detects volume drops — a day with unusually few rows usually means a silent collection problem
+- Exits with an error code on any anomaly so the scheduler's log captures the alert
 
 **To run the collector:**
 
@@ -103,55 +101,51 @@ pip install -r requirements.txt
 python data_collector/collect.py
 ```
 
-A single run takes ~8 minutes when the upstream API is responsive, ~5–6 hours on slow-API days. The retry logic handles transient failures without intervention.
+---
+
+## What the Data Showed (EDA)
+
+~18 documented plots across two phases. The findings that shaped the model:
+
+- Fares are heavily skewed — a few very expensive tickets distort averages, so the model predicts the *logarithm* of price and converts back to dollars
+- Distance is the strongest single predictor, but doubling distance doesn't double price
+- Budget and legacy airlines form two distinct price regimes on short routes
+- Day of week matters for international trips (weekend premium), barely at all for domestic
+- Nonstop flights carry a real premium regardless of distance
+- Booking earlier matters mainly for long-haul trips
+- A key surprise: the same flight's price barely moves day to day — most price variation comes from *which* flights are on offer, not from prices changing. This shaped the whole product: predict what a trip should cost, rather than trying to time price movements
 
 ---
 
-## EDA — Key Findings
+## The Model
 
-~18 documented plots across two phases. The findings that shaped the model design:
+**What it predicts:** the typical price of a route on a date — using only the information a traveler actually has when searching (origin, destination, dates). Details you'd only know *after* seeing an offer, like the airline or number of stops, are deliberately excluded, so the model works as a real product rather than just scoring well in a notebook.
 
-**Phase 1 (domestic US):**
-- Fare distribution is right-skewed — log-transformed target is the right move
-- Distance is the strongest single predictor, but the relationship is sublinear
-- LCC vs. legacy carriers create two distinct fare regimes at short distances
-- Market share is confounded with distance — both features needed
+**Results, measured on flights held out from training:**
 
-**Phase 2 (live international):**
-- Price distribution is bimodal — short-haul domestic cluster and long-haul international cluster
-- `is_international` is a coarse proxy for distance; distance itself is the real driver
-- Day-of-week matters for international (vacation premium around weekends), mostly flat for domestic
-- Direct-flight premium is real and distance-independent — `transfers` adds signal beyond distance
-- Lead time matters mainly for long-haul; weak signal on short/medium routes
-- Same-flight day-over-day prices barely move — only ~5.6% of flights ever changed price across an 11-day capture window. Most observed price variation comes from the offer set churning (new flights appearing, old ones falling out), not from real price movement. Shapes the target framing: predict the price of a flight appearing on day X, not how a known flight's price will change.
+| Model | Average error |
+|---|---|
+| Linear regression (baseline) | 17.1% |
+| XGBoost | **14.6%** |
 
----
+**How the numbers are kept honest:**
+- The model is scored on whole trips it never saw during training — no partial overlap
+- Every result carries a confidence interval, so a small "improvement" that's really just noise doesn't get counted
+- Every experiment is logged in [`documentation/modeling_runs.md`](documentation/modeling_runs.md) with its exact code version, one change at a time
+- A final test set stays untouched until the very end — it will be used exactly once, on the finished model
 
-## Modeling Approach
-
-**Target:** `log(price)`. Standard for right-skewed price data and keeps loss interpretable in percentage terms once exponentiated.
-
-**Features (planned):**
-- `distance_km` — strongest predictor, sublinear shape
-- `lead_time_days` — weak on short routes, real signal on long-haul
-- `day_of_week` — meaningful for international routes
-- `month_of_year` — captures seasonality
-- `airline_type` (LCC / hybrid / legacy) — `is_lcc` captures most of the signal
-- `airline` — within-type variance is large, so airline itself is needed as a feature
-- `transfers` — independent of distance
-- `is_international` — coarse but cheap backup signal
-- `route_mean_log_price` — per-route mean of log-price, fit on training data only to avoid leakage
-
-**Model:** XGBoost. Chosen for native handling of the LCC/legacy regime split and the sublinear distance relationship without manual feature crossing, plus native handling of high-cardinality categoricals (airline, origin, destination).
-
-**Evaluation:** MAPE on a held-out test set, stratified by distance bucket. Targeting sub-10%.
-
-**Train/val/test split:** by `departure_at`, not random. The deployment scenario is a user querying a future flight, so the training set must not see flights departing after the test window. Random splits would leak future-snapshot info into training and overstate the score.
+**Known limits, stated plainly:** predictions for departure dates far beyond what the model has seen are less reliable, and the frontend shows every prediction as a range rather than a single number for exactly that reason.
 
 ---
 
-## Dataset & Model Artifacts
+## Deployment
 
-The SQLite database is gitignored (~70MB and growing); the collector regenerates it from scratch given an API key, though cumulative dataset depth has to be built up over time at ~4K rows/day.
+The trained model exports to a small bundle of plain files (the model itself, route statistics, reference tables, and a metadata file recording exactly which code and data produced it). No pickled Python objects — the bundle can be loaded by a lightweight server without the training environment installed.
 
-Modeling iteration happens in a working repo and will consolidate here once stable. This public repo is scoped to the data infrastructure, feature engineering, and EDA findings that shaped the model design.
+The live site is currently a design preview with sample predictions. Next step: a small prediction API that loads the bundle and answers route-plus-date queries, which the frontend will call for real predictions.
+
+---
+
+## Dataset
+
+The SQLite database is gitignored (~600MB and growing). The collector rebuilds it from scratch given an API key, though the dataset's depth — months of daily snapshots — accumulates at ~4,000 rows per day and can't be shortcut.
