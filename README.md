@@ -6,6 +6,8 @@ Two phases: an automated data pipeline (running daily) and an XGBoost price mode
 
 This public repo covers the data pipeline, feature engineering, and EDA.
 
+**Live frontend:** https://flight-price-predictor-eosin.vercel.app/ — design preview with sample predictions; the model-serving backend is in progress.
+
 ![System architecture](diagrams/architecture.svg)
 
 ![Flight Predictor overview](diagrams/Flight%20Predictor.jpeg)
@@ -24,7 +26,8 @@ This public repo covers the data pipeline, feature engineering, and EDA.
 | Feature engineering (`src/features.py`) | In progress |
 | Train/val/test split (`src/split.py`) | Complete |
 | XGBoost model training | In progress |
-| Prediction API / frontend | Planned |
+| Frontend ([live on Vercel](https://flight-price-predictor-eosin.vercel.app/)) | Design preview live |
+| Prediction API (model backend) | Planned |
 
 Target modeling start: end of May 2026, once feature engineering and the split strategy are locked in. Goal metric: MAPE on a held-out test set, targeting sub-10%. Will update with the measured number once a baseline is in place.
 
