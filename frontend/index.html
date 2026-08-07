@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Flight fare checker — a machine learning project. Type a route, get the typical price.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✈️</text></svg>">
+<title>Flight fare checker — mockup</title>
+<style>
+  /* ---------- design tokens — committed night-flight world ---------- */
+  :root {
+    --sky-top: #050b1c;
+    --sky-mid: #0d1b33;
+    --sky-bottom: #1a2c4a;
+    --sky-ink: #edf3fa;
+    --sky-ink-soft: #aabfd6;
+    --title-shadow: 0 2px 24px rgba(0, 0, 0, 0.6);
+    --glass: rgba(14, 26, 46, 0.66);
+    --glass-brd: rgba(130, 160, 195, 0.25);
+    --field: rgba(8, 18, 34, 0.6);
+    --field-brd: rgba(130, 160, 195, 0.35);
+    --ink: #e9f1f9;
+    --ink-soft: #9fb4c9;
+    --accent: #f2a25c;
+    --accent-hover: #f6b478;
+    --accent-ink: #241205;
+    --band: rgba(242, 162, 92, 0.25);
+    --good: #4cc08f;
+    --warn: #e0b45c;
+    --bad: #e5876f;
+    --chip-good-bg: rgba(76, 192, 143, 0.14);
+    --chip-warn-bg: rgba(224, 180, 92, 0.14);
+    --chip-bad-bg: rgba(229, 135, 111, 0.13);
+    --line: rgba(233, 241, 249, 0.35);
+    --font-data: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
+  }
+
+  /* ---------- scene ---------- */
+  html, body { margin: 0; }
+  body {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--sky-bottom);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .sky {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 55%, var(--sky-bottom) 100%);
+  }
+  /* CSS starfield: fallback if WebGL is unavailable; the canvas paints over it */
+  .stars {
+    position: absolute;
+    inset: 0 0 40% 0;
+    opacity: 0.9;
+    background-image:
+      radial-gradient(1.5px 1.5px at 12% 22%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 28% 9%, #fff 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 41% 30%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 55% 14%, #fff 50%, transparent 51%),
+      radial-gradient(2px 2px at 67% 26%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 76% 8%, #fff 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 88% 19%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 94% 34%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 6% 40%, #fff 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 49% 42%, #fff 50%, transparent 51%);
+  }
+  #scene {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ---------- layout ---------- */
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: clamp(1.2rem, 4vw, 2.5rem) 1.2rem 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    min-height: 92vh;
+  }
+  header.brand {
+    text-align: center;
+    margin-top: clamp(0.5rem, 5vh, 3.5rem);
+    color: var(--sky-ink);
+    text-shadow: var(--title-shadow);
+  }
+  .wordmark {
+    font-family: var(--font-data);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.42em;
+    text-indent: 0.42em; /* optically recenters the tracked caps */
+    text-transform: uppercase;
+    margin: 0 0 0.55rem;
+  }
+  .tagline {
+    font-size: clamp(1.8rem, 6vw, 2.6rem);
+    font-weight: 700;
+    line-height: 1.12;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .sub {
+    color: var(--sky-ink-soft);
+    margin: 0.7rem auto 0;
+    max-width: 34ch;
+    line-height: 1.5;
+    font-size: 1.02rem;
+  }
+
+  /* ---------- form card ---------- */
+  .card {
+    background: var(--glass);
+    border: 1px solid var(--glass-brd);
+    border-radius: 18px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 24px 64px rgba(2, 8, 18, 0.5);
+    padding: clamp(1.1rem, 3.5vw, 1.6rem);
+    animation: float 6s ease-in-out infinite alternate;
+  }
+  .card.result { animation-delay: -3s; }
+  @keyframes float {
+    from { transform: translateY(-3px); }
+    to   { transform: translateY(3px); }
+  }
+  form.route { display: flex; flex-direction: column; gap: 0.9rem; }
+  .row { display: flex; gap: 0.7rem; align-items: end; }
+  .fld { display: flex; flex-direction: column; gap: 0.32rem; flex: 1; min-width: 0; }
+  .fld label {
+    font-family: var(--font-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .fld input {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--ink);
+    background: var(--field);
+    border: 1px solid var(--field-brd);
+    border-radius: 10px;
+    padding: 0.62rem 0.7rem;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease;
+  }
+  .fld input.code {
+    font-family: var(--font-data);
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .fld input:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .fld input::-webkit-calendar-picker-indicator { filter: invert(0.85); }
+  .swap {
+    background: var(--field);
+    border: 1px solid var(--field-brd);
+    color: var(--ink-soft);
+    border-radius: 10px;
+    width: 2.6rem;
+    height: 2.95rem;
+    flex: none;
+    cursor: pointer;
+    font-size: 1.05rem;
+    transition: transform 0.25s ease, color 0.15s ease;
+  }
+  .swap:hover { color: var(--accent); }
+  .swap.spun { transform: rotate(180deg); }
+  .cta {
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    font-weight: 650;
+    color: var(--accent-ink);
+    background: var(--accent);
+    border: none;
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .cta:hover { background: var(--accent-hover); }
+  .error {
+    display: none;
+    margin: 0;
+    color: var(--bad);
+    background: var(--chip-bad-bg);
+    border-radius: 8px;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+  .error.show { display: block; }
+
+  /* ---------- result ---------- */
+  .result { display: none; }
+  .result.show { display: block; }
+  .strip {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    font-family: var(--font-data);
+    font-size: clamp(1.6rem, 6vw, 2.3rem);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.9rem;
+  }
+  .strip .path {
+    flex: 1;
+    position: relative;
+    height: 26px;
+  }
+  .strip .path::before {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; top: 50%;
+    border-top: 2px dashed var(--line);
+  }
+  .plane {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 24px;
+    height: 24px;
+    margin-top: -12px;
+    color: var(--ink);
+  }
+  .flying .plane { animation: fly 1.25s ease-in-out forwards; }
+  @keyframes fly {
+    from { left: 0; }
+    to   { left: calc(100% - 24px); }
+  }
+  .payload { opacity: 0; transition: opacity 0.45s ease; }
+  .payload.in { opacity: 1; }
+  /* Solari split-flap board — the price lands the way airports announce things */
+  .price {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0.15rem 0 0;
+  }
+  .tile, .sep {
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(2.4rem, 8vw, 3.5rem);
+    font-weight: 700;
+    line-height: 1;
+  }
+  .tile {
+    color: #f2f6fb;
+    background: linear-gradient(180deg, #3a4450 0%, #242b34 47%, #161b22 53%, #272f39 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 7px;
+    padding: 0.2em 0.1em 0.16em;
+    min-width: 0.74em;
+    text-align: center;
+    position: relative;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 3px 8px rgba(2, 8, 16, 0.5);
+  }
+  .tile::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; top: 50%;
+    height: 2px;
+    margin-top: -1px;
+    background: rgba(0, 0, 0, 0.5);
+  }
+  .sep { color: var(--ink); }
+  .tile.spinning { animation: flap 0.09s linear infinite; }
+  .tile.settled { animation: settle 0.14s ease-out; }
+  @keyframes flap {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.45); }
+  }
+  @keyframes settle {
+    from { transform: scaleY(0.45); }
+    to { transform: scaleY(1); }
+  }
+
+  .range-line {
+    color: var(--ink-soft);
+    font-size: 0.98rem;
+    margin: 0.35rem 0 1rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .band { margin: 0 0 1.1rem; }
+  .track {
+    position: relative;
+    height: 8px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--ink-soft) 18%, transparent);
+  }
+  .track .fill {
+    position: absolute;
+    top: 0; bottom: 0;
+    border-radius: 4px;
+    background: var(--band);
+    border: 1px solid var(--accent);
+    box-sizing: border-box;
+  }
+  .track .pin {
+    position: absolute;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--accent);
+    border: 2px solid var(--glass);
+    box-sizing: border-box;
+  }
+  .track .pin.quoted { background: var(--ink); }
+  .ticks {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-data);
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    margin-top: 0.4rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .legend { font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.3rem; }
+  .legend .dot {
+    display: inline-block;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    margin: 0 0.25rem 0 0.6rem;
+    vertical-align: baseline;
+  }
+  .legend .dot.model { background: var(--accent); margin-left: 0; }
+  .legend .dot.you { background: var(--ink); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.9rem; }
+  .chip {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.34rem 0.7rem;
+    border-radius: 99px;
+  }
+  .chip.good { color: var(--good); background: var(--chip-good-bg); }
+  .chip.warn { color: var(--warn); background: var(--chip-warn-bg); }
+  .chip.bad  { color: var(--bad);  background: var(--chip-bad-bg); }
+  .advice {
+    margin: 0 0 0.9rem;
+    line-height: 1.55;
+    font-size: 0.97rem;
+  }
+  .fine {
+    margin: 0;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--field-brd);
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+
+  footer.creds {
+    text-align: center;
+    color: var(--sky-ink-soft);
+    text-shadow: var(--title-shadow);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    margin-top: auto;
+  }
+  footer.creds .facts {
+    font-family: var(--font-data);
+    letter-spacing: 0.06em;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 34rem) {
+    .row.dates { flex-direction: column; align-items: stretch; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card { animation: none; }
+    .flying .plane { animation: none; left: calc(100% - 24px); }
+    .tile.spinning, .tile.settled { animation: none; }
+    .payload { transition: none; }
+    .swap { transition: none; }
+  }
+</style>
+
+<div class="sky" aria-hidden="true">
+  <div class="stars"></div>
+  <canvas id="scene"></canvas>
+</div>
+
+<div class="page">
+  <header class="brand">
+    <h1 class="tagline">Know what a flight should cost.</h1>
+    <p class="sub">Type a route. A model trained on 400,000+ real fares tells you the typical price, and whether your fare beats it.</p>
+  </header>
+
+  <section class="card" aria-label="Route input">
+    <form class="route" id="routeForm" novalidate>
+      <div class="row">
+        <div class="fld">
+          <label for="from">From</label>
+          <input class="code" id="from" list="airports" placeholder="JFK" maxlength="3" autocomplete="off" spellcheck="false" value="JFK">
+        </div>
+        <button class="swap" type="button" id="swapBtn" title="Swap airports" aria-label="Swap origin and destination">⇅</button>
+        <div class="fld">
+          <label for="to">To</label>
+          <input class="code" id="to" list="airports" placeholder="NRT" maxlength="3" autocomplete="off" spellcheck="false" value="NRT">
+        </div>
+      </div>
+      <div class="row dates">
+        <div class="fld">
+          <label for="dep">Departure</label>
+          <input type="date" id="dep">
+        </div>
+        <div class="fld">
+          <label for="quoted">Price you found <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+          <input type="text" id="quoted" inputmode="numeric" placeholder="$ 980" autocomplete="off">
+        </div>
+      </div>
+      <button class="cta" type="submit">Check this fare</button>
+      <p class="error" id="err" role="alert"></p>
+    </form>
+    <datalist id="airports">
+      <option value="JFK">New York JFK</option>
+      <option value="EWR">Newark</option>
+      <option value="LAX">Los Angeles</option>
+      <option value="SEA">Seattle</option>
+      <option value="SFO">San Francisco</option>
+      <option value="YYZ">Toronto</option>
+      <option value="YVR">Vancouver</option>
+      <option value="LHR">London Heathrow</option>
+      <option value="CDG">Paris CDG</option>
+      <option value="NRT">Tokyo Narita</option>
+      <option value="HND">Tokyo Haneda</option>
+      <option value="ICN">Seoul Incheon</option>
+      <option value="CUN">Cancún</option>
+      <option value="MEX">Mexico City</option>
+      <option value="BCN">Barcelona</option>
+    </datalist>
+  </section>
+
+  <section class="card result" id="result" aria-live="polite">
+    <div class="strip" id="strip">
+      <span id="codeFrom">JFK</span>
+      <span class="path">
+        <svg class="plane" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M2 12 L22 4 L14 20 L11 13 Z" fill="currentColor"></path>
+        </svg>
+      </span>
+      <span id="codeTo">NRT</span>
+    </div>
+    <div class="payload" id="payload">
+      <div class="price" id="price" role="img" aria-label=""></div>
+      <p class="range-line">Usually lands between <strong id="lo"></strong> and <strong id="hi"></strong></p>
+
+      <div class="band">
+        <div class="track">
+          <div class="fill" id="fill"></div>
+          <div class="pin" id="pinModel" title="Model estimate"></div>
+          <div class="pin quoted" id="pinQuoted" title="Your fare" style="display:none"></div>
+        </div>
+        <div class="ticks"><span id="tickLo"></span><span id="tickHi"></span></div>
+        <p class="legend"><span class="dot model"></span>model estimate<span id="youLegend" style="display:none"><span class="dot you"></span>your fare</span></p>
+      </div>
+
+      <div class="chips" id="chips"></div>
+      <p class="advice" id="advice"></p>
+      <p class="fine" id="fine"></p>
+    </div>
+  </section>
+
+  <footer class="creds">
+    <p class="facts">Built with XGBoost</p>
+    <p>Estimates only — this site never sells tickets.</p>
+  </footer>
+</div>
+
+<script>
+  // =====================================================================
+  // 3D night sky: raymarched volumetric clouds, stars, moon, aircraft
+  // lights — pure WebGL, no libraries. Falls back to the CSS sky if
+  // WebGL is unavailable.
+  // =====================================================================
+  (function () {
+    const canvas = document.getElementById("scene");
+    let gl;
+    try {
+      gl = canvas.getContext("webgl", { antialias: false, alpha: false });
+    } catch (e) { gl = null; }
+    if (!gl) { canvas.remove(); return; }
+
+    const VERT = `
+      attribute vec2 aPos;
+      void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
+    `;
+
+    const FRAG = `
+      precision highp float;
+      uniform vec2 uRes;
+      uniform float uTime;
+
+      const vec3 MOON = vec3(0.32, 0.38, 0.87);
+      const float CTOP = -5.0;
+      const float CBOT = -34.0;
+
+      float hash13(vec3 p) {
+        p = fract(p * 0.1031);
+        p += dot(p, p.yzx + 33.33);
+        return fract((p.x + p.y) * p.z);
+      }
+
+      float noise3(vec3 x) {
+        vec3 i = floor(x);
+        vec3 f = fract(x);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(mix(hash13(i), hash13(i + vec3(1, 0, 0)), f.x),
+              mix(hash13(i + vec3(0, 1, 0)), hash13(i + vec3(1, 1, 0)), f.x), f.y),
+          mix(mix(hash13(i + vec3(0, 0, 1)), hash13(i + vec3(1, 0, 1)), f.x),
+              mix(hash13(i + vec3(0, 1, 1)), hash13(i + vec3(1, 1, 1)), f.x), f.y),
+          f.z);
+      }
+
+      float fbm(vec3 p) {
+        float v = 0.0;
+        float a = 0.55;
+        for (int i = 0; i < 4; i++) {
+          v += a * noise3(p);
+          p = p * 2.13 + vec3(11.7);
+          a *= 0.5;
+        }
+        return v;
+      }
+
+      float fbm2(vec3 p) {
+        return 0.55 * noise3(p) + 0.275 * noise3(p * 2.13 + vec3(11.7));
+      }
+
+      float heightShape(float y) {
+        return smoothstep(CBOT, CBOT + 10.0, y) * (1.0 - smoothstep(CTOP - 8.0, CTOP, y));
+      }
+
+      // sharp remap = defined masses with clear-sky gaps (a linear ramp reads
+      // as gray haze); the extra high-frequency octave breaks up the edges
+      float density(vec3 p) {
+        vec3 q = p * vec3(0.030, 0.055, 0.030) + vec3(uTime * 0.015, 0.0, 0.0);
+        float f = fbm(q) + 0.15 * noise3(q * 5.0 + vec3(3.7));
+        return smoothstep(0.52, 0.78, f) * heightShape(p.y);
+      }
+
+      float densityLQ(vec3 p) {
+        vec3 q = p * vec3(0.030, 0.055, 0.030) + vec3(uTime * 0.015, 0.0, 0.0);
+        return smoothstep(0.46, 0.74, fbm2(q)) * heightShape(p.y);
+      }
+
+      // returns rgb = in-scattered light, a = transmittance
+      vec4 clouds(vec3 ro, vec3 rd) {
+        if (rd.y > -0.012) return vec4(0.0, 0.0, 0.0, 1.0);
+        float t0 = (CTOP - ro.y) / rd.y;
+        float t1 = (CBOT - ro.y) / rd.y;
+        t0 = max(t0, 0.0);
+        t1 = min(t1, 340.0);
+        if (t1 <= t0) return vec4(0.0, 0.0, 0.0, 1.0);
+        float stp = (t1 - t0) / 34.0;
+        float t = t0 + stp * hash13(vec3(gl_FragCoord.xy, 1.7));
+        vec3 acc = vec3(0.0);
+        float T = 1.0;
+        vec3 horizonCol = vec3(0.10, 0.13, 0.20);
+        // forward-scatter phase: clouds between viewer and moon get a silver lining
+        float phase = 0.55 + 1.3 * pow(max(dot(rd, MOON), 0.0), 6.0);
+        for (int i = 0; i < 34; i++) {
+          if (t > t1) break;
+          vec3 p = ro + rd * t;
+          float d = density(p);
+          if (d > 0.01) {
+            // Beer-Lambert toward the moon + powder term: shadowed cores go
+            // deep blue, thin edges and tops catch bright moonlight
+            float dl = densityLQ(p + MOON * 5.0);
+            float beer = exp(-dl * 4.5);
+            float powder = 1.0 - exp(-d * 6.0);
+            float lit = clamp(beer * (0.3 + 0.7 * powder) * phase, 0.0, 1.0);
+            vec3 c = mix(vec3(0.10, 0.13, 0.22), vec3(0.78, 0.84, 1.0), lit);
+            c += vec3(0.04, 0.06, 0.10) * smoothstep(CBOT, CTOP, p.y);
+            c = mix(horizonCol, c, exp(-t * 0.0016));
+            // fade distant clouds out instead of graying them in
+            float a = (1.0 - exp(-d * stp * 0.9)) * exp(-t * 0.0022);
+            acc += T * a * c;
+            T *= 1.0 - a;
+            if (T < 0.05) break;
+            t += stp;
+          } else {
+            t += stp * 1.7; // stride faster through empty air
+          }
+        }
+        return vec4(acc, T);
+      }
+
+      vec3 planeLight(vec3 rd, vec3 rel, float ph) {
+        float d = dot(rd, normalize(rel));
+        float core = exp((d - 1.0) * 70000.0);
+        float fl = step(fract(uTime * 0.8 + ph), 0.05);
+        float rb = smoothstep(0.6, 1.0, sin(uTime * 4.0 + ph * 9.0));
+        return (vec3(1.0) * fl * 1.6
+              + vec3(1.0, 0.3, 0.25) * rb * 0.5
+              + vec3(0.9) * 0.12) * core;
+      }
+
+      vec3 sky(vec3 rd) {
+        float h = clamp(rd.y * 2.0 + 0.3, 0.0, 1.0);
+        vec3 col = mix(vec3(0.07, 0.11, 0.19), vec3(0.015, 0.03, 0.075), h);
+
+        // airglow band hugging the horizon
+        col += vec3(0.05, 0.09, 0.12) * smoothstep(0.18, 0.0, abs(rd.y + 0.02));
+        // distant cloud bank silhouette below the horizon
+        col = mix(col, vec3(0.10, 0.13, 0.20), smoothstep(0.02, -0.06, rd.y));
+
+        // moon: disc + two glow falloffs
+        float md = dot(rd, MOON);
+        float disc = smoothstep(0.9997, 0.99985, md);
+        col += vec3(0.92, 0.94, 1.0) * disc * (0.8 + 0.2 * noise3(rd * 260.0));
+        col += vec3(0.35, 0.42, 0.60) * pow(max(md, 0.0), 90.0) * 0.35;
+        col += vec3(0.18, 0.22, 0.34) * pow(max(md, 0.0), 18.0) * 0.18;
+
+        // stars, above the horizon only
+        vec2 sph = vec2(atan(rd.x, rd.z), asin(clamp(rd.y, -1.0, 1.0)));
+        vec2 sp = sph * vec2(160.0, 110.0);
+        vec2 id = floor(sp);
+        vec2 f = fract(sp);
+        float hs = hash13(vec3(id, 7.0));
+        if (hs > 0.90 && rd.y > 0.02) {
+          vec2 pos = vec2(hash13(vec3(id, 3.1)), hash13(vec3(id, 5.7))) * 0.7 + 0.15;
+          float dd = length(f - pos);
+          float tw = 0.6 + 0.4 * sin(uTime * (1.5 + hs * 3.0) + hs * 60.0);
+          float b = (hs - 0.90) / 0.10;
+          col += vec3(0.9, 0.95, 1.0) * smoothstep(0.20, 0.0, dd)
+               * b * b * tw * smoothstep(0.02, 0.15, rd.y);
+        }
+
+        // aircraft: white strobe + red beacon, three altitudes and speeds
+        col += planeLight(rd, vec3(mod(uTime * 1.1, 80.0) - 40.0, 14.0, 55.0), 0.0);
+        col += planeLight(rd, vec3(40.0 - mod(uTime * 0.7, 80.0), 20.0, 90.0), 0.37);
+        col += planeLight(rd, vec3(mod(uTime * 1.7, 70.0) - 35.0, 9.0, 34.0), 0.71);
+
+        return col;
+      }
+
+      void main() {
+        vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
+        vec3 ro = vec3(0.0, 0.0, uTime * 4.0);
+        vec3 rd = normalize(vec3(uv.x, uv.y - 0.10, 1.0));
+
+        vec4 cl = clouds(ro, rd);
+        vec3 col = sky(rd) * cl.a + cl.rgb;
+
+        // dither to kill gradient banding
+        col += (hash13(vec3(gl_FragCoord.xy, 9.1)) - 0.5) * 0.012;
+        gl_FragColor = vec4(pow(max(col, 0.0), vec3(0.85)), 1.0);
+      }
+    `;
+
+    function compile(type, src) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(s));
+      }
+      return s;
+    }
+
+    let prog;
+    try {
+      prog = gl.createProgram();
+      gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+      gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(prog));
+      }
+    } catch (e) {
+      canvas.remove();
+      return;
+    }
+    gl.useProgram(prog);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, "aPos");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const uRes = gl.getUniformLocation(prog, "uRes");
+    const uTime = gl.getUniformLocation(prog, "uTime");
+
+    // render at reduced internal resolution — raymarching is per-pixel work
+    function resize() {
+      const s = 0.6 * Math.min(window.devicePixelRatio || 1, 1.5);
+      canvas.width = Math.max(1, Math.floor(window.innerWidth * s));
+      canvas.height = Math.max(1, Math.floor(window.innerHeight * s));
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    resize();
+
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const start = performance.now();
+    function frame(now) {
+      const t = reduced ? 120.0 : (now - start) * 0.001;
+      gl.uniform1f(uTime, t);
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      if (!reduced) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    window.addEventListener("resize", () => {
+      resize();
+      if (reduced) requestAnimationFrame(frame);
+    });
+  })();
+
+  // =====================================================================
+  // Fair-price checker UI (canned model outputs; real app calls backend)
+  // =====================================================================
+  const KNOWN_AIRPORTS = ["JFK","EWR","LAX","SEA","SFO","YYZ","YVR","LHR","CDG","NRT","HND","ICN","CUN","MEX","BCN"];
+  const ROUTE_PRICES = {
+    "JFK-NRT": 1124, "NRT-JFK": 1124,
+    "YYZ-LHR": 636,  "LHR-YYZ": 648,
+    "JFK-LHR": 583,  "LHR-JFK": 574,
+    "JFK-CDG": 612,  "CDG-JFK": 605,
+    "LAX-NRT": 948,  "NRT-LAX": 931,
+    "YYZ-NRT": 1052, "NRT-YYZ": 1067,
+    "SEA-NRT": 884,  "NRT-SEA": 869,
+    "LAX-LHR": 702,  "LHR-LAX": 715,
+    "YYZ-CDG": 645,  "CDG-YYZ": 652,
+    "JFK-LAX": 288,  "LAX-JFK": 292,
+    "SEA-LAX": 174,  "LAX-SEA": 171,
+    "JFK-ICN": 998,  "ICN-JFK": 1010,
+    "JFK-CUN": 384,  "CUN-JFK": 391,
+    "YYZ-CUN": 412,  "CUN-YYZ": 405
+  };
+  const MAPE_KNOWN = 0.146;   // run #11 val CI midpoint, carried in metadata.json
+  const MAPE_UNSEEN = 0.205;  // chronological-split caveat: wider band off-distribution
+
+  const $ = (id) => document.getElementById(id);
+  const money = (x) => "$" + Math.round(x).toLocaleString("en-US");
+
+  // deterministic tiny wiggle so different dates feel alive (±4%)
+  function dateWiggle(dateStr) {
+    let h = 0;
+    for (const ch of dateStr) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return 1 + ((h % 81) - 40) / 1000;
+  }
+
+  const depInput = $("dep");
+  const today = new Date();
+  depInput.min = today.toISOString().slice(0, 10);
+  const defaultDep = new Date(today);
+  defaultDep.setDate(defaultDep.getDate() + 45);
+  depInput.value = defaultDep.toISOString().slice(0, 10);
+
+  $("swapBtn").addEventListener("click", () => {
+    const f = $("from"), t = $("to");
+    [f.value, t.value] = [t.value, f.value];
+    $("swapBtn").classList.toggle("spun");
+  });
+
+  function fail(msg) {
+    const e = $("err");
+    e.textContent = msg;
+    e.classList.add("show");
+    $("result").classList.remove("show");
+  }
+
+  $("routeForm").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    $("err").classList.remove("show");
+
+    const from = $("from").value.trim().toUpperCase();
+    const to = $("to").value.trim().toUpperCase();
+    const dep = depInput.value;
+    const quotedRaw = $("quoted").value.replace(/[$,\s]/g, "");
+    const quoted = quotedRaw ? Number(quotedRaw) : null;
+
+    for (const code of [from, to]) {
+      if (!KNOWN_AIRPORTS.includes(code)) {
+        return fail(`"${code || "—"}" isn't an airport we cover yet. Try one from the list — JFK, LAX, YYZ, LHR, NRT…`);
+      }
+    }
+    if (from === to) return fail("Origin and destination are the same — pick two different airports.");
+    if (!dep) return fail("Pick a departure date.");
+    if (dep < depInput.min) return fail("That departure is in the past — the model only prices future flights.");
+    if (quotedRaw && (!Number.isFinite(quoted) || quoted <= 0)) {
+      return fail("The price you found should be a number, like 980.");
+    }
+
+    const key = from + "-" + to;
+    const unseen = !(key in ROUTE_PRICES);
+    const base = unseen ? 407 : ROUTE_PRICES[key];
+    const pred = base * dateWiggle(dep + key);
+    const err = unseen ? MAPE_UNSEEN : MAPE_KNOWN;
+    const lo = pred * (1 - err), hi = pred * (1 + err);
+
+    render({ from, to, dep, pred, lo, hi, quoted, unseen });
+  });
+
+  // Solari board: digits and "$" get flap tiles, "," is a bare separator
+  function spinBoard(finalText, reduced) {
+    const board = $("price");
+    board.setAttribute("aria-label", finalText);
+    board.innerHTML = "";
+    [...finalText].forEach((ch, i) => {
+      const isTile = /[0-9$]/.test(ch);
+      const el = document.createElement("span");
+      el.className = isTile ? "tile" : "sep";
+      el.setAttribute("aria-hidden", "true");
+      board.appendChild(el);
+      if (!isTile || ch === "$" || reduced) {
+        el.textContent = ch;
+        return;
+      }
+      el.classList.add("spinning");
+      const iv = setInterval(() => {
+        el.textContent = Math.floor(Math.random() * 10);
+      }, 70);
+      setTimeout(() => {
+        clearInterval(iv);
+        el.classList.remove("spinning");
+        el.textContent = ch;
+        el.classList.add("settled");
+      }, 350 + i * 140);
+    });
+  }
+
+  function render(r) {
+    const result = $("result"), strip = $("strip"), payload = $("payload");
+    $("codeFrom").textContent = r.from;
+    $("codeTo").textContent = r.to;
+    result.classList.add("show");
+    payload.classList.remove("in");
+    strip.classList.remove("flying");
+    void strip.offsetWidth; // restart the flight animation
+    strip.classList.add("flying");
+
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setTimeout(() => {
+      spinBoard(money(r.pred), reduced);
+      $("lo").textContent = money(r.lo);
+      $("hi").textContent = money(r.hi);
+
+      // band scale: lo-30% .. hi+30% of predicted
+      const min = r.pred * 0.55, max = r.pred * 1.45;
+      const pct = (x) => Math.min(98, Math.max(2, (x - min) / (max - min) * 100));
+      $("fill").style.left = pct(r.lo) + "%";
+      $("fill").style.width = (pct(r.hi) - pct(r.lo)) + "%";
+      $("pinModel").style.left = pct(r.pred) + "%";
+      $("tickLo").textContent = money(min);
+      $("tickHi").textContent = money(max);
+
+      const chips = $("chips");
+      chips.innerHTML = "";
+      let advice = "";
+
+      if (r.quoted != null) {
+        $("pinQuoted").style.display = "block";
+        $("pinQuoted").style.left = pct(r.quoted) + "%";
+        $("youLegend").style.display = "inline";
+        const gap = (r.quoted - r.pred) / r.pred;
+        const z = gap / (r.unseen ? MAPE_UNSEEN : MAPE_KNOWN);
+        const pctStr = Math.abs(Math.round(gap * 100)) + "%";
+        if (z <= -1) {
+          chips.insertAdjacentHTML("beforeend", `<span class="chip good">Good fare — ${pctStr} below typical</span>`);
+          advice = `${money(r.quoted)} beats what this route usually costs. Fares this far below typical don't appear often.`;
+        } else if (z >= 1) {
+          chips.insertAdjacentHTML("beforeend", `<span class="chip bad">Above typical — ${pctStr} over</span>`);
+          advice = `${money(r.quoted)} is more than this route usually costs. Worth checking other dates or nearby airports.`;
+        } else {
+          chips.insertAdjacentHTML("beforeend", `<span class="chip good" style="color:var(--ink-soft);background:color-mix(in srgb,var(--ink-soft) 12%, transparent)">About typical</span>`);
+          advice = `${money(r.quoted)} is within the normal range for this route — neither a steal nor a rip-off.`;
+        }
+        advice += " In our data, waiting rarely helps: fares 2–4 weeks out moved under 5% on average.";
+      } else {
+        advice = "Found a fare online? Enter it above and we'll tell you whether it beats the typical price. In our data, waiting rarely helps: fares 2–4 weeks out moved under 5% on average.";
+      }
+
+      if (r.unseen) {
+        chips.insertAdjacentHTML("beforeend", `<span class="chip warn">New route for us — wider estimate</span>`);
+      }
+      $("advice").textContent = advice;
+      $("fine").textContent = r.unseen
+        ? "We haven't collected fares on this exact route, so this estimate leans on distance and season alone — the range shown is ±20%."
+        : "Estimate from 400,000+ fares logged since June 2026 · typical error ±14.6%.";
+
+      payload.classList.add("in");
+    }, reduced ? 0 : 1250);
+  }
+</script>
