@@ -1049,3 +1049,29 @@ Run 88: **5,466 offers — new volume record** (prev 5,367 on Aug 1) — single 
 **Late start observed, but it does NOT explain runtime.** Run 88 fired at 13:13 UTC rather than the usual 13:01 — a 12-minute deferral, the signature of launchd waiting for the machine to wake from sleep. Tempting as a free proxy for the open runtime question, but the record refutes it: Jul 31, Aug 1, Aug 2 and Aug 3 all started at 13:01 exactly and still ran 8–12h, while Aug 4 started on time and ran 1h 26m. **Start delay predicts nothing about runtime**; per-call timing (still unlogged) remains the only thing that would discriminate sleep-suspension from upstream latency.
 
 **Disk 58 GB free / 72% — up 2 GB, the first increase in this stretch** (−13, −1, −5, **+2**). That argues against a runaway consumer and fits the iCloud re-materialization reading. **Deliberately not closing the watch on one good day** — that is precisely the error made on Aug 3 and amended on Aug 4. **Backup byte-size unverified for a sixth consecutive run**; the path still returns `Operation not permitted`, so the Full Disk Access fix noted in the Aug 4 entry remains outstanding and is now the longest-broken series here.
+
+---
+
+## August 6, 2026
+
+Run 89: **5,521 offers — second consecutive volume record** (5,466 → 5,521), single run, **0 failures**, **4,200 api_calls**, ~**54m** runtime (13:02 → 13:56 UTC; finished 06:56 PDT) — **fastest since Jul 23**. Cumulative **407,346 rows** (401,825 + 5,521 — reconciles exactly). Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, lead 0–204d, trip 0–54d, 274 routes; **0 duplicates**; `flight_class` still constant. Distributions: 40 gates, **113 airlines (holding the Aug 5 record)**, avg **$538.84**, floor **$47** (holding), 201 distinct departure dates. Top fare **$2,819 NYC→TYO (TK, OneTwoTrip)** — the identical offer that topped Aug 4, persisting rather than new; no leak candidates. `lead_max` 205 → 204, normal decay. err.log unchanged (Jun 25).
+
+**Every pair damaged by the Aug 5 failure cluster recovered in one day — confirming the loss was purely the failures, with no inventory component.**
+
+| City pair | Aug 5 | Today | Band |
+|---|---|---|---|
+| NYC→DEN | **0** | **13** | 6–10 |
+| NYC→ATL | 22 | 46 | 35–45 |
+| YTO→FLL | 12 | 16 | 16–20 |
+| YTO→MIA | 11 | 13 | 13–17 |
+| NYC→LAS | 61 | 62 | 60–71 |
+
+NYC→DEN — yesterday's first-ever total pair loss — went 0 → 13. Note NYC→DEN and NYC→ATL both rebounded *above* their bands; a bounce-back day is not band evidence, so the 6–10 and 35–45 bands stand unrevised. Routes **274**, back inside the 271–286 band after yesterday's 270.
+
+**Staleness 99.1% on 4,933 matched — top of the band, record match count.** Yesterday's soft reading (97.2% on 3,989) reversed exactly as its one-story interpretation predicted: the route dropouts had depressed the match base, and with routes restored the count recovered — overshooting the usual 4,150–4,500 range, consistent with two consecutive record-volume days. 99.1% touches the top of the 96.8–99.2 band: almost nothing repriced overnight.
+
+**Runtime 54m — the bimodal pattern sharpens: 12h 04m → 54m in consecutive runs.** Start was 13:02, on time. The stretch now reads Jul 31 12h24m/20f, Aug 1 9h16m/0f, Aug 2 8h39m/0f, Aug 3 9h51m/32f, Aug 4 1h26m/0f, Aug 5 12h04m/30f, Aug 6 **54m/0f** — durations cluster at ~1h or 9–12h with nothing in between, which fits either open explanation (upstream latency episodes or sleep suspension) and rules out gradual drift. Per-call timing remains the only discriminator and remains unlogged.
+
+**Backup: success is now *inferrable* per-run — the daily "did it run" question is closed, though byte-size stays unverified (seventh consecutive).** The path still returns `Operation not permitted` (TCC blocks the terminal even outside the sandbox). But the backup block in `collect.py` (lines 194–199) has no try/except: any copy failure crashes the run before the dedup/audit subprocesses launch — exactly the Jun 25 signature, an ENOSPC traceback with no dedup/audit output after it. Today's block contains both dedup and audit output, so the copy **succeeded**. This test applies retroactively: every run in the "unverified" stretch that shows dedup/audit output in its log block completed its backup. What Full Disk Access would still add is byte-size/mtime confirmation that iCloud hasn't evicted or truncated the file — worth one manual Finder check, but no longer a daily unknown.
+
+**Disk 53 GB free / 74% — down 5 GB; watch stays open.** Trend −13, −1, −5, +2, **−5**: still sawing downward overall, still consistent with the iCloud re-materialization reading. Roughly 10 days of headroom at the worst single-day rate.
