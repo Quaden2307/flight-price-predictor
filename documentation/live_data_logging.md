@@ -1075,3 +1075,27 @@ NYC→DEN — yesterday's first-ever total pair loss — went 0 → 13. Note NYC
 **Backup: success is now *inferrable* per-run — the daily "did it run" question is closed, though byte-size stays unverified (seventh consecutive).** The path still returns `Operation not permitted` (TCC blocks the terminal even outside the sandbox). But the backup block in `collect.py` (lines 194–199) has no try/except: any copy failure crashes the run before the dedup/audit subprocesses launch — exactly the Jun 25 signature, an ENOSPC traceback with no dedup/audit output after it. Today's block contains both dedup and audit output, so the copy **succeeded**. This test applies retroactively: every run in the "unverified" stretch that shows dedup/audit output in its log block completed its backup. What Full Disk Access would still add is byte-size/mtime confirmation that iCloud hasn't evicted or truncated the file — worth one manual Finder check, but no longer a daily unknown.
 
 **Disk 53 GB free / 74% — down 5 GB; watch stays open.** Trend −13, −1, −5, +2, **−5**: still sawing downward overall, still consistent with the iCloud re-materialization reading. Roughly 10 days of headroom at the worst single-day rate.
+
+---
+
+## August 7, 2026
+
+Run 90: **5,380 offers**, single run, **49 failures — new failure record** (prev 32 on Aug 3), **4,200 api_calls**, ~**15h 52m runtime — new duration record** (prev 12h 24m on Jul 31; 13:05 Aug 7 → 04:57 Aug 8 UTC; finished 21:57 PDT). Cumulative **412,726 rows** (407,346 + 5,380 — reconciles exactly). Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, lead 0–202d, trip 0–54d, 277 routes; **0 duplicates**; `flight_class` still constant. Distributions: 40 gates, 112 airlines (113 → 112), avg **$539.47**, **floor $48 — the $47 floor broke after three days**, 200 distinct departure dates. Top fare **$2,819 NYC→TYO (TK, OneTwoTrip) for the third consecutive day** — the same offer persisting, not a new leak candidate. `lead_max` 204 → **202** — first non-unit decay in the stretch (207→206→205→204→202), minor but noted. err.log unchanged (Jun 25). Backup **succeeded** by the Aug 6 inference — dedup and audit output present in the block.
+
+**All 49 failures departed YUL — and Montreal is a single-airport city, so the triage model got its second confirmation.** YUL→MIA, YUL→EWR and YUL→BOS each failed all 14 calls; YUL→LGA failed 5, YUL→FLL 2. All were `NameResolutionError`, and the affected routes are adjacent in `ROUTES` — consistent with a contiguous DNS-outage window sweeping a slice of the loop rather than anything Montreal-specific. Since every YMQ pair is served by YUL alone, complete route failure meant total pair loss, exactly as the Aug 5 framing predicts:
+
+| City pair | Recent band | Today | Read |
+|---|---|---|---|
+| YMQ→MIA | 2–10 | **0** | **Total loss — second ever**, after NYC→DEN on Aug 5 |
+| YMQ→NYC | 18–19 | 2 | Heavy loss (EWR wiped, LGA mostly) — had already dipped to 8 on Aug 6 |
+| YMQ→FLL | 6–7 | 3 | Partial |
+| YMQ→BOS | 0–2 | 0 | Already 0 on Aug 5–6 — not attributable to the failures |
+| YMQ→PAR | ~40–50 | 48 | Untouched — those calls succeeded |
+
+**≈25–30 rows lost from 49 failures** — the damage series is now ~185/32f (Aug 3), ~36/30f (Aug 5), ~25–30/49f (today). Failure count and impact are fully decoupled; what matters is which pairs are hit and how thin they are. The other ~110 of today's 141-row drop from the Aug 6 record reads as ordinary variance. Routes **277** — comfortably in band despite the record failure count.
+
+**Staleness 97.3% on 4,036 matched — the Aug 5 one-story pattern repeats.** Both numbers at the low end (usual match base 4,150–4,500), and again the failure-thinned base explains the soft rate and the low count together. Two clean instances of this signature (Aug 5, today) against the restored-day rebound between them (Aug 6: 99.1% on 4,933) make it a reliable read: **on a failure-cluster day, expect staleness to sag with its match base, and don't treat it as market movement.**
+
+**Runtime 15h 52m — the long mode is stretching.** Series: Jul 31 12h24m/20f, Aug 1 9h16m/0f, Aug 2 8h39m/0f, Aug 3 9h51m/32f, Aug 4 1h26m/0f, Aug 5 12h04m/30f, Aug 6 54m/0f, Aug 7 **15h52m/49f**. Still bimodal — under ~1½h or over ~8½h, nothing between — but the long mode's ceiling moved up 3½ hours. Start was 13:05, on time. Today is the first long run whose failure count is also a record, but Aug 1–2 (long, zero failures) still block the DNS explanation from being sufficient on its own; per-call timing remains unlogged and remains the only discriminator.
+
+**Disk watch CLOSED: 88 GB free / 55% — up 35 GB overnight.** Trend −13, −1, −5, +2, −5, **+35**. This is not "one quiet day" (the Aug 3 mistake) — it is the specific terminal event the iCloud re-materialization hypothesis predicted: sync completes, local copies get evicted, and the ~117 GB `du`-invisible gap collapses. The mechanism was confirmed by the Aug 4 diagnostic (snapshots ruled out, gap localized to the TCC-hidden iCloud path); today delivered the predicted resolution. Reopen only if free space resumes a multi-day decline without an obvious consumer.
