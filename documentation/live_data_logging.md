@@ -1118,3 +1118,28 @@ Run 91: **5,338 offers**, single run, **0 failures**, **4,200 api_calls**, ~**7h
 **Volume: third consecutive decline — and today's is the first clean read of it.** 5,521 → 5,380 → **5,338**; the Aug 7 step had 49 failures muddying it, but today's zero-failure run puts the softening on the record cleanly. Still ordinary variance in scale (~−100/day against a ±150 daily swing), but a fourth decline tomorrow would make it a trend worth a distribution look.
 
 **Disk 87 GB free / 56% — stable (−1) after the +35 GB resolution.** Watch stays closed; behaviour matches the post-sync steady state the close predicted.
+
+---
+
+## August 9, 2026
+
+Run 92: **5,411 offers**, single run, **0 failures**, **4,200 api_calls**, ~**45m 33s runtime — new fast-mode record** (prev 54m on Aug 6; 13:00 → 13:45 UTC; finished 06:45 PDT; started on time to the second). Cumulative **423,475 rows** (418,064 + 5,411 — reconciles exactly). Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, lead 0–200d, trip 0–54d, 273 routes; **0 duplicates**; `flight_class` still constant. Distributions: **41 gates** (40 → 41), 112 airlines (111 → 112), avg **$539.52**, floor **$48** (holding), 198 distinct departure dates. Top fare $2,819 NYC→TYO — fifth day, retired as an outlier candidate on Aug 8, noted only for continuity. `lead_max` 201 → 200, normal decay. err.log unchanged (Jun 25). Backup **succeeded** (dedup and audit output present in the block).
+
+**Volume decline broken — the Aug 8 trigger did not fire.** 5,521 → 5,380 → 5,338 → **5,411**, second consecutive zero-failure run, so both endpoints of the reversal are clean reads. Back near the top of the range; no distribution look needed. The three-day dip closes as ordinary variance, exactly where the Aug 8 entry left the burden.
+
+**Montreal is settling into a reshuffled shape — all three Aug 8 reads firmed up today.**
+
+| Pair | Old band | Aug 6–9 (clean days bolded) | Read |
+|---|---|---|---|
+| YMQ→NYC | 18–19 | **8**, 2, **7**, **8** | New ~7–8 band **confirmed** — thinning real and stable |
+| YMQ→MIA | 2–10 | **10**, 0, **9**, **9** | Holding at the top — likely shifted up |
+| YMQ→FLL | 6–7 | **7**, 3, **11**, **11** | Two clean days above old band — **gained** inventory |
+| YMQ→BOS / YMQ→LAX | 1–2 | 0 ×5 days | Quiet disappearance persistent |
+
+What looked on Aug 8 like rebound overshoot on MIA/FLL now reads as their new level — two consecutive clean-day observations each. Taken together the pattern is an **inventory reshuffle across the YMQ pairs around Aug 5–7** (NYC down, MIA/FLL up, BOS/LAX gone) that the Aug 7 failure cluster overlapped and partially masked. Worth remembering as a template: a failure cluster landing on a pair mid-reshuffle makes the reshuffle look like damage until clean days separate the two.
+
+**Staleness 98.9% on 4,759 matched — mid-band, clean-day normal.** Consistent with the established cluster-day rule (nothing to add; second consecutive clean day, both readings ordinary).
+
+**Runtime 45m 33s — fast mode sets a new floor, and the bimodal gap widens again.** Series: Aug 4 1h26m/0f, Aug 5 12h04m/30f, Aug 6 54m/0f, Aug 7 15h52m/49f, Aug 8 7h44m/0f, Aug 9 **45m/0f**. The two modes now read 45m–1h26m and 7h44m–15h52m — a >5× gap with nothing in between across ten runs. Start-time and failure-count both remain non-predictive; per-call timing remains the only discriminator and remains unlogged.
+
+**Disk 88 GB free / 55% — stable (+1).** Second steady day post-resolution; the closed watch stands.
