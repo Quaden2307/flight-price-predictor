@@ -1143,3 +1143,47 @@ What looked on Aug 8 like rebound overshoot on MIA/FLL now reads as their new le
 **Runtime 45m 33s — fast mode sets a new floor, and the bimodal gap widens again.** Series: Aug 4 1h26m/0f, Aug 5 12h04m/30f, Aug 6 54m/0f, Aug 7 15h52m/49f, Aug 8 7h44m/0f, Aug 9 **45m/0f**. The two modes now read 45m–1h26m and 7h44m–15h52m — a >5× gap with nothing in between across ten runs. Start-time and failure-count both remain non-predictive; per-call timing remains the only discriminator and remains unlogged.
 
 **Disk 88 GB free / 55% — stable (+1).** Second steady day post-resolution; the closed watch stands.
+
+---
+
+## August 10, 2026
+
+*(Entry written Aug 12 — the run was checked live mid-flight on Aug 10, but logging lagged two days.)*
+
+Run 93: **5,385 offers**, single run, **48 failures**, **4,200 api_calls**, ~**11h 55m** wall time (13:06 → 01:01 UTC; finished 18:01 PDT). Cumulative **428,860 rows** (423,475 + 5,385 — reconciles exactly). Audit clean on the six modeling-critical fields — 0 NULLs, ranges sane, lead 0–199d, trip 0–54d; **0 duplicates**; `flight_class` still constant. Distributions: **267 routes — new band-floor break** (prev low 270 on Aug 5), 40 gates, 109 airlines (112 → 109), avg **$534.07**, **floor $52** (the $48 floor broke after four days), 193 distinct departure dates. Top fare $2,819 NYC→TYO, day six. `lead_max` 200 → 199, normal decay. err.log unchanged (Jun 25). Backup **succeeded** (dedup/audit output present).
+
+**Second consecutive all-Canadian failure cluster** — YVR→SFO ×14, YVR→PHX ×14, YUL→YYC ×14, YUL→YOW ×4, YVR→SEA ×2, again contiguous in `ROUTES`. YMQ→YYC (single-airport, 9–13/day) took the third total pair loss on record; YVR→SFO and YVR→PHX (thin) also wiped. Staleness **97.5% on 4,034 matched** — cluster-day signature, fourth instance, rule holds.
+
+**⚠️ This run was observed live mid-crawl, and the observation broke both "progress" signals at once.** At 11h 50m in, the flushed log sat at ~20% of the route order and the DB file had grown only ~119 KB (vs ~10 MB/day norm) — two "independent" signals agreeing on ~20–25% complete. The run then finished **12 minutes later**. Both signals were artifacts of the same two facts, confirmed today: (1) the machine was in clamshell sleep from 00:31 to a 17:49 full wake (`pmset -g log`), executing the collector only in seconds-long maintenance DarkWake slivers all day; (2) `collect.py` holds the **entire run as one transaction — a single commit at the end** — so mid-run, file growth is journal spill, not committed rows, today's rows are never reader-visible, and the writer's EXCLUSIVE lock explains the total read lockout (10 × 30s attempts failed). Full analysis and the second replication: see Aug 11.
+
+---
+
+## August 11, 2026
+
+Run 94: **5,270 offers**, single run, **56 failures — new failure record** (prev 49), **4,200 api_calls**, ~**15h 49m** wall time — second-longest ever (13:00 → 04:49 UTC; finished 21:49 PDT). Cumulative **434,130 rows** (reconciles exactly). Audit clean — 0 NULLs, ranges sane, lead 0–198d, **trip 0–57d** (the 58→54 drop of Aug 5 partially reversed), 271 routes (back at the band floor); **0 duplicates**; `flight_class` constant. Distributions: 40 gates, 108 airlines, avg **$530.22**, floor $52, 192 departure dates. **New top fare: $2,971 NYC→SHA (UA, City.Travel)** — displaces the $2,819 NYC→TYO after six days. err.log unchanged. Backup **succeeded**.
+
+**⚠️ RUNTIME MYSTERY CLOSED: wall-clock runtime measures time-to-next-full-wake, not API latency.** `pmset -g log` for both days: Aug 10 — clamshell sleep 00:31, full wake 17:49, run `Done:` at 18:01 (**+12 min**). Aug 11 — clamshell sleep 00:09, no full wake all day, evening full wake ~21:38, `Done:` at 21:49 (**+11 min**). Two consecutive runs completed within minutes of the machine's first full wake. During sleep the collector executes only in brief maintenance DarkWake windows — that is the "crawl." One mechanism now explains every open runtime question in this log: the bimodal duration split (machine awake vs asleep after fire time), finish times clustering 14:40–21:57, late starts (job fires on first wake after 06:00), long runs with zero failures (stable DarkWake network), and the contiguous "all-Canadian" DNS clusters — **loop position × flaky DarkWake network slivers, nothing to do with geography.** The per-call-timing action item, carried since Jul 31, is retired unneeded.
+
+**Failure detail:** all-YVR — SEA ×14, PDX ×14, LAS ×14, DEN ×12, SFO ×2. **YVR→LAS, an 18–19/day pair, wiped to zero — the largest total pair loss on record.** PDX and DEN were already dark beforehand, so their wipeouts cost ~nothing; the triage model's "how thin is the pair" question again dominated the raw failure count. Staleness **97.8% on 4,234** — fifth cluster-day instance.
+
+**⚠️ Correction to Aug 9: the YMQ→NYC "confirmed ~7–8 band" is refuted** — the pair read 15 then 17 immediately after. YMQ→LAX likewise un-vanished (1, 1) after five zero days. Three clean-day observations were not enough to declare a structural shift, and the sleep discovery suggests why these pairs wobble: they sit in the stretch of the loop most often executed inside unstable DarkWake windows. Band-shift claims now require ~a week of clean days.
+
+---
+
+## August 12, 2026
+
+Run 95: **5,169 offers**, single run, **0 failures**, **4,200 api_calls**, ~**1h 35m** (13:10 → 14:45 UTC; finished 07:45 PDT). Cumulative **439,299 rows** (reconciles exactly). Audit clean — 0 NULLs, ranges sane, lead 0–197d, trip 0–57d, 273 routes; **0 duplicates**; `flight_class` constant. Distributions: 39 gates (40 → 39), **104 airlines**, avg **$531.52**, floor $52 (third day), 192 departure dates. Top fare $2,971 NYC→SHA, day two. err.log unchanged. Backup **succeeded**. Disk 84 GB / stable; closed watch stands.
+
+**The sleep mechanism, third data point — and a practical fix confirmed: AC power.** The machine stayed in clamshell sleep through the run, but on AC — and on AC the DarkWake windows stretch from seconds to minutes (one lasted 29 min and covered the finish). The run fired inside the 06:10 DarkWake, completed by 07:45 lid-closed, with **zero DNS failures**. Battery slivers → crawl + failure clusters; AC windows → near-normal runtime + clean network. Keeping the machine on AC overnight is most of the fix; a wrapper that holds a sleep assertion for the run's duration (`caffeinate`) would close the rest.
+
+**⚠️ NEW WATCH — the data itself is going quiet. Three signals, one story:**
+
+| Signal | Reading | Context |
+|---|---|---|
+| Volume | 5,411 → 5,385 → 5,270 → **5,169** | Third consecutive decline; today's is the first zero-failure read; lowest since Aug 3 |
+| Airlines | 113 → 112 → 111 → 109 → 108 → **104** | Nine airlines gone since the Aug 5 peak — steady, not step-wise |
+| Staleness | **99.4% on 4,835 — record high, above the 96.8–99.2 band** | Almost nothing repriced overnight |
+
+Coherent reading: **quoting activity on these routes is contracting** — fewer airlines listing, fewer offers, frozen prices. The airline slide, not failures, looks like the volume story (the two failure-cluster days merely muddied it). Trigger for escalation: another volume decline **and** airlines < 104 → per-route/per-airline distribution cut to find where the listings are disappearing.
+
+**Pair watches:** YMQ→YYC fully recovered (14). YMQ→NYC held 17 — the Aug 9 band-shift call is formally dead. **YVR→LAS recovered only to 14 vs its 18–19 band** — watch for whether this is rebound lag or a genuine step down. YVR→PDX/SEA/DEN remain at zero; Vancouver's thin pairs are where the airline contraction and failure clusters overlap, so they need a run of clean days to disentangle.
