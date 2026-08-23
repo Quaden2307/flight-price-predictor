@@ -43,6 +43,14 @@ for _ in range(7):
         year += 1
 
 
+def parse_iso(ts):
+    # The API emits both '+00:00'-style offsets and a bare trailing 'Z';
+    # fromisoformat only accepts 'Z' on Python 3.11+, so normalize first.
+    if ts.endswith("Z"):
+        ts = ts[:-1] + "+00:00"
+    return datetime.fromisoformat(ts)
+
+
 def offset_month(month_str, offset):
     # Shift YYYY-MM forward by N months
     y, m = map(int, month_str.split("-"))
@@ -124,7 +132,7 @@ for origin, destination in ROUTES:
 
             for offer in offers:
                 # Lead time and trip duration come from the offer's actual dates, not the query month.
-                depart_date = datetime.fromisoformat(offer["departure_at"]).date()
+                depart_date = parse_iso(offer["departure_at"]).date()
                 lead = (depart_date - today).days
                 if lead < 0:
                     continue
@@ -132,7 +140,7 @@ for origin, destination in ROUTES:
                 return_at = offer.get("return_at")
                 trip_duration_days = None
                 if return_at:
-                    return_date = datetime.fromisoformat(return_at).date()
+                    return_date = parse_iso(return_at).date()
                     trip_duration_days = (return_date - depart_date).days
 
                 cur.execute(
