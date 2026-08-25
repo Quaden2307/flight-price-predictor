@@ -1251,3 +1251,25 @@ Distributions (98 / 97): 275 / 274 routes (276 combined — above the ~266 floor
 **Tomorrow's 6:00 fire is the first full test of the repaired chain** (collect → commit → backup-to-local → dedupe --apply → audit). One expected wrinkle: audit.py's relative-volume check compares the latest day against the average of the 3 prior capture days — with the doubled Aug 21 (10,958) in that window the threshold is ~5,296, so a modestly light run could trip a one-day false volume flag. Self-resolving once Aug 21 rolls out of the window.
 
 **Still pending:** Python 3.12 reinstall → venv rebuild → optional plist repoint (unchanged; modeling blocked). CONTEXT.md is badly stale (last substantive update May 30 — predates the 300-route expansion and everything above) and wants a rewrite.
+
+---
+
+## August 23, 2026 — no run (machine off at the fire)
+
+**Second consecutive lost day.** The machine went down ~01:28 PDT — with no clean shutdown record, suggesting a forced power-off or battery death — was off through the correctly-registered 6:00 slot (the unified log shows no fire attempt at all), and booted 11:55, after which UserEventAgent re-registered for the *next* occurrence: Monday Aug 24, 6:00 AM PDT. The TZ fix held (correct hour on re-registration); the machine simply wasn't on to use it.
+
+**Rule now established across three days: calendar fires survive sleep but not shutdown.** A fire missed during sleep coalesces to the next wake (the pre-outage pattern all summer); a fire missed while powered off is skipped outright, and a reboot registers only the next occurrence. Practical consequence: overnight, closed-lid sleep is fine — shutdown loses the day.
+
+---
+
+## August 24, 2026 — run 99: first clean end-to-end chain since Aug 12
+
+Run 99: **5,718 offers — highest since July**, single run, **59 failures**, **4,200 api_calls**, ~**12h 46m** (13:06 → 01:51 UTC; 06:06 → 18:51 PDT). Fired in the **correct 6 AM slot** and finished minutes after the evening full wake — classic sleep-crawl shape per the Aug 10–11 mechanism. Cumulative **461,029 rows** (455,311 + 5,718 — reconciles exactly).
+
+**The repaired chain ran itself, end to end, for the first time since Aug 12:** backup landed at the new local path (`~/Backups/flight-price-predictor/flights.db`, 762 MB, 18:51 — first launchd-context backup ever to succeed on this machine), dedupe --apply self-ran (**0 duplicates**), audit self-ran (**All audits passed**). The relative-volume check passed honestly — 5,718 > the ~5,295 threshold inflated by doubled Aug 21 — so the predicted one-day false-flag risk never materialized. No new tracebacks. **The Aug 21 findings are both closed.**
+
+Distributions: **286 routes — new record high** (prev band 266–276), 39 gates (35 → 39, fully recovered), 107 airlines, avg **$534.89**, **new floor $34** (LAX→LAS, F9 — the $37 floor broke after three days), top fare $2,630 CHI→TYO (UA), day four, 184 departure dates, lead 0–188d, trip 0–60d. Staleness vs run 98 (3-day gap, for the record only): 47.6% matched, 92.4% of matched at identical price.
+
+**Pair watches:** **YMQ→NYC 41** — band was 15–17 pre-outage, 27 on Aug 21; still climbing, now the most interesting pair in the set. YMQ→LAX 11 (holding its new ~10 level); YMQ→YYC 6 (still halved). YVR→LAS 8 (band 18–19 — still depressed); YVR→PDX and YVR→SEA still zero; YVR→DEN 1. **New: LAX→SEA wiped** (11 → 0) — plausibly ~14 of the 59 failures; the remainder reads as sliver-failure scatter on a crawl day.
+
+**Log-reading gotcha found this run:** dedupe/audit output appears *above* the `--- post-collection ---` headers in out.log — collect.py's own prints are block-buffered to the log file and flush at process exit, while the subprocess output writes straight through to the fd. Cosmetic only, but an empty-looking section is not a skipped step; grep for "duplicate group(s)" / "All audits passed" instead.
