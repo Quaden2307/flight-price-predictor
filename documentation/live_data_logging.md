@@ -1273,3 +1273,60 @@ Distributions: **286 routes — new record high** (prev band 266–276), 39 gate
 **Pair watches:** **YMQ→NYC 41** — band was 15–17 pre-outage, 27 on Aug 21; still climbing, now the most interesting pair in the set. YMQ→LAX 11 (holding its new ~10 level); YMQ→YYC 6 (still halved). YVR→LAS 8 (band 18–19 — still depressed); YVR→PDX and YVR→SEA still zero; YVR→DEN 1. **New: LAX→SEA wiped** (11 → 0) — plausibly ~14 of the 59 failures; the remainder reads as sliver-failure scatter on a crawl day.
 
 **Log-reading gotcha found this run:** dedupe/audit output appears *above* the `--- post-collection ---` headers in out.log — collect.py's own prints are block-buffered to the log file and flush at process exit, while the subprocess output writes straight through to the fd. Cosmetic only, but an empty-looking section is not a skipped step; grep for "duplicate group(s)" / "All audits passed" instead.
+
+---
+
+## August 25 – September 1, 2026 — catch-up: runs 100–106, one lost day, machine moved to the east coast
+
+*(Written Sep 2 from the DB, out.log, pmset history and launchctl — no entries were made on these days.)*
+
+| Date | Run | Offers | Fail | Runtime (UTC) | Routes | Gates | Airlines | Avg | Cumulative |
+|---|---|---|---|---|---|---|---|---|---|
+| Aug 25 | 100 | 5,656 | 50 | 4h 48m (13:00 → 17:48) | **292 — record** | 40 | 104 | $533.32 | 466,685 |
+| Aug 26 | 101 | 5,679 | 45 | 11h 54m (13:11 → 01:05) | 287 | 38 | 106 | $530.15 | 472,364 |
+| Aug 27 | 102 | 4,828 | **411** | 4h 06m (13:04 → 17:11) | 266 | 37 | 105 | $564.51 | 477,192 |
+| Aug 28 | — | **no run** | | | | | | | 477,192 |
+| Aug 29 | 103 | 5,562 | 0 | 28m (13:00 → 13:28) | 288 | 39 | 105 | $535.23 | 482,754 |
+| Aug 30 | 104 | 5,684 | 14 | 3h 07m (13:02 → 16:08) | 285 | 38 | 110 | $534.94 | 488,438 |
+| Aug 31 | 105 | 5,736 | 0 | 1h 17m (13:02 → 14:19) | 287 | 39 | 113 | $534.17 | 494,174 |
+| Sep 1 | 106 | **5,847 — all-time high** | 5 | 1h 09m (13:05 → 14:14) | 285 | 40 | 112 | $531.97 | 500,021 |
+
+All seven runs: 4,200 api_calls, single capture per UTC day, dedupe **0 duplicates**, audit **All audits passed**, backup landed (dedupe/audit only run after a successful backup, so their presence in out.log confirms it). No tracebacks in err.log since the Aug 21 iCloud rename. Cumulative reconciles exactly from the Aug 24 figure (461,029) through every row above.
+
+**Every failure this week was a DNS failure (`NameResolutionError`, "nodename nor servname provided"), never an API error.** The retry loop can't help: three attempts over ~6 s inside a sleep sliver that has no resolver yet all fail the same way. Per run: Aug 25 scattered mid-run (SEA→HND 14, YYZ→NRT 13, SEA→RDU 7, SFO→AMS 5, EWR→SIN 4, SFO→BKK 4, SEA→MSP 3); Aug 26 one contiguous SJC block (SJC→AUS/DEN/ORD 14 each, SJC→JFK 3); **Aug 27 a 411-call outage across 34 routes — 14 JFK→\* and 16 YYZ→\* domestic/transborder routes lost most or all of their 14 calls.** 23 city pairs went dark vs Aug 26 (13 YTO-\*, 6 NYC-\*, 4 scatter); the NYC side was partly covered by other queries landing on the same city pairs. That day's $564.51 average is an artifact of exactly that: the missing routes were the cheap short-hauls, so dropping them lifted the mean ~$30. Aug 30 SEA→HKG 10 + YYZ→HKG 4; Sep 1 YYZ→YVR 5. Runtime tracks the mechanism: the 0-failure days (Aug 29, 31) were the short ones.
+
+**Aug 28 — lost day, same rule as Aug 22–23.** pmset shows clamshell sleep at 00:13 PDT, then no record at all until a `powerd process is started` boot at 12:21 PDT — no shutdown entry, so a forced power-off or dead battery, as on Aug 23. The 13:00 UTC fire fell inside the off window and was skipped outright; the boot registered the next occurrence (Aug 29), which fired on time. Third lost day since the rebuild (Aug 22, 23, 28), all from the machine being off at the slot.
+
+**Machine moved to the east coast; timezone flipped Aug 29 — and the schedule is now firing at 9 AM east-coast time.** Sequence: boot 19:32 EDT Aug 29 (second boot in two days), then `/etc/localtime` switched to the east-coast zone at 20:00 EDT. Exactly the Aug 21 mechanism in reverse: UserEventAgent cached the pre-correction west-coast zone at boot, so `Hour=6` still resolves to 6:00 PDT = 13:00 UTC = **9:00 EDT**. Confirmed in the unified log on Sep 2 (see that entry). The four runs since the boot (Aug 30 – Sep 2; `launchctl print` shows `runs = 4`) all fired at 13:00 UTC, which is *why the capture time stayed consistent with the whole series since May*. Decision pending — see the Sep 2 entry.
+
+**Distributions over the week:** routes 285–292 with the Aug 25 **292 a new record** (Aug 27's 266 is the outage); gates 37–40; **airlines climbed 104 → 113** — the Aug 12 "airlines slide" watch is dead, Aug 31 tied the Aug 5 peak. Avg $530–535 (Aug 27 excepted). **New floor $28 (LAX→LAS, F9, Farera) held all week Aug 25–31**, breaking Aug 24's $34, then rolled out: $32 ATL→ORL Sep 1. Top fare: $2,630 CHI→TYO (UA) on Aug 25 for the last time, then **$3,421 NYC→LON (BA, Kupi.com) Aug 26–29**, then $2,496 NYC→SIN (AC) Aug 30 – Sep 1.
+
+**Sep 1 departure-window roll:** the 7-month loop moved from Aug–Feb to Sep–Mar 2027, so lead max jumped 181 → 211 d and departure dates 180 → 206. Trip max dropped 60 → 58 — no 59–60 day offers happened to match in the new window. All expected, not a data change.
+
+**Staleness series** (day-over-day, matched on origin/destination/departure/return/airline/flight_number; second number is the identical-price rate on matched rows — the tracked metric, band 96.8–99.2): Aug 24→25 85.9% / 98.5%; 25→26 75.8% / 97.5%; 26→27 88.2% / 98.5%; 27→29 (2-day gap, for the record only) 60.3% / 96.0%; 29→30 81.5% / 97.6%; 30→31 83.9% / 97.7%; 31→Sep 1 79.5% / 97.3%. Identical-price rate in band all week; the matched share is drifting down (86 → 78) — more churn in the quote pool, not repricing.
+
+**Pair watches (rows/day Aug 25 → Sep 1):** **YMQ→NYC 46, 47, 48, 49, 37, 34, 25** — peaked Aug 29 at ~3× its pre-outage 15–17 band, then fell back steadily; YMQ→YYC 7, 6, 13, 19, 20, 20, 19 (recovered to a new ~20 level); YMQ→LAX 10, 7, 4, 4, 4, 3, 1 (fading); **YVR→PDX 0 → 18/day from Aug 30** — back after months dark; YVR→LAS 4–8 (band 18–19, still depressed); YVR→SEA 1/day; YVR→DEN 1 → 0; LAX→SEA 5–7 (recovered from the Aug 24 wipe); YTO→YVR 40–54 except the Aug 27 outage and **4 on Sep 1** (the 5 failures).
+
+---
+
+## September 2, 2026 — run 107: clean chain; YYZ routes dark on DNS; schedule confirmed at 9 AM east-coast time
+
+Run 107: **5,740 offers**, single run, **29 failures**, **4,200 api_calls**, ~**6h 26m** (13:09 → 19:35 UTC; 09:09 → 15:35 EDT). Cumulative **505,761 rows** (500,021 + 5,740 — reconciles exactly). Chain ran end to end: backup landed (`~/Backups/flight-price-predictor/flights.db`, 845 MB, 15:35, same size as the live DB), dedupe --apply **0 duplicates**, audit **All audits passed** (0 NULLs across today's rows, currency all `usd`, class all 0, no non-positive prices, no negative leads, trips within 0–60). No tracebacks.
+
+**Sleep-crawl shape, spawned into a 5-second wake.** Unified log: `Running StartCalendarInterval: local.flightpricepredictor.collector` at 09:09:18 EDT — the 09:00 fire coalesced to the next maintenance DarkWake, which lasted 09:09:18 → 09:09:23. From there the process crawled through 2–5 s slivers every ~16 min until the 15:26 lid-open wake, then finished in 9 minutes.
+
+**⚠️ All 29 failures are the first 29 calls of the run, all DNS, and two YYZ routes are fully dark.** YYZ→YVR lost all 14 month combos, YYZ→YUL all 14, YYZ→YYC its first one. The API labels those pairs **YTO-YVR and YTO-YMQ, and both have 0 rows today** (vs 40–54 and 12–19 last week). Mechanism: the job spawned into that 5 s wake before the resolver was up; 2 s + 4 s backoff × 29 calls burned through the head of ROUTES across the first few slivers before DNS came back — YYZ→YYC's second call succeeded. Sep 1's 5 failures were the same route, same cause. **Because the YYZ block sits first in ROUTES, it absorbs this every time a run spawns from sleep.** Options, not yet decided: a wait-for-network probe before the loop (resolve `api.travelpayouts.com` in a retry loop until it answers); a longer or unbounded backoff specifically on `NameResolutionError`; or rotating the ROUTES order so no fixed block eats the startup window.
+
+**⚠️ Schedule confirmed firing at 9 AM east-coast time, not 6.** The unified log's follow-up line reads `Rescheduling StartCalendarInterval: local.flightpricepredictor.collector: Thursday, September 3, 2026 at 9:00:00 AM Eastern`. Nothing fired in the 6 AM EDT slot (pmset: a 5 s maintenance wake at 06:06, no spawn). Mechanism as in the catch-up entry: boot Aug 29 19:32 EDT, zone corrected to the east coast at 20:00, UserEventAgent still computing `Hour=6` in the west-coast zone. **Tradeoff to decide:** captures have stayed at 13:00 UTC, consistent with the entire series since May. The next reboot resets UserEventAgent and the fire moves to 6:00 EDT = **10:00 UTC — a 3-hour shift in `captured_at`**. To keep 13:00 UTC, set the plist to `Hour=9` (then bootout/bootstrap, or just reboot) *before* that happens; to go back to a true 6 AM local, leave it and expect the shift. The 9 AM slot also has a practical upside: the machine is more likely to be awake, so fewer sleep-crawl days.
+
+**Distributions:** 286 routes (band 285–292), **43 gates — new high** (band 37–40), **116 airlines — new high** (band 104–113), avg **$530.58**, floor **$33** (LAX→LAS, F9), **top fare $5,620 NYC→PAR (AF 8738 codeshare, City.Travel, same-day JFK→CDG→JFK)**, 205 departure dates, lead 0–210 d, trip 0–58 d. Staleness vs Sep 1: 77.7% matched, **97.4% of matched at identical price** — in band.
+
+**The $5,620 fare is a known population, not a new anomaly.** The all-time max ($5,855, NYC→LON AF via City.Travel, May 28 – Jun 1) was the identical shape — same-day transatlantic on an AF codeshare through City.Travel — and 45 zero-day trips over $3,000 exist in the table. It is the first fare over $4,000 since Jul 11, and the only row over $3,000 today; City.Travel's own max was $2,054 the day before. Worth remembering for modeling: `trip_duration_days = 0` rows carry the fat right tail.
+
+**Route churn vs Sep 1:** 10 dark (the two YTO pairs above, YMQ-LAX, YYC-YEA, YYC-SFO, SFO-DEN, LGB-MIA, SEA-PDX, ONT-OGG, WAS-DEL), 11 new (YTO-SFO, YVR-SEA, ONT-LAS, ONT-AUS, SEA-AUS, SJC-SIN, ATL-ONT, SFO-BOM, ONT-GDL, FLL-SDQ, DEN-SEA). `airports`-table coverage re-checked against today's codes: 0 rows at risk from the dropna hazard.
+
+**Pair watches:** YMQ→NYC **19** — back inside the old 15–17 band after the Aug 29 peak of 49; YMQ→YYC 9 (halved from 19–20); YMQ→LAX 0; YVR→PDX 18 (fourth day at 18); YVR→LAS 8; YVR→SEA 1; YVR→DEN 0; LAX→SEA 7; **YTO→YVR 0, YTO→YMQ 0** (the failures).
+
+**Housekeeping:** the iCloud clone of the repo (`~/Library/Mobile Documents/.../Main Projects/flight-price-predictor`) is a stale mirror — DB frozen at run 96 (Aug 13), git 3 commits behind; the live checkout is `~/Developer/flight-price-predictor`. For future log forensics: `log` is a zsh builtin, so a bare `log show` silently returns nothing — use `/usr/bin/log`.
+
+**Still pending:** Python 3.12 reinstall → venv rebuild (modeling blocked); CONTEXT.md rewrite; the two decisions above (DNS-at-startup mitigation, `Hour=6` vs `Hour=9`).
