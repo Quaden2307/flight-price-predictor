@@ -1376,3 +1376,37 @@ Run 110: **5,607 offers**, single run, **3 failures**, **4,200 api_calls**, ~**2
 **Audit blind spot:** a healthy day is back in the 3-day window (tomorrow's baseline ≈ 5,154, threshold ≈ 3,866), so the rolling check re-arms on its own. The structural problem from the Sep 4 entry — a collapse the baseline follows down — stands; failure-count / coverage checks still worth adding.
 
 **Still pending:** wait-for-network probe; morning router-link check; `Hour=6` vs `Hour=9`; Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+---
+
+## September 6, 2026 — run 111: zero failures, another route record
+
+*(Written Sep 8 with the two entries below — this day was not checked live.)*
+
+Run 111: **5,540 offers**, single run, **0 failures**, **4,200 api_calls**, ~**3h 02m** (13:11 → 16:12 UTC; 09:11 → 12:12 EDT). Cumulative **526,764 rows** (521,224 + 5,540 — reconciles exactly). Chain ran end to end: dedupe --apply **0 duplicates**, audit **All audits passed** (their presence in out.log confirms the backup landed first). No tracebacks.
+
+**Distributions:** **296 routes — new record** (prev 292, set Aug 25 and tied Sep 5), 41 gates, 116 airlines, avg **$524.27**, floor **$36 (ATL→ORL, F9)** — the $33 LAX→LAS floor rolled out; top fare $5,620 NYC→PAR (AF, City.Travel), day five; 201 departure dates, lead 0–206 d, **trip 0–53 d — trip max dropped 58 → 53**: the 54–58-day itineraries left the quote pool (echo of the Sep 1 window-roll note; held Sep 7–8 too). Staleness vs Sep 5: 84.3% matched, **98.9% identical price** — high end of band. All 51 Canadian routes intact — first fully clean day since the Sep 3–4 outages. Pair notes: **YVR→PDX 1 — the Aug 30 – Sep 5 recovery at 17–18/day did not hold**; YVR→LAS 12; YMQ→NYC 8; YMQ→YYC 6; LAX→SEA 2.
+
+---
+
+## September 7, 2026 — run 112: 46 scattered DNS blips; no head block, no router hijack
+
+*(Written Sep 8 — not checked live.)*
+
+Run 112: **5,548 offers**, single run, **46 failures**, **4,200 api_calls**, ~**3h 24m** (13:00 → 16:24 UTC; 09:00 → 12:24 EDT). Cumulative **532,312 rows** (reconciles exactly). Chain ran end to end: dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks.
+
+**All 46 failures are mid-run DNS scatter, not the head block:** JFK→DEL ×13, IAD→DEL ×10, YYC→LAX ×7, CLT→LGA ×5, JFK→MBJ ×4, ATL→BOS ×4, MIA→SDQ / JFK→SDQ / EWR→SIN ×1 — nine routes spread through the loop, the Sep 5 sliver-blip pattern, not the Sep 3–4 contiguous startup outage. **Zero `myrouter.io` certificate errors** — verified by bucketing every `FAILED after` line in out.log per run: all 75 cert-hijacks belong to run 109. Canadian block fully intact (YTO→YVR 33, YTO→YYC 33, YTO→YMQ 18).
+
+**Distributions:** 294 routes, 43 gates, 114 airlines, avg **$521.30 — new series low** (prev $522.32, Sep 5; composition on record coverage, not repricing — identical-price rate in band), floor $36 (ATL→ORL, F9), top fare $5,620 NYC→PAR, day six; 199 departure dates, lead 0–205 d, trip 0–53 d. Staleness vs Sep 6: 81.0% matched, **97.3% identical price** — in band. YVR→LAS 8; YMQ→NYC 13.
+
+---
+
+## September 8, 2026 — run 113: zero failures, 47 minutes, 299 routes — third record in three days
+
+Run 113: **5,571 offers**, single run, **0 failures**, **4,200 api_calls**, ~**47m** (13:00:00 → 13:47 UTC; 09:00 → 09:47 EDT — fired on the second). Cumulative **537,883 rows** (532,312 + 5,571 — reconciles exactly). Chain ran end to end: backup landed (903 MB, 09:47), dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks. Still the 9 AM slot — no reboot since Aug 29, so `captured_at` stays consistent at 13:00 UTC.
+
+**Distributions:** **299 routes — new all-time record** (296 → 294 → 299 across three days), 43 gates, 113 airlines, avg $522.68, floor $36 (ATL→ORL, F9, day three), top fare **$5,620 NYC→PAR (AF, City.Travel) — day seven**, still the only row over $3,000; 199 departure dates, lead 0–204 d, trip 0–53 d. Staleness vs Sep 7: 81.2% matched, **97.4% identical price** — in band.
+
+**Four straight days with all 51 Canadian routes intact** — the Sep 3–4 morning outage has not recurred; the audit blind spot from the Sep 4 entry remains untested and unfixed. **Watch consolidation:** YVR→PDX back at 1/day (recovery failed); YVR→LAS 7 (12 → 8 → 7 — Sep 5's 14 was the high-water mark, band 18–19 not regained); YMQ→NYC 16 (8 → 13 → 16, re-entering the old 15–17 band from below after the August spike saga); YMQ→YYC ~5 (the late-Aug ~20 level is gone); LAX→SEA 5.
+
+**Still pending:** wait-for-network probe (Sep 7 shows mid-run blips persist regardless of the head-block fix); morning router-link check; `Hour=6` vs `Hour=9` plist decision — **any reboot silently moves captures 13:00 → 10:00 UTC until decided**; Python 3.12 / venv rebuild; CONTEXT.md rewrite.
