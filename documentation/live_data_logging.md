@@ -1410,3 +1410,17 @@ Run 113: **5,571 offers**, single run, **0 failures**, **4,200 api_calls**, ~**4
 **Four straight days with all 51 Canadian routes intact** — the Sep 3–4 morning outage has not recurred; the audit blind spot from the Sep 4 entry remains untested and unfixed. **Watch consolidation:** YVR→PDX back at 1/day (recovery failed); YVR→LAS 7 (12 → 8 → 7 — Sep 5's 14 was the high-water mark, band 18–19 not regained); YMQ→NYC 16 (8 → 13 → 16, re-entering the old 15–17 band from below after the August spike saga); YMQ→YYC ~5 (the late-Aug ~20 level is gone); LAX→SEA 5.
 
 **Still pending:** wait-for-network probe (Sep 7 shows mid-run blips persist regardless of the head-block fix); morning router-link check; `Hour=6` vs `Hour=9` plist decision — **any reboot silently moves captures 13:00 → 10:00 UTC until decided**; Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+---
+
+## September 9, 2026 — run 114: mild head-block echo; record tied; the $5,620 fare rolls out
+
+Run 114: **5,612 offers**, single run, **13 failures**, **4,200 api_calls**, ~**34m** (13:00:36 → 13:35 UTC; 09:00 → 09:35 EDT). Cumulative **543,495 rows** (537,883 + 5,612 — reconciles exactly). Chain ran end to end: backup landed (913 MB, 09:35), dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks.
+
+**All 13 failures are DNS in the YYZ block — the head-block mechanism in its mild form.** YYZ→ORD ×6, YYZ→BOS ×3, YYZ→ATL ×2, YYZ→DCA ×1, YYZ→JFK ×1. The run spawned into a sliver before the resolver was up, but DNS arrived within seconds this time: no route lost more than 6 of its 14 slots and **no pair went dark** (YTO→YVR 33, YTO→YYC 41, YTO→YMQ 22 all healthy). Fourth severity level observed for the same mechanism (13 / 29 / 46-scatter / 749–886) — the wait-for-network probe case keeps building.
+
+**Distributions:** **299 routes — ties yesterday's all-time record**, 42 gates, 113 airlines, avg $523.32, floor $36 (ATL→ORL, F9, day four), **top fare $2,681 NYC→SIN (LH) — the $5,620 NYC→PAR rolled out after exactly seven days**, right tail back to normal; 200 departure dates, lead 0–203 d, trip 0–53 d. Staleness vs Sep 8: 82.4% matched, **98.2% identical price** — high end of band.
+
+**Pair watches:** **LAX→SEA 11 — first return to its pre-Aug-24-wipe level**; YMQ→NYC 19 (settled back in its old band); unchanged: YVR→LAS 8, YVR→PDX 1, YVR→SEA 2, YMQ→YYC 4.
+
+**Still pending:** unchanged from Sep 8 — wait-for-network probe; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
