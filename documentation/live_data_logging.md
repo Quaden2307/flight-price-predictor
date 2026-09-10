@@ -1424,3 +1424,15 @@ Run 114: **5,612 offers**, single run, **13 failures**, **4,200 api_calls**, ~**
 **Pair watches:** **LAX→SEA 11 — first return to its pre-Aug-24-wipe level**; YMQ→NYC 19 (settled back in its old band); unchanged: YVR→LAS 8, YVR→PDX 1, YVR→SEA 2, YMQ→YYC 4.
 
 **Still pending:** unchanged from Sep 8 — wait-for-network probe; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+---
+
+## September 10, 2026 — run 115: zero failures, clean morning, LAX→SEA recovery complete
+
+Run 115: **5,624 offers**, single run, **0 failures**, **4,200 api_calls**, ~**1h 05m** (13:00:05 → 14:04 UTC; 09:00 → 10:04 EDT). Cumulative **549,119 rows** (543,495 + 5,624 — reconciles exactly). Chain ran end to end: backup landed (924 MB, 10:04), dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks. First zero-failure day since Sep 8 — no head-block echo this morning.
+
+**Distributions:** 298 routes (one shy of the 299 record), 39 gates, 114 airlines, avg $523.73, **floor back to $32 — LAX→LAS (F9) reclaims it** from the four-day $36 ATL→ORL floor; top fare $2,681 NYC→SIN (LH), day two; 200 departure dates, lead 0–202 d, trip 0–53 d. Staleness vs Sep 9: 80.1% matched, **97.5% identical price** — in band.
+
+**Pair watches:** **LAX→SEA 13 — above its pre-Aug-24-wipe level, recovery complete**. **YMQ→NYC crept up to 22** (old band 15–17) — watching for a repeat of the August spike-and-collapse. YVR→LAS slipped back to 5. Toronto block healthy (YTO→YYC 42, YTO→YVR 29, YTO→YMQ 26). YVR→PDX 1, YVR→SEA 1, YMQ→YYC 4 unchanged.
+
+**Still pending:** unchanged — wait-for-network probe; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
