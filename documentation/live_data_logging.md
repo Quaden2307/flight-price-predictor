@@ -1436,3 +1436,39 @@ Run 115: **5,624 offers**, single run, **0 failures**, **4,200 api_calls**, ~**1
 **Pair watches:** **LAX→SEA 13 — above its pre-Aug-24-wipe level, recovery complete**. **YMQ→NYC crept up to 22** (old band 15–17) — watching for a repeat of the August spike-and-collapse. YVR→LAS slipped back to 5. Toronto block healthy (YTO→YYC 42, YTO→YVR 29, YTO→YMQ 26). YVR→PDX 1, YVR→SEA 1, YMQ→YYC 4 unchanged.
 
 **Still pending:** unchanged — wait-for-network probe; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+---
+
+## September 11, 2026 — run 116 + deep audit: two watches retired, plist divergence quantified
+
+Run 116: **5,704 offers — highest since Sep 1**, single run, **15 failures**, **4,200 api_calls**, ~**28m** (13:03:35 → 13:31 UTC; 09:03 → 09:31 EDT). Cumulative **554,823 rows** (549,119 + 5,704 — reconciles exactly). Chain ran end to end: backup (934 MB, 09:31), dedupe --apply **0 duplicates**, audit **All audits passed**. Failures: all DNS, all YYZ block (YYZ→YVR ×6, YYZ→FLL ×5, YYZ→MIA ×2, YYZ→ATL ×2) — third mild head-block echo in a week. **YTO→YVR's 16 (vs 29–33) is a proven artifact**: today covers only departure months Sep/Oct; the missing Nov/Dec/Jan = 3 months × 2 offsets = exactly the 6 failed calls. Distributions: 296 routes, 41 gates, 114 airlines, avg $528.51, floor $32 (ATL→ORL joined LAX→LAS), top $2,681 NYC→SIN day three, lead 0–201 d. Staleness vs Sep 10: 81.9% / 97.4% — in band.
+
+**A five-agent deep audit ran today (integrity / baseline / trip-ceiling / YMQ→NYC / critic). Results:**
+
+**Integrity — clean at every level.** 0 NULLs across all 23 columns, one capture batch, 0 duplicates on both key variants, raw_offer 100% valid JSON and consistent with columns, price percentiles p10–p99 within 2% of Sep 10, lead histogram unchanged. SQL gotcha for future audits: recomputing `lead_time_days` with SQLite `date()` flags ~1,600 false mismatches — `date()` converts tz-offset timestamps to UTC while the collector uses local calendar dates; recompute with `substr(departure_at,1,10)` instead (0 mismatches).
+
+**⚠️ Trip-max line RETIRED as a market signal.** The 58 → 53 → 49 slide is an extreme-value stat on a 0–12-row tail: 58 was one MIA→CUN offer (Feb 1 → Mar 31 2027, the exact Feb+Mar ceiling), 53 one YTO→SHA offer, 49 two Oct→Nov rows — each drop a single itinerary leaving the API pool while still future-dated (today's mechanical ceiling is 60). Calendar decay is real but only governs same-month departures, which stopped setting the max after Sep 1. Expect a meaningless jump ~Oct 1. Replacement if a duration signal is wanted: `COUNT(trip ≥ 30d)` or p99 on next-month-or-later departures.
+
+**YMQ→NYC — same mechanism as August, different shape; new watch metric.** Both episodes: AC-led (56% of today), Farera the lead gate, normal prices, near-month inventory filling in. August *widened* coverage (6 → 17–19 distinct departure dates/day at constant ~2.5–2.9 rows/date); the current climb *densifies* a flat 9-date set (Oct departures 16 of 25 rows). The August "collapse" was a benign window-roll — departure dates passing (17→15→13→9→7→6). **New tracked metric: daily `COUNT(DISTINCT date(departure_at))` for the pair.** Drop ≥4 day-over-day or below 8 = roll-off (benign); rows dropping while dates hold = real collection problem. Correction in this log's favor: Aug 21's "27" was right per run (two runs that day; an auditor pooled them to "54").
+
+**⚠️ Plist divergence quantified (the standing reboot risk):** on-disk plist says `Hour=6` = **10:00 UTC in EDT**, while the loaded job fires 13:00 UTC. Any reboot shifts captures 3 h earlier. Uptime 13 days (boot Aug 29).
+
+**Small watches from the baseline sweep:** BOS→AMS 3.2× (9→30; a fresh October fare release across 5 airlines, organic-looking); SFO→AUS 0.19× (AS/WN inventory vanished, 2 UA rows left); SFO→OGG decayed 10→5→1→0 dark — all with clean query slots; recheck tomorrow. Housekeeping: disk 70 Gi free (~19 MB/day growth); backup shares the DB's volume (protects against corruption/deletion, not disk death); `airlines` table missing 89 of 114 codes (~25% of rows) — harmless Tier-A, note in modeling_runs.md before any Tier-B run.
+
+---
+
+## September 12–13, 2026 — run 117: 27h 47m marathon; Sep 13 capture lost; 11-route head-block wipe
+
+Run 117: **5,587 offers**, single run, **162 failures**, **4,200 api_calls**, ~**27h 47m — new duration record by ~12 h** (prev 15h 52m, run 90): fired Sep 12 13:01 UTC (09:01 EDT), committed Sep 13 16:48 UTC (12:48 EDT). All rows carry `captured_at` 2026-09-12. Cumulative **560,410 rows** (554,823 + 5,587 — reconciles exactly). Chain ran end to end after the late commit: backup (944 MB, 12:48 Sep 13), dedupe --apply **0 duplicates**, audit **All audits passed** (5,587 cleared the ~4,235 volume threshold). No tracebacks.
+
+**⚠️ Sep 13 is a lost capture day — the fourth, and the first lost with the machine ON.** The Sep 13 13:00 UTC fire was skipped because launchd will not spawn a second instance while the label is still running. New entry for the lost-day taxonomy: sleep doesn't just slow a run — a slow-enough run eats the next day's slot.
+
+**Mechanism:** machine closed from ~Sep 12 morning to Sep 13 ~12:38 EDT with sparse, dead-resolver DarkWakes. At the 27-hour mark the run sat ~18% through the loop with all 162 failures already banked; it then sprinted the remaining ~82% in roughly ten minutes once the lid opened, committed, and chained cleanly.
+
+**⚠️ Failure detail — an 11½-route contiguous head-block wipe, all DNS (calls 1–162):** YYZ→{YVR, YUL, YYC, YOW, YHZ, YEG, JFK, LGA, EWR, BOS, ORD} ×14 each + YYZ→IAD ×8. Sep 3–4's shape at one-fifth scale, fifth head-block incident in 11 days. In the table: **YTO→YVR, YTO→YYC, YTO→YMQ all 0** (dark — artifact); 282 routes; **avg $538.97 is the usual composition artifact** of the missing cheap Canadian short-hauls.
+
+**Distributions:** 282 routes, 41 gates, 110 airlines, avg $538.97 (artifact), floor $32 (ATL→ORL, F9), **top fare $2,454 YTO→HKG (AC)** — the $2,681 NYC→SIN rolled out after three days; 199 departure dates, lead **1**–200 d (min 1 is the day-late commit: capture Sep 12, earliest departure Sep 13), trip 0–51 d (metric retired per Sep 11). Staleness vs Sep 11: 68.6% matched (depressed by the dark Canadian pairs), **96.8% identical price** — bottom edge of band, in band.
+
+**Watches:** YMQ→NYC, first reading on the new metric: 19 rows / **8 distinct departure dates** (dates 9 → 8, rows 25 → 19) — consistent with a benign roll-off beginning; no flag (flag = date-drop ≥4 or count <8... this sits exactly at the boundary, so tomorrow's reading decides). BOS→AMS holding its new level (27). SFO→AUS still collapsed (1); SFO→OGG still dark. **LAX→SEA 16 — new high for the pair.** YVR→LAS 8; YVR→PDX 0.
+
+**Still pending — priority raised again:** wait-for-network probe (five head-block incidents in 11 days); NEW: consider a max-runtime guard or a `caffeinate` assertion for the run's duration so a marathon can't eat the next day's slot; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
