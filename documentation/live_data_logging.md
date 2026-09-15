@@ -1472,3 +1472,17 @@ Run 117: **5,587 offers**, single run, **162 failures**, **4,200 api_calls**, ~*
 **Watches:** YMQ→NYC, first reading on the new metric: 19 rows / **8 distinct departure dates** (dates 9 → 8, rows 25 → 19) — consistent with a benign roll-off beginning; no flag (flag = date-drop ≥4 or count <8... this sits exactly at the boundary, so tomorrow's reading decides). BOS→AMS holding its new level (27). SFO→AUS still collapsed (1); SFO→OGG still dark. **LAX→SEA 16 — new high for the pair.** YVR→LAS 8; YVR→PDX 0.
 
 **Still pending — priority raised again:** wait-for-network probe (five head-block incidents in 11 days); NEW: consider a max-runtime guard or a `caffeinate` assertion for the run's duration so a marathon can't eat the next day's slot; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+---
+
+## September 14, 2026 — run 118: clean 30-minute recovery; sixth head-block incident
+
+Run 118: **5,689 offers**, single run, **19 failures**, **4,200 api_calls**, ~**30m** (13:00:21 → 13:30 UTC; 09:00 → 09:30 EDT). Cumulative **566,099 rows** (560,410 + 5,689 — reconciles exactly). Chain ran end to end: backup (954 MB, 09:30), dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks. Clean recovery from the run-117 marathon — machine awake at the slot.
+
+**Failures: sixth head-block DNS incident in 12 days.** All 19 DNS, all YYZ block: YYZ→YUL ×8, YYZ→YYC ×7, YYZ→YVR ×3, YYZ→JFK ×1. Visible in the table as half-depressed Toronto pairs (YTO→YYC 10, YTO→YVR 11 vs ~33–41 norms; YTO→YMQ 20 held up despite 8 lost slots), which keeps **avg $538.96 artificially elevated — composition artifact again**. Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19. The wait-for-network probe remains the highest-value pending fix.
+
+**Distributions:** 285 routes, 41 gates, 109 airlines, avg $538.96 (artifact), floor $32 (ATL→ORL, F9), **new top fare $2,993 NYC→BUE (AA) — first Buenos Aires top on record** (the $2,454 YTO→HKG lasted one day); 197 departure dates, lead 0–198 d. Staleness vs Sep 12 (2-day gap over the lost Sep 13): 81.9% matched, **97.8% identical price** — in band.
+
+**Watches:** YMQ→NYC **19 rows / 10 distinct departure dates** — the date count bounced 8 → 10, so Saturday's boundary reading did NOT confirm a roll-off; no flag. BOS→AMS holding its new level (27) — the October fare release looks durable. LAX→SEA 13; YVR→LAS 10. Still flat: SFO→AUS 1, SFO→OGG dark, YVR→PDX 0.
+
+**Still pending:** unchanged from Sep 12–13 — wait-for-network probe; max-runtime guard / `caffeinate` wrapper; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
