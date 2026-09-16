@@ -1502,3 +1502,21 @@ Run 119: **5,789 offers — highest since Sep 1**, single run, **15 failures**, 
 **Watches:** BOS→AMS steady at 26 (the October release is durable). **SFO→OGG showed life (1) after four dark days.** LAX→SEA 14; YVR→LAS 11. Still flat: SFO→AUS 1, YVR→PDX 0.
 
 **Still pending:** unchanged — wait-for-network probe (seven incidents in 14 days); max-runtime guard / `caffeinate` wrapper; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+---
+
+## September 16, 2026 — run 120: all-time volume record; new watch — the median is drifting up
+
+Run 120: **5,878 offers — new all-time high** (prev 5,847, Sep 1), single run, **13 failures**, **4,200 api_calls**, ~**29m** (13:02:22 → 13:31 UTC; 09:02 → 09:31 EDT). Cumulative **577,766 rows** (571,888 + 5,878 — reconciles exactly). Chain ran end to end: backup (976 MB, 09:31), dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks.
+
+**Failures: eighth head-block DNS incident, small.** All 13 DNS: YYZ→YYC ×6, YYZ→YOW ×4, YYZ→YUL ×3. Mild effects: YTO→YYC 39 (vs ~43), and **YTO→YVR recovered from yesterday's wipe (18)**. Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13.
+
+**⚠️ NEW WATCH — the median price is drifting up on full coverage.** p50 **$422 → $445 → $453** (Sep 11 → 15 → 16, +7.3%) while p90 barely moved ($950 → $957) and identical-price staleness stayed 97–98%. Existing quotes are not repricing — the *mix* is shifting toward mid-priced inventory, consistent with the volume records. Today's avg **$543.08 is real**, not the Canadian-coverage artifact of Sep 12–15. Read: market-composition story, not a collector issue; watch whether p50 keeps climbing with staleness in band.
+
+**YMQ→NYC: 17 rows / 7 distinct departure dates — flag persists, no cascade.** Dates held at 7 (August's roll-off kept falling daily); rows ticked up 16 → 17. Verdict still open: a third reading decides between "new lower plateau" and "slow roll-off."
+
+**Distributions:** 287 routes, 41 gates, 107 airlines, avg $543.08, floor $32 (ATL→ORL, F9), **new top fare $2,707 NYC→SHA (AC)**; 194 departure dates, lead 0–195 d. Staleness vs Sep 15: 80.5% matched, **97.4% identical price** — in band.
+
+**Watches:** BOS→AMS rock-steady at 26. LAX→SEA eased to 10; YVR→LAS 10; SFO→OGG hanging on at 1; **SFO→AUS back to dark (0)**; YVR→PDX 0.
+
+**Still pending:** unchanged — wait-for-network probe (eight incidents in 15 days); max-runtime guard / `caffeinate` wrapper; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
