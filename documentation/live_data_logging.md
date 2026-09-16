@@ -1486,3 +1486,19 @@ Run 118: **5,689 offers**, single run, **19 failures**, **4,200 api_calls**, ~**
 **Watches:** YMQ→NYC **19 rows / 10 distinct departure dates** — the date count bounced 8 → 10, so Saturday's boundary reading did NOT confirm a roll-off; no flag. BOS→AMS holding its new level (27) — the October fare release looks durable. LAX→SEA 13; YVR→LAS 10. Still flat: SFO→AUS 1, SFO→OGG dark, YVR→PDX 0.
 
 **Still pending:** unchanged from Sep 12–13 — wait-for-network probe; max-runtime guard / `caffeinate` wrapper; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+---
+
+## September 15, 2026 — run 119: strong volume; YTO→YVR wiped; first flag on the YMQ→NYC date metric
+
+Run 119: **5,789 offers — highest since Sep 1**, single run, **15 failures**, **4,200 api_calls**, ~**1h 00m** (13:01:51 → 14:01 UTC; 09:01 → 10:01 EDT — a mid-run nap, then a sprint). Cumulative **571,888 rows** (566,099 + 5,789 — reconciles exactly). Chain ran end to end: backup (965 MB, 10:01), dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks.
+
+**Failures: seventh head-block DNS incident.** All 15 DNS: YYZ→YVR ×12, YYZ→JFK ×3. Losing 12 of 14 slots leaves **YTO→YVR fully dark today (artifact)** — which also keeps avg **$539.04 artificially elevated** for the third day. The rest of the Toronto block recovered fully: **YTO→YYC 43 — back at its norm**; YTO→YMQ 17. Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15.
+
+**⚠️ YMQ→NYC: first flag on the new date metric — benign roll-off signature.** 16 rows / **7 distinct departure dates** (10 → 7, crossing the <8 threshold from the Sep 11 rule). Rows-per-date steady at ~2.3, matching how August's "collapse" announced itself — the expected read is a benign window-roll, with the pair's row count sliding over the coming days. Tomorrow's reading confirms; a rows drop with dates *steady* would instead mean a collection problem.
+
+**Distributions:** 284 routes, 42 gates, **104 airlines — ties the month's low** (month range 104–118; today's dip partly the dark YVR pair taking Canadian carriers with it), avg $539.04 (artifact), floor $32 (ATL→ORL, F9), top fare back to **$2,454 YTO→HKG (AC)** — the $2,993 NYC→BUE lasted one day; 195 departure dates, lead 0–197 d. Staleness vs Sep 14: 81.4% matched, **98.2% identical price** — high end of band.
+
+**Watches:** BOS→AMS steady at 26 (the October release is durable). **SFO→OGG showed life (1) after four dark days.** LAX→SEA 14; YVR→LAS 11. Still flat: SFO→AUS 1, YVR→PDX 0.
+
+**Still pending:** unchanged — wait-for-network probe (seven incidents in 14 days); max-runtime guard / `caffeinate` wrapper; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
