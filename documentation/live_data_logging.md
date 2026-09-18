@@ -1520,3 +1520,41 @@ Run 120: **5,878 offers — new all-time high** (prev 5,847, Sep 1), single run,
 **Watches:** BOS→AMS rock-steady at 26. LAX→SEA eased to 10; YVR→LAS 10; SFO→OGG hanging on at 1; **SFO→AUS back to dark (0)**; YVR→PDX 0.
 
 **Still pending:** unchanged — wait-for-network probe (eight incidents in 15 days); max-runtime guard / `caffeinate` wrapper; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+---
+
+## September 17, 2026 — run 121: zero failures — head-block streak broken; near-record fare
+
+Run 121: **5,839 offers — second-highest ever**, single run, **0 failures**, **4,200 api_calls**, ~**1h 11m** (13:10:37 → 14:22 UTC; 09:10 → 10:22 EDT — fire coalesced ~10 min, light crawl, then sprint). Cumulative **583,605 rows** (577,766 + 5,839 — reconciles exactly). Chain ran end to end: backup (986 MB, 10:22), dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks. **First zero-failure morning in eight runs — the head of ROUTES finally got a working resolver from call 1.** Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, **0**.
+
+**Top fare $5,775 NYC→BER (AF 11, Biletix) — second-highest fare ever recorded** (all-time max $5,855, May 28 – Jun 1). Shape verified before classifying: same-day departure/return (trip 0 d), 1 transfer, OTA gate — exactly the known fat-tail population from the Sep 2 entry (same-day transatlantic AF codeshares). Real data, known family; the `trip_duration_days = 0` modeling note stands.
+
+**p50-drift watch: paused.** Median eased $453 → $449, p90 flat ($957 → $952). Watch stays open but the climb did not continue.
+
+**YMQ→NYC: 17 rows / 8 distinct departure dates.** Date series 7 → 7 → 8 — a **stabilizing lower plateau**, not August's cascading roll-off. Leaning "settled at a new level"; one more steady day closes the flag.
+
+**Distributions:** 283 routes, 41 gates, 107 airlines, avg $541.66, **floor $29 — new low** (below the $32 era; still ATL→ORL/LAX→LAS Frontier territory), 193 departure dates, lead 0–194 d. Staleness vs Sep 16: 82.1% matched, **97.9% identical price** — in band.
+
+**Watches:** **SFO→AUS revived to 3** after five days at 0–1; SFO→OGG dark again (flickering at the edge); LAX→SEA 15; Toronto block fully healthy (YTO→YYC 40, YTO→YVR 20, YTO→YMQ 13); BOS→AMS steady at 25; YVR→LAS 8; YVR→PDX 0.
+
+**Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate` wrapper; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+---
+
+## September 18, 2026 — run 122: 24 minutes; YMQ→NYC flag closed; the BOS→AMS release rolls out
+
+Run 122: **5,689 offers**, single run, **7 failures**, **4,200 api_calls**, ~**24m** (13:06:52 → 13:31 UTC; 09:06 → 09:31 EDT). Cumulative **589,294 rows** (583,605 + 5,689 — reconciles exactly). Chain ran end to end: backup (997 MB, 09:31), dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks.
+
+**Failures: mild ninth head-block echo.** YYZ→YVR ×3, YYZ→FLL / YYZ→SEA / YYZ→MIA ×1 (6 DNS) plus one mid-run SFO→HKG (non-DNS, single slot). YTO→YVR 11 — artifact of the 3 lost slots. Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7.
+
+**⚠️ YMQ→NYC flag CLOSED — it was a dip, not a roll-off.** Dates 7 → 7 → 8 → **10**; rows 17 → 17 → **21** — full bounce-back. Neither August's cascade nor a new plateau: the Sep 15 flag resolves as transient noise. The metric behaved as designed (it flagged, then the next readings discriminated); thresholds stand unchanged.
+
+**BOS→AMS: the October release rolled out — 26 → 5.** After exactly a week at 25–30 (the Sep 11 five-airline October burst), the pair snapped back to its pre-release level. Benign inventory lifecycle; watch closed.
+
+**p50 easing continues:** $453 → $449 → **$446**, p90 flat ($952). The Sep 16 drift watch now reads as a crest, not a trend; keep one more day before closing.
+
+**Distributions:** 280 routes, 40 gates, 107 airlines, avg $540.95, floor $29 (day two), **top fare $5,775 NYC→BER (AF), day two**; 193 departure dates, lead 0–193 d. Staleness vs Sep 17: 84.4% matched, **98.1% identical price** — in band.
+
+**Watches:** LAX→SEA 16; SFO→AUS 3 (recovery holding); SFO→OGG dark; YTO→YYC 35; YVR→LAS 7; YVR→PDX 0.
+
+**Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
