@@ -1558,3 +1558,35 @@ Run 122: **5,689 offers**, single run, **7 failures**, **4,200 api_calls**, ~**2
 **Watches:** LAX→SEA 16; SFO→AUS 3 (recovery holding); SFO→OGG dark; YTO→YYC 35; YVR→LAS 7; YVR→PDX 0.
 
 **Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+---
+
+## September 19, 2026 — run 123: a first — failures with a clean head block
+
+Run 123: **5,656 offers**, single run, **3 failures**, **4,200 api_calls**, ~**2h 56m** (13:00:38 → 15:56 UTC; 09:00 → 11:56 EDT). Cumulative **594,950 rows** (589,294 + 5,656 — reconciles exactly). Chain ran end to end: backup, dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks.
+
+**Failures: all 3 DNS on LGA→ATL, mid-loop — the head block got through untouched.** First time a failure day skipped the head of ROUTES entirely; a mid-run sliver caught one route instead. Distributions: 276 routes, 39 gates, 109 airlines, avg $542.05, floor $29, top fare $5,775 NYC→BER (day three), p50 $446, lead 0–193 d. Staleness vs Sep 18: 81.6% matched, **97.6% identical** — in band.
+
+---
+
+## September 20, 2026 — run 124: 7m 49s — fastest run ever recorded
+
+Run 124: **5,604 offers**, single run, **0 failures**, **4,200 api_calls**, ~**7m 49s** (13:00:03 → 13:07:52 UTC; 09:00 → 09:07 EDT) — **fastest run in the series** (prev ~14m, run 97). Machine awake at the slot; ~9 calls/second sustained. Cumulative **600,554 rows — the 600k milestone** (594,950 + 5,604 — reconciles exactly). Chain ran end to end: backup, dedupe --apply **0 duplicates**, audit **All audits passed**.
+
+**Distributions:** 275 routes, 38 gates, 111 airlines, avg $547.07, **floor $31** (the $29 floor broke after three days), top fare $5,775 NYC→BER (day four), p50 $453, lead 0–192 d. Staleness vs Sep 19: 85.5% matched, **98.1% identical** — in band.
+
+---
+
+## September 21, 2026 — run 125: scattered-cluster failures; p50 watch closed; backup crosses 1 GB
+
+Run 125: **5,726 offers**, single run, **20 failures**, **4,200 api_calls**, ~**27m** (13:00:30 → 13:27 UTC; 09:00 → 09:27 EDT). Cumulative **606,280 rows** (600,554 + 5,726 — reconciles exactly). Chain ran end to end: **backup crossed 1 GB** (1.03 GB, 09:27), dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks.
+
+**Failures: scattered clusters, mostly NOT the head block** — JFK→SDQ ×10 and MIA→PUJ ×4 (the Latin-America block, mid/late loop) plus a small head echo (YYZ→BOS ×3, YYZ→YOW ×3), 19 DNS + 1. With Sep 19's LGA→ATL day, the failure pattern is drifting from "always the head" to "wherever a dead sliver lands" — the probe fix would still catch all of it. Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20.
+
+**⚠️ p50-drift watch CLOSED.** Series since opening: $422 → $445 → $453 → $449 → $446 → $446 → $453 → $443. The Sep 11–16 climb crested and dispersed into noise around **$445 ± 10** — inventory-mix wobble, not a trend. (Same verdict shape as the trip-max metric: watch opened, tested, resolved benign.)
+
+**Distributions:** 277 routes, 40 gates, 111 airlines, avg $539.81, floor $31, **top fare $5,775 NYC→BER — day five**; 189 departure dates, lead 0–191 d. Staleness vs Sep 20: 81.0% matched, **98.2% identical** — in band.
+
+**Watches:** YMQ→NYC healthy (23 rows / 9 dates). **YTO→YYC 20 — half its ~35–43 norm with NO matching failures today; genuine thinning, open a watch.** **YVR→LAS 3 — new low** (original band 18–19; the long decline continues). YTO→YVR 26 healthy; LAX→SEA 14; SFO→AUS 4 and SFO→OGG 2 both holding their recoveries; BOS→AMS 3 (post-release level).
+
+**Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
