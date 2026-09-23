@@ -1604,3 +1604,17 @@ Run 126: **5,791 offers — third-highest ever**, single run, **4 failures**, **
 **Watches:** **YTO→YYC 23** — slight lift from 20 but still well under the 35–43 norm; thinning watch stays open. YMQ→NYC healthy (26 rows / 9 dates). **SFO→OGG up to 3 — strengthening for a third day** after its near-death flicker. YVR→LAS still scraping at 4; YTO→YVR 25; LAX→SEA 12; SFO→AUS 4; YTO→YMQ 14.
 
 **Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+---
+
+## September 23, 2026 — run 127: quiet day; YTO→YYC recovering; the BER fare hits day seven
+
+Run 127: **5,590 offers**, single run, **6 failures**, **4,200 api_calls**, ~**31m** (13:05:32 → 13:36 UTC; 09:05 → 09:36 EDT). Cumulative **617,661 rows** (612,071 + 5,590 — reconciles exactly). Chain ran end to end: backup (1.05 GB, 09:36), dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks.
+
+**Failures: small head echo** — YYZ→YHZ ×4, YYZ→YVR ×2, DNS. Mild effects (YTO→YVR 22, consistent with the two lost slots). Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20, 4, 6.
+
+**Distributions:** 270 routes, 39 gates, 115 airlines, avg $535.97, floor $31, p50 $441 (steady), **top fare $5,775 NYC→BER — day seven**. Lifecycle note: the $5,620 NYC→PAR fare lasted exactly seven days before rolling out — if the pattern holds, the BER fare disappears tomorrow. 189 departure dates, lead 0–189 d. Staleness vs Sep 22: 84.6% matched, **98.2% identical** — high end of band.
+
+**Watches:** **YTO→YYC recovering — 20 → 23 → 28**, climbing back toward its 35–43 norm; the thinning watch leans "dip, not step-down" — one or two more days to close. YMQ→NYC healthy (23 rows / 8 dates). SFO→OGG 3 and SFO→AUS 4 holding; LAX→SEA 13; YVR→LAS 6; YTO→YMQ 16.
+
+**Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
