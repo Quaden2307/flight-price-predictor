@@ -1590,3 +1590,17 @@ Run 125: **5,726 offers**, single run, **20 failures**, **4,200 api_calls**, ~**
 **Watches:** YMQ→NYC healthy (23 rows / 9 dates). **YTO→YYC 20 — half its ~35–43 norm with NO matching failures today; genuine thinning, open a watch.** **YVR→LAS 3 — new low** (original band 18–19; the long decline continues). YTO→YVR 26 healthy; LAX→SEA 14; SFO→AUS 4 and SFO→OGG 2 both holding their recoveries; BOS→AMS 3 (post-release level).
 
 **Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+---
+
+## September 22, 2026 — run 126: third-highest volume; head block clean a third straight day
+
+Run 126: **5,791 offers — third-highest ever**, single run, **4 failures**, **4,200 api_calls**, ~**1h 03m** (13:01:24 → 14:04 UTC; 09:01 → 10:04 EDT). Cumulative **612,071 rows** (606,280 + 5,791 — reconciles exactly). Chain ran end to end: backup (1.04 GB, 10:04), dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks.
+
+**Failures: all 4 DNS, all mid-loop scatter** — CLT→LGA ×2, CLT→MCO, ATL→BOS (the US-interconnections block). Head block untouched for a third straight day; the drift from "always the head" to "wherever a dead sliver lands" is now consistent. Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20, 4.
+
+**Distributions:** 274 routes, 40 gates, **115 airlines** (climbing again — 107 → 111 → 115 over five days), avg $542.29, floor $31, **top fare $5,775 NYC→BER (AF) — day six**; 189 departure dates, lead 0–190 d, p50 $443 (steady; the closed drift-watch verdict holds). Staleness vs Sep 21: 79.4% matched, **97.5% identical** — in band.
+
+**Watches:** **YTO→YYC 23** — slight lift from 20 but still well under the 35–43 norm; thinning watch stays open. YMQ→NYC healthy (26 rows / 9 dates). **SFO→OGG up to 3 — strengthening for a third day** after its near-death flicker. YVR→LAS still scraping at 4; YTO→YVR 25; LAX→SEA 12; SFO→AUS 4; YTO→YMQ 14.
+
+**Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
