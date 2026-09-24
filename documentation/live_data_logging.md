@@ -1618,3 +1618,19 @@ Run 127: **5,590 offers**, single run, **6 failures**, **4,200 api_calls**, ~**3
 **Watches:** **YTO→YYC recovering — 20 → 23 → 28**, climbing back toward its 35–43 norm; the thinning watch leans "dip, not step-down" — one or two more days to close. YMQ→NYC healthy (23 rows / 8 dates). SFO→OGG 3 and SFO→AUS 4 holding; LAX→SEA 13; YVR→LAS 6; YTO→YMQ 16.
 
 **Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+---
+
+## September 24, 2026 — run 128: zero failures; the seven-day fare lifecycle confirmed
+
+Run 128: **5,648 offers**, single run, **0 failures**, **4,200 api_calls**, ~**36m** (13:15:07 → 13:51 UTC; 09:15 → 09:51 EDT — fire coalesced ~15 min into a wake). Cumulative **623,309 rows** (617,661 + 5,648 — reconciles exactly). Chain ran end to end: backup (1.06 GB, 09:51), dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks. Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20, 4, 6, 0.
+
+**⚠️ Seven-day fare lifecycle CONFIRMED — called in advance.** The $5,775 NYC→BER fare vanished after exactly seven days, matching the $5,620 NYC→PAR's exact seven-day run (Sep 2–8). Two for two: the same-day-trip premium codeshares appear to sit in the API cache on a ~seven-day TTL. Predictive value: when the next $4,000+ zero-day fare appears, expect a one-week lifespan.
+
+**New top fare $3,436 YTO→NYC (SK 3148, Kiwi.com) — known family, new variant.** Shape verified before classifying: zero-day turn, 0 transfers — the established `trip_duration_days = 0` fat-tail population, but transborder SK/Kiwi rather than the usual transatlantic AF/City.Travel. (Its date fields show the documented UTC-vs-local ±1-day display artifact; recompute with string prefixes, not SQLite `date()`.)
+
+**Distributions:** 274 routes, 41 gates, 114 airlines, avg $535.70, floor $31, p50 $442 (steady), 188 departure dates, lead 0–188 d. Staleness vs Sep 23: 82.8% matched, **98.6% identical — highest identical-price rate in weeks**, in band.
+
+**Watches:** **YTO→YYC 31** — recovery continues (20 → 23 → 28 → 31, nearly at the 35–43 norm); one more day closes the thinning watch as a dip. YMQ→NYC healthy (25 rows / 8 dates). **LAX→SEA slipped to 8** (band 13–16 — half an eye). SFO→OGG 3; SFO→AUS 2; YVR→LAS 6; YTO→YVR 28; YTO→YMQ 18.
+
+**Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
