@@ -1634,3 +1634,21 @@ Run 128: **5,648 offers**, single run, **0 failures**, **4,200 api_calls**, ~**3
 **Watches:** **YTO→YYC 31** — recovery continues (20 → 23 → 28 → 31, nearly at the 35–43 norm); one more day closes the thinning watch as a dip. YMQ→NYC healthy (25 rows / 8 dates). **LAX→SEA slipped to 8** (band 13–16 — half an eye). SFO→OGG 3; SFO→AUS 2; YVR→LAS 6; YTO→YVR 28; YTO→YMQ 18.
 
 **Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+---
+
+## September 25, 2026 — run 129: head-block echo returns; YTO→YYC watch closed; YMQ→NYC flags with a new shape
+
+Run 129: **5,669 offers**, single run, **17 failures**, **4,200 api_calls**, ~**39m** (13:09:10 → 13:48 UTC; 09:09 → 09:48 EDT). Cumulative **628,978 rows** (623,309 + 5,669 — reconciles exactly). Chain ran end to end: backup (1.07 GB, 09:48), dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks.
+
+**Failures: head-block echo after three quiet days** — YYZ→JFK ×10, YYZ→YHZ ×2, YYZ→LGA ×2, YYZ→YOW ×1 (DNS) + two mid-loop strays (SFO→AUS, LAX→LAS). No pair dark: YTO→NYC still 75 (the NYC city pair is fed by many queries). Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20, 4, 6, 0, 17.
+
+**⚠️ YTO→YYC thinning watch CLOSED — it was a dip.** Five straight days of recovery: 20 → 23 → 28 → 31 → **33**, back within reach of the 35–43 norm.
+
+**⚠️ YMQ→NYC flags again — with a NEW shape: densification.** Dates 8 → **5** (below the <8 threshold) while rows *held* at 23 → **4.6 rows/date** vs the ~2.5–2.9 norm. Neither the benign roll-off (dates and rows falling together) nor the collection-problem signature (rows falling, dates steady) — this is concentration into fewer departure dates. Watch tomorrow: dates shrinking further with rows holding would make this a third, distinct pattern for the pair.
+
+**Distributions:** 280 routes, 41 gates, 115 airlines, avg $543.87, floor $31, p50 $451 (upper edge of the $445 ± 10 noise band), **top fare $2,969 SEA→SEL labeled "F9"** — Frontier doesn't fly transpacific; an API carrier-labeling quirk on an OTA row, curiosity not alarm; 187 departure dates, lead 0–187 d. Staleness vs Sep 24: 82.6% matched, **98.0% identical** — in band.
+
+**Watches:** **SFO→OGG up to 5 — recovery keeps strengthening.** LAX→SEA bounced back to 11; SFO→AUS 2 (plus one failed slot today); YVR→LAS 6; YTO→YVR 24; YTO→YMQ 16.
+
+**Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
