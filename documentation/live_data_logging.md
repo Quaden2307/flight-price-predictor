@@ -1652,3 +1652,17 @@ Run 129: **5,669 offers**, single run, **17 failures**, **4,200 api_calls**, ~**
 **Watches:** **SFO→OGG up to 5 — recovery keeps strengthening.** LAX→SEA bounced back to 11; SFO→AUS 2 (plus one failed slot today); YVR→LAS 6; YTO→YVR 24; YTO→YMQ 16.
 
 **Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+## September 26, 2026 — run 130: zero failures and the second-fastest run of the 300-route era; YMQ→NYC densification eases
+
+Run 130: **5,745 offers**, single run, **0 failures**, **4,200 api_calls**, ~**13m** (13:05:33 → 13:18:59 UTC; 09:05 → 09:18 EDT). Cumulative **634,723 rows** (628,978 + 5,745 — reconciles exactly). Chain ran end to end: backup (1.0 GB, 09:19), dedupe --apply **0 duplicates**, audit **All audits passed**. No tracebacks.
+
+**13.4 minutes is the second-fastest run since the route table grew to 300** (only run 124's 7.8m beats it — also a zero-failure day). The mechanics: failures cost 3 retries with exponential backoff each, so a clean day skips all the waiting. Speed here is a *symptom of health*, not something to investigate. Yesterday's head-block echo did not repeat — no DNS incident. Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20, 4, 6, 0, 17, **0**.
+
+**YMQ→NYC — the deciding reading eases the flag.** 20 rows / **5 dates** = 4.0 rows/date (from 23/5 = 4.6 yesterday; norm ~2.5–2.9). Dates held at 5 rather than shrinking further, so this is not coverage loss and not the feared third pattern — the densification is *relaxing*, not deepening. Downgraded from flag to watch: one more normal-ish reading (density back under ~3, or dates recovering toward 8) closes it.
+
+**Distributions:** 287 routes (280 → 287 — yesterday's 5 failed-out YYZ pairs are back), 40 gates, 114 airlines, avg $550.13, floor $31, p50 $452 (still the upper edge of the $445 ± 10 band), p90 $977, **new top fare $3,438 YTO→NYC labeled "SK"** — SAS doesn't fly Toronto→New York; same OTA carrier-labeling quirk as the SEA→SEL "F9" fare, which is still present at $2,969 (day 2 of the typical 7-day lifecycle); 186 departure dates, lead 0–186 d, trip 0–56 d. Staleness vs Sep 25: 81.9% matched (4,707 of 5,745), **98.0% identical** — both in band.
+
+**Watches:** YVR→LAS ticked up 6 → **8** (band 18–19 — first upward move in the long decline, still deeply depressed); **YVR→PDX still 0**; SFO→OGG slipped back 5 → 4 (recovery stalls); LAX→SEA 11 → 14; SFO→AUS 1; YTO→YVR 32; YTO→YMQ 15; YTO→NYC 81. **YTO→YYC stays closed and keeps climbing: 33 → 38**, inside the 35–43 norm for the first time since the dip.
+
+**Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
