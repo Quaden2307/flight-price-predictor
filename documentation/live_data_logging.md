@@ -1666,3 +1666,21 @@ Run 130: **5,745 offers**, single run, **0 failures**, **4,200 api_calls**, ~**1
 **Watches:** YVR→LAS ticked up 6 → **8** (band 18–19 — first upward move in the long decline, still deeply depressed); **YVR→PDX still 0**; SFO→OGG slipped back 5 → 4 (recovery stalls); LAX→SEA 11 → 14; SFO→AUS 1; YTO→YVR 32; YTO→YMQ 15; YTO→NYC 81. **YTO→YYC stays closed and keeps climbing: 33 → 38**, inside the 35–43 norm for the first time since the dip.
 
 **Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+## September 27, 2026 — run 131: second clean fast day; 640k crossed; YMQ→NYC turns toward benign roll-off; SFO→OGG recovery reverses
+
+Run 131: **5,790 offers**, single run, **1 failure**, **4,200 api_calls**, ~**16m** (13:00:05 → 13:16:27 UTC; 09:00 → 09:16 EDT). Cumulative **640,513 rows** (634,723 + 5,790 — reconciles exactly; **crossed 640k**). Chain ran end to end: backup (1.0 GB, 09:16), dedupe --apply **0 duplicates**, audit **All audits passed** (92nd). No tracebacks.
+
+**Fire time note:** launchd fired at exactly 13:00 UTC — 5 minutes earlier than the recent 13:05–13:15 drift, but the same hour, so no timezone shift; just coalescing landing on the nominal minute. Two fast days back-to-back (13.4m → 16.4m) — the failure-free pattern holds.
+
+**The one failure: EWR→AMS ×1** — a mid-loop stray, not a YYZ head-block; no DNS incident. Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20, 4, 6, 0, 17, 0, **1**.
+
+**YMQ→NYC turns toward the benign shape.** 17 rows / **4 dates** = 4.25 rows/date. Dates slipped again (8 → 5 → 5 → 4) instead of recovering, but rows are now falling *with* them (23 → 20 → 17) — the benign roll-off signature (dates and rows shrinking together), just from a densified base. Not closed: a reading with density back under ~3 would close it; dates shrinking with rows *holding* would reopen the flag.
+
+**⚠️ SFO→OGG recovery reverses: 5 → 4 → 2.** What looked like a strengthening recovery is now a fresh two-day decline. Reopened as a decline watch.
+
+**Distributions:** 287 routes, 40 gates, 110 airlines (114 → 110, small churn), avg $550.22, floor $32, p50 $446 (back to the middle of the $445 ± 10 band), p90 $981, top fares unchanged — $3,438 YTO→NYC "SK" (day 2) and $2,969 SEA→SEL "F9" (day 3 of the typical 7-day lifecycle); 186 departure dates, lead 0–185 d, trip 0–56 d. Staleness vs Sep 26: 84.2% matched (4,873 of 5,790), **99.0% identical** — top of the band, consistent with two calm days.
+
+**Watches:** YVR→LAS 8 → 7 (hovering, band 18–19); **YVR→PDX still 0**; LAX→SEA 14 → 13; SFO→AUS 3; YTO→YVR 34; YTO→YMQ 19. **YTO→YYC 38 → 40** — fully inside the 35–43 norm; closure holds.
+
+**Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
