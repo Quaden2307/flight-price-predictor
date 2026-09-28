@@ -1684,3 +1684,17 @@ Run 131: **5,790 offers**, single run, **1 failure**, **4,200 api_calls**, ~**16
 **Watches:** YVR→LAS 8 → 7 (hovering, band 18–19); **YVR→PDX still 0**; LAX→SEA 14 → 13; SFO→AUS 3; YTO→YVR 34; YTO→YMQ 19. **YTO→YYC 38 → 40** — fully inside the 35–43 norm; closure holds.
 
 **Still pending:** unchanged — wait-for-network probe; max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+## September 28, 2026 — run 132: DNS sliver lands on the Bay Area block; two SFO routes dark for a day; YMQ→NYC keeps easing
+
+Run 132: **5,711 offers**, single run, **38 failures**, **4,200 api_calls**, ~**31m** (13:00:05 → 13:31:02 UTC; 09:00 → 09:31 EDT — second straight day firing at exactly 13:00). Cumulative **646,224 rows** (640,513 + 5,711 — reconciles exactly). Chain ran end to end: backup (1.0 GB, 09:31), dedupe --apply **0 duplicates**, audit **All audits passed** (93rd). No tracebacks. The extra runtime vs the two fast days is pure retry backoff on the failures.
+
+**Failures: the DNS sliver lands mid-loop on the Bay Area block — largest incident since Sep 12.** All 38 are `NameResolutionError`, contiguous: SFO→MSP ×14, SFO→RDU ×13, SFO→AUS ×5, SJC→LAX ×4, SJC→SEA ×2. This is the strongest confirmation yet of the "sliver lands wherever the loop happens to be" model — previous incidents hit the YYZ head because slivers usually coincide with run start; this one arrived ~mid-run. Consequence: **SFO→MSP and SFO→RDU went completely dark today** (14/14 and 13/14 slots lost, 0 rows each) — hence 285 routes instead of 287. Expect both back tomorrow, as the YYZ pairs always were. Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20, 4, 6, 0, 17, 0, 1, **38**. The wait-for-network probe would only cover run start — today argues for the thorough version: a retry-after-DNS-settle *during* the loop.
+
+**YMQ→NYC keeps easing toward normal.** 21 rows / **6 dates** = 3.5 rows/date — dates recovered (4 → 6) and density fell (4.25 → 3.5). The benign-roll-off read strengthens. One more reading near norm (density ~3, or dates back toward 8) closes the watch.
+
+**Distributions:** 285 routes (see failures), 39 gates, 109 airlines, avg $557.84, floor $33, p50 $453 (upper edge of the $445 ± 10 band), p90 $996, top fares unchanged — $3,438 YTO→NYC "SK" (day 3) and $2,969 SEA→SEL "F9" (day 4 of the typical 7-day lifecycle); 184 departure dates, lead 0–184 d, trip max 56 d. Staleness vs Sep 27: 82.3% matched (4,701 of 5,711), **97.7% identical** — in band.
+
+**Watches:** SFO→OGG 2 → 3 (small bounce; OGG's slots were untouched by the SFO failure block); SFO→AUS salvaged 3 rows despite 5 failed slots; YVR→LAS slipped back 7 → 5 (band 18–19); **YVR→PDX still 0**; LAX→SEA 13 → 14; YTO→YVR 31; YTO→YMQ 21. **YTO→YYC 40 → 37** — inside the norm; closure holds.
+
+**Still pending:** unchanged — wait-for-network probe (today upgrades the ask: mid-loop DNS-settle retry, not just a start-of-run gate); max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
