@@ -1698,3 +1698,19 @@ Run 132: **5,711 offers**, single run, **38 failures**, **4,200 api_calls**, ~**
 **Watches:** SFO→OGG 2 → 3 (small bounce; OGG's slots were untouched by the SFO failure block); SFO→AUS salvaged 3 rows despite 5 failed slots; YVR→LAS slipped back 7 → 5 (band 18–19); **YVR→PDX still 0**; LAX→SEA 13 → 14; YTO→YVR 31; YTO→YMQ 21. **YTO→YYC 40 → 37** — inside the norm; closure holds.
 
 **Still pending:** unchanged — wait-for-network probe (today upgrades the ask: mid-loop DNS-settle retry, not just a start-of-run gate); max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+## September 29, 2026 — run 133: a 73-minute crawl-then-sprint; SFO routes back as predicted; the F9 fare dies on day 4
+
+Run 133: **5,704 offers**, single run, **11 failures**, **4,200 api_calls**, ~**73m** (13:03:35 → 14:16:23 UTC; 09:03 → 10:16 EDT) — slowest completed run since the Sep 12–13 marathon. Cumulative **651,928 rows** (646,224 + 5,704 — reconciles exactly). Chain ran end to end: backup (1.0 GB, 10:16), dedupe --apply **0 duplicates**, audit **All audits passed** (94th). No tracebacks.
+
+**The run's shape was new: crawl then sprint.** ~63 minutes for the first third of the route table (degraded resolver latency dragging every call), then recovery around 10:05 and the remaining two-thirds in ~10 minutes at fast-day pace. All 11 failures are `NameResolutionError`, scattered in three slivers inside the slow window — JFK→PHL ×4, JFK→RDU ×6, YVR→LAX ×1 — zero failures after recovery. Third straight DNS day, third distinct shape (head-block → mid-loop block → scattered slivers + latency drag). Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20, 4, 6, 0, 17, 0, 1, 38, **11**.
+
+**Yesterday's prediction confirmed: SFO→MSP (3 rows) and SFO→RDU (1) reappeared** after their dark day — routes recovered to **290**. Today's 0-row pairs are JFK→PHL and JFK→RDU, with a caveat: they lost only 4 and 6 of 14 slots, so the surviving slots also returned nothing — thin route *plus* partial failure, not a pure blackout.
+
+**The SEA→SEL "F9" $2,969 fare vanished on day 4** (SEA→SEL max today: $895) — breaking the seven-day lifecycle that NYC→PAR and NYC→BER both followed exactly. The lifecycle is a tendency, not a law. YTO→NYC "SK" $3,438 still up (day 4) — now the test case.
+
+**Distributions:** 290 routes, 40 gates, **105 airlines — a four-day slide (114 → 110 → 109 → 105), soft watch opened**; avg $552.33, floor $33, p50 $448 (mid-band), p90 $985; 183 departure dates, lead 0–183 d, trip max 56 d. Staleness vs Sep 28: **79.6% matched** (4,539 of 5,704) — slightly below the recent 82–84 range, explained by yesterday's dark SFO routes having no partner rows plus today's slivers; **97.7% identical** — in band.
+
+**Watches:** **YMQ→NYC plateaus: an identical 21 rows / 6 dates = 3.5 rows/date two days running** — neither closing toward the 2.5–2.9 norm nor worsening; a third 3.5 reading tomorrow starts to look like a new baseline rather than an anomaly. **YTO→YYC swings above the norm: 37 → 48** (norm 35–43) — this pair now overshoots in both directions; watching the top side. SFO→OGG flat at 3; SFO→AUS 3; LAX→SEA 14; YVR→LAS flat at 5; **YVR→PDX still 0**; YTO→YVR 29; YTO→YMQ 21.
+
+**Still pending:** unchanged — wait-for-network probe (the mid-loop version; three straight days of mid-run DNS make the start-of-run gate insufficient); max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
