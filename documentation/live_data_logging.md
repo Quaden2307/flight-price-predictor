@@ -1714,3 +1714,31 @@ Run 133: **5,704 offers**, single run, **11 failures**, **4,200 api_calls**, ~**
 **Watches:** **YMQ→NYC plateaus: an identical 21 rows / 6 dates = 3.5 rows/date two days running** — neither closing toward the 2.5–2.9 norm nor worsening; a third 3.5 reading tomorrow starts to look like a new baseline rather than an anomaly. **YTO→YYC swings above the norm: 37 → 48** (norm 35–43) — this pair now overshoots in both directions; watching the top side. SFO→OGG flat at 3; SFO→AUS 3; LAX→SEA 14; YVR→LAS flat at 5; **YVR→PDX still 0**; YTO→YVR 29; YTO→YMQ 21.
 
 **Still pending:** unchanged — wait-for-network probe (the mid-loop version; three straight days of mid-run DNS make the start-of-run gate insufficient); max-runtime guard / `caffeinate`; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+## September 30 – October 2, 2026 — runs 134–136: runtimes triple without failures; October rollover; YMQ→NYC watch closed; erratum for Sep 29
+
+Three runs, all complete and clean:
+
+- **Run 134 (Sep 30):** 5,758 offers, 5 failures, ~**2h25m** (13:14:58 → 15:40:08 UTC; 09:14 → 11:40 EDT). Cumulative 657,686.
+- **Run 135 (Oct 1):** 6,104 offers, **0 failures**, ~**2h49m** (13:00:37 → 15:49:57 UTC). Cumulative 663,790.
+- **Run 136 (Oct 2):** 6,112 offers, 27 failures, ~**2h50m** (13:11:08 → 16:01:15 UTC; done 12:01 PM EDT). Cumulative **669,902 — reconciles exactly at every step**.
+
+Chains ran end to end all three days: dedupe --apply **0 duplicates** ×3, audit **All audits passed** (95th–97th), backup now **1.1 GB** (Oct 2, 12:01). No tracebacks.
+
+**⚠️ The headline: runtimes are climbing steeply, and it is NOT retry backoff.** 73m → 145m → 169m → 170m over four runs — and the 2h49m run had *zero* failures, so the cost is per-call latency, not failure retries. Sep 29's crawl-then-sprint has become all-crawl. No slot-collision risk yet (worst finish: 12:01 PM vs the 9 AM fire), but four days of monotonic worsening is a trend, not a blip. It sharpens two pending items at once: the max-runtime guard, and actually diagnosing the resolver/router, since the slow days also carry DNS failures.
+
+**Failures — all DNS (`NameResolutionError`), all slivers:** Sep 30: YUL→EWR ×5 (route dipped to 2 rows, recovered to 7 next day). Oct 1: none. Oct 2: YUL→LGA ×13, YUL→JFK ×6, JFK→SEA ×8 — YUL→LGA fully dark (0 rows, 13/14 slots lost), YUL→JFK kept 3 rows, JFK→SEA barely dented (19 rows). Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20, 4, 6, 0, 17, 0, 1, 38, 11, **5, 0, 27**.
+
+**⚠️ ERRATUM for the Sep 29 entry.** It claimed "JFK→PHL and JFK→RDU at 0 rows." Wrong — the check queried airport codes against `offers.origin`/`destination`, which hold **city** codes (JFK stores as NYC, YUL as YMQ), so those pair queries always return 0 regardless of data. The routes were fine that day: NYC→PHL had 2 rows, NYC→RDU had 9. The failure attribution itself (failed slots from the collector log) stands. Lesson re-learned from the features-join gotcha: **airport-code pair checks must use `origin_airport`/`destination_airport`.** All other watch pairs (YMQ, YTO, YVR, SFO, LAX, SEA) use single-airport or metro city codes and were unaffected.
+
+**October rollover (Oct 1):** offers stepped up ~5,750 → ~6,100/day, departure dates 182 → 210 (April 2027 opened), avg price $552 → $569–571, airlines recovering 105 → 108 — all expected month-boundary behavior; the airline-count soft watch relaxes.
+
+**Fare lifecycle: YTO→NYC "SK" $3,438 died after day 6** (last seen Oct 1). The high-fare lifecycle series is now 7, 7, 4, 6 — roughly-a-week is a tendency, not a law. Top fare Oct 2 reverts to the long-standing SFO→SHA "YP" $2,877.
+
+**Distributions (Sep 30 / Oct 1 / Oct 2):** routes 289 / 289 / 285; gates 41 / 42 / 42; airlines 105 / 108 / 108; avg $552.25 / $568.79 / $571.43; floor $31 ×3; p50-era band unchanged. Staleness: 4,842 matched (84.1%), 98.3% identical; 4,783 (78.4% — rollover inventory diluting the match pool), 97.7%; 5,044 (82.5%), 97.9% — identical-price % in band all three days.
+
+**⚠️ YMQ→NYC densification watch CLOSED.** Density returned to norm three straight days: 15/6 = 2.5, 17/6 = 2.8, 9/6 = 1.5 rows/date. The episode (Sep 25–29, peak 4.6) resolved without a coverage event. Oct 2's thin 9 rows is the failures hitting exactly its feeder queries — explained, not alarming.
+
+**Watches:** **YVR→LAS 3, 3, 3** — weeks below the 18–19 band; this now reads structural, and the band needs re-baselining rather than more waiting. **YTO→YYC 41 → 50 → 48** — now overshooting the 35–43 norm from above; the pair swings both ways. SFO→OGG recovered to 3 → 6 → 5; LAX→SEA 14 → 15 → 9 (one-day dip, unrelated to the JFK→SEA sliver — that fed NYC→SEA, which held at 19); **YVR→PDX still 0**.
+
+**Still pending:** unchanged — wait-for-network probe (mid-loop version); **max-runtime guard / `caffeinate` (urgency up — see runtime trend)**; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
