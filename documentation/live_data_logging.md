@@ -1742,3 +1742,24 @@ Chains ran end to end all three days: dedupe --apply **0 duplicates** ×3, audit
 **Watches:** **YVR→LAS 3, 3, 3** — weeks below the 18–19 band; this now reads structural, and the band needs re-baselining rather than more waiting. **YTO→YYC 41 → 50 → 48** — now overshooting the 35–43 norm from above; the pair swings both ways. SFO→OGG recovered to 3 → 6 → 5; LAX→SEA 14 → 15 → 9 (one-day dip, unrelated to the JFK→SEA sliver — that fed NYC→SEA, which held at 19); **YVR→PDX still 0**.
 
 **Still pending:** unchanged — wait-for-network probe (mid-loop version); **max-runtime guard / `caffeinate` (urgency up — see runtime trend)**; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+## October 3–4, 2026 — runs 137–138: the 4-hour run; a new failure type; a record $5,723 fare; the per-call-connection diagnosis
+
+Two runs, both complete and clean:
+
+- **Run 137 (Oct 3):** 5,880 offers, **29 failures**, ~**4h11m** (13:14:45 → 17:25:28 UTC; 09:14 → 13:25 EDT) — the longest non-marathon run ever. Cumulative 675,782.
+- **Run 138 (Oct 4):** 5,940 offers, **0 failures**, ~**3h18m** (13:04:38 → 16:22:23 UTC; 09:04 → 12:22 EDT). Cumulative **681,722 — reconciles exactly both days**.
+
+Chains end to end both days: dedupe --apply **0 duplicates** ×2, audit **All audits passed** (98th, 99th), backup 1.1 GB (Oct 4, 12:22). No tracebacks. Runtime series: 73 → 145 → 169 → 170 → **251** → **198** min — first improvement in six runs, still ~15× fast-day pace. No slot-collision risk yet (worst finish 1:25 PM), but the guard decision shouldn't wait for one.
+
+**Run 137's failures introduce a NEW type.** 27 of 29 are the familiar `NameResolutionError`, scattered across eight routes — the most dispersed sliver pattern yet (JFK→PVG ×10, YUL→EWR ×8, YUL→LHR ×3, JFK→ATL ×2, JFK→DFW ×2, YUL→CDG ×2, YYZ→NRT ×1, LAX→HKG ×1). The other 2 (JFK→PVG, LAX→HKG slots) are **`Read timed out (timeout=10)`** — DNS resolved and the connection stood, but the API didn't answer in 10 s, three attempts straight. First direct evidence that some of the slowness is server-side, not just the local resolver. No route went dark: JFK→PVG kept 16 rows (as NYC→PVG). Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20, 4, 6, 0, 17, 0, 1, 38, 11, 5, 0, 27, **29, 0**.
+
+**Diagnosis for the runtime climb — found in `collect.py`: one fresh connection per call.** Line 115 is a bare `requests.get(URL, ...)`, so each of the 4,200 calls pays its own DNS lookup + TCP + TLS handshake. Healthy resolver: ~0.1 s of overhead, invisible. Degraded resolver: seconds — multiplied 4,200×, which is exactly this week's crawl (avg per-call time went ~0.15 s → ~3 s). A `requests.Session` (connection reuse / keep-alive) would pay DNS and the handshake roughly once instead of 4,200 times, and would also shrink the DNS-sliver attack surface. It would not fix server-side read-timeouts, but those were 2 of 29 failures. **Proposed test before changing anything: on a slow morning, time 10 bare `requests.get` calls vs 10 through one `Session`.** May moot the max-runtime guard.
+
+**Record fare: NYC→PAR AF $5,723** — highest ever recorded (previous record: $3,438 YTO→NYC). Appeared Oct 3, held Oct 4 (day 2); new lifecycle case. **p50 has left the old band**: $467 → $474 vs $445 ± 10, with avg $568–572 — reads as October repricing alongside the rollover, so the p50 reference band needs re-baselining for October rather than an alarm.
+
+**Distributions (Oct 3 / Oct 4):** routes 286 / 283; gates 41 / 42; airlines **102 / 104 — the slide's lowest readings** (soft watch back on); floor $31 ×2; p90 $993 / $998; departure dates 205 / 206. Staleness: 5,014 matched (85.3%), **98.6% identical**; 5,017 (84.5%), **98.1%** — both strong.
+
+**Watches:** YMQ→NYC closure holds — 13/6 = 2.2 and 15/6 = 2.5 rows/date, fully normal. YTO→YYC back inside its norm: 41 → 38; overshoot episode over. **YVR→LAS hits 2 — a new low; re-baselining is overdue** (band 18–19 is weeks stale). **YVR→PDX still 0.** LAX→SEA 9 / 9 — settling at a lower level rather than dipping. SFO→OGG 6 → 5. YUL→EWR recovered to 4 → 6 after its sliver days.
+
+**Still pending:** wait-for-network probe (mid-loop version); max-runtime guard / `caffeinate` — **both may be superseded if the `Session` test pans out**; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
