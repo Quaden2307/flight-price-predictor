@@ -1777,3 +1777,17 @@ Run 139: **5,852 offers**, single run, **0 failures**, **4,200 api_calls**, ~**6
 **Watches — a quiet day:** YMQ→NYC 14/5 = 2.8 rows/date, fully normal — closure holds. YTO→YYC 37 — inside the norm, overshoot episode over. YVR→LAS flat at 2 (the 18–19 band is weeks stale; re-baseline). **YVR→PDX still 0.** SFO→OGG 5 and LAX→SEA 10 — both at their settled levels.
 
 **Still pending:** unchanged — `Session` timing test on the next slow morning (may supersede the wait-for-network probe and max-runtime guard); morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite; re-baseline the October reference bands (p50, p90, YVR→LAS).
+
+## October 6, 2026 — run 140: crawl-then-sprint returns; airlines hit 100; YTO→YYC whipsaws below its band
+
+Run 140: **5,719 offers**, single run, **18 failures**, **4,200 api_calls**, ~**71m** (13:00:34 → 14:12:00 UTC; 09:00 → 10:12 EDT). Cumulative **693,293 rows** (687,574 + 5,719 — reconciles exactly; 700k lands ~Oct 8). Chain ran end to end: backup (1.1 GB, 10:12), dedupe --apply **0 duplicates**, audit **All audits passed** (101st). No tracebacks.
+
+**Crawl-then-sprint again (the Sep 29 shape):** the first hour was slow and carried all 18 failures, then the resolver recovered and the final two-thirds of the route table sprinted in minutes. Yesterday's 61m was not a full recovery — the degradation comes and goes within a morning. All 18 failures are `NameResolutionError` (no read-timeouts today), scattered across seven routes: SFO→LAX ×6, YVR→SFO ×3, YUL→LGA ×3, SFO→CLT ×2, YVR→LAX ×2, JFK→FLL ×1, YYZ→LAS ×1. **No route dark** — SFO→LAX kept 15 rows, YUL→LGA kept 4 (airport-column check). Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20, 4, 6, 0, 17, 0, 1, 38, 11, 5, 0, 27, 29, 0, 0, **18**. Runtime series: 251 → 198 → 61 → **71**. The `Session` timing test remains the experiment to run on a morning like this one.
+
+**Distributions:** 282 routes, 43 gates, **100 airlines — new low for the slide** (114 → 108 → 104 → 102 → 100 over ten days; soft watch continues); avg $578.25, floor $31, p50 $481, p90 $1,008 — the October repricing climb continues on all three; 205 departure dates. Staleness vs Oct 5: 4,771 matched (83.4%), **98.3% identical** — in band.
+
+**Fares:** **NYC→PAR AF $5,723 holds — day 4.** NYC→SHA UA $2,592 is now the #3 anchor; LAX→SHA KE $2,819 at #2.
+
+**Watches:** **YTO→YYC whipsaws below its band: 37 → 29** (norm 35–43) — after 20 → 33 → 48 → 37 → 29 inside three weeks, the pair's true variance is simply wider than the band; moved to the re-baseline list alongside YVR→LAS. YMQ→NYC 11/4 = 2.75 rows/date — normal, closure holds. YVR→LAS flat at 2; **YVR→PDX still 0**; SFO→OGG drifted back to 3; LAX→SEA 9 at its settled level.
+
+**Still pending:** unchanged — `Session` timing test on the next slow morning; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite; re-baseline the October reference bands (p50, p90, YVR→LAS, **now YTO→YYC too**).
