@@ -1763,3 +1763,17 @@ Chains end to end both days: dedupe --apply **0 duplicates** ×2, audit **All au
 **Watches:** YMQ→NYC closure holds — 13/6 = 2.2 and 15/6 = 2.5 rows/date, fully normal. YTO→YYC back inside its norm: 41 → 38; overshoot episode over. **YVR→LAS hits 2 — a new low; re-baselining is overdue** (band 18–19 is weeks stale). **YVR→PDX still 0.** LAX→SEA 9 / 9 — settling at a lower level rather than dipping. SFO→OGG 6 → 5. YUL→EWR recovered to 4 → 6 after its sliver days.
 
 **Still pending:** wait-for-network probe (mid-loop version); max-runtime guard / `caffeinate` — **both may be superseded if the `Session` test pans out**; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite.
+
+## October 5, 2026 — run 139: the 100th clean audit; runtime recovery continues; p90 crosses $1,000
+
+Run 139: **5,852 offers**, single run, **0 failures**, **4,200 api_calls**, ~**61m** (13:11:07 → 14:11:48 UTC; 09:11 → 10:11 EDT). Cumulative **687,574 rows** (681,722 + 5,852 — reconciles exactly; 700k lands ~Oct 8 at this pace). Chain ran end to end: backup (1.1 GB, 10:11), dedupe --apply **0 duplicates**, audit **All audits passed — the 100th consecutive clean audit**. No tracebacks.
+
+**The runtime recovery is real: 251 → 198 → 61 min** — still ~4× September's fast days, but the acute crawl is fading, and this is the second straight zero-failure day. Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20, 4, 6, 0, 17, 0, 1, 38, 11, 5, 0, 27, 29, 0, **0**. The `Session` timing test (last entry) is still worth running on the next slow morning — this week showed the degradation comes and goes.
+
+**Distributions:** 282 routes, 41 gates, 104 airlines (holding at the lower level), avg $573.14, floor $31, p50 $479, **p90 $1,002 — first four-digit reading** (977 → 981 → 996 → 985 → 993 → 998 → 1,002); p50 still climbing (467 → 474 → 479). Both consistent with October repricing — re-baseline the reference bands, don't alarm. 204 departure dates. Staleness vs Oct 4: 4,971 matched (84.9%), **97.7% identical** — in band.
+
+**Fare lifecycles:** **NYC→PAR AF $5,723 holds — day 3.** NYC→SHA ET $2,851 **gone after 6 days** (Sep 29 → Oct 4; today's #2 is LAX→SHA KE $2,819). Lifecycle series: 7, 7, 4, 6, **6**.
+
+**Watches — a quiet day:** YMQ→NYC 14/5 = 2.8 rows/date, fully normal — closure holds. YTO→YYC 37 — inside the norm, overshoot episode over. YVR→LAS flat at 2 (the 18–19 band is weeks stale; re-baseline). **YVR→PDX still 0.** SFO→OGG 5 and LAX→SEA 10 — both at their settled levels.
+
+**Still pending:** unchanged — `Session` timing test on the next slow morning (may supersede the wait-for-network probe and max-runtime guard); morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite; re-baseline the October reference bands (p50, p90, YVR→LAS).
