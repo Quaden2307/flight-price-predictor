@@ -1791,3 +1791,19 @@ Run 140: **5,719 offers**, single run, **18 failures**, **4,200 api_calls**, ~**
 **Watches:** **YTO→YYC whipsaws below its band: 37 → 29** (norm 35–43) — after 20 → 33 → 48 → 37 → 29 inside three weeks, the pair's true variance is simply wider than the band; moved to the re-baseline list alongside YVR→LAS. YMQ→NYC 11/4 = 2.75 rows/date — normal, closure holds. YVR→LAS flat at 2; **YVR→PDX still 0**; SFO→OGG drifted back to 3; LAX→SEA 9 at its settled level.
 
 **Still pending:** unchanged — `Session` timing test on the next slow morning; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite; re-baseline the October reference bands (p50, p90, YVR→LAS, **now YTO→YYC too**).
+
+## October 7–8, 2026 — runs 141–142: zero failures both days, but run 142 is the slowest ever (~5 hours); 700k crossed; airlines at 98
+
+Run 141 (Oct 7): **5,728 offers**, **0 failures**, **4,200 api_calls**, ~**139.5m** (13:03:07 → 15:22:35 UTC; 09:03 → 11:22 EDT). Run 142 (Oct 8): **5,448 offers**, **0 failures**, **4,200 api_calls**, ~**298.9m** (13:11:20 → 18:10:11 UTC; 09:11 → 14:10 EDT) — **the slowest run on record** (previous record: 251m, run 136). Cumulative **704,469 rows** (693,293 + 5,728 + 5,448 — reconciles exactly; **700k crossed Oct 8 mid-run, right on the ~Oct 8 prediction**). Both chains ran end to end: dedupe --apply **0 duplicates** ×2, audits **All audits passed** (102nd and 103rd), backup 1.1 GB refreshed 14:10 EDT Oct 8. No tracebacks.
+
+**The slowdown is back, and it's pure latency:** runtime series 61 → 71 → **139 → 299**, with zero failures on both days — the same signature as the 169m/0-failure run 135. No `NameResolutionError`, no read-timeouts; every call simply took long. Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20, 4, 6, 0, 17, 0, 1, 38, 11, 5, 0, 27, 29, 0, 0, 18, **0, 0**. These two mornings were exactly what the `Session` timing test has been waiting for — it remains the decisive experiment.
+
+**Distributions (Oct 7 / Oct 8):** routes 278 / 283; gates 43 / 43; airlines **98 / 98 — new low for the slide** (114 → 108 → 104 → 102 → 100 → 98 over twelve days). Churn check: the carriers gone since Oct 6 are LJ, OH, P3, TA — fringe long-tail, not majors. Floor rose $31 → **$37** both days. **First reversal of the October repricing climb:** avg $577.36 → $569.55, p50 $481 → $466, p90 $1,010 → $999 — all three down on Oct 8. Departure dates 204 / 205. Oct 8's 5,448 offers sits below the October band, but with 0 failures and the route count *up* (283), it's mild per-route thinning (20.6 → 19.3 rows/route) plus a soft pricing day — not a collection artifact. Staleness: Oct 7 vs Oct 6 — 4,757 matched (83.0%), **97.8% identical**; Oct 8 vs Oct 7 — 4,373 matched (80.3%), **97.7%** — both in band, the low match rate consistent with the thin day.
+
+**Fares:** **NYC→PAR AF $5,723 holds — days 5 and 6** of the typical ~7-day lifecycle; watch for drop-off ~Oct 9–10.
+
+**Watches:** YTO→YYC 29 → 32 → 27 — the whipsaw continues; re-baseline case confirmed. YVR→LAS 4 → 2; **YVR→PDX still 0**; SFO→OGG down to 1 (low end of its hover); LAX→SEA 8 → 11 — settled. Fringe route churn: ONT→TYO, SFO→BLR, YTO→SJC dark Oct 8; 8 pairs returned (incl. NYC→PHL, SFO→AMS).
+
+**Bookkeeping:** the "gates" figure in this log is the union of distinct origin *city* codes and origin *airport* codes (verified against Oct 6's 43); a plain `COUNT(DISTINCT origin_airport)` gives 34 and is not this series. Done-line anchors for failure attribution: r141 = 519,078, r142 = 523,333.
+
+**Still pending:** unchanged — `Session` timing test (Oct 7 and Oct 8 were both qualifying mornings); morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite; re-baseline the October reference bands (p50, p90, YVR→LAS, YTO→YYC).
