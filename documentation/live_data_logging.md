@@ -1807,3 +1807,17 @@ Run 141 (Oct 7): **5,728 offers**, **0 failures**, **4,200 api_calls**, ~**139.5
 **Bookkeeping:** the "gates" figure in this log is the union of distinct origin *city* codes and origin *airport* codes (verified against Oct 6's 43); a plain `COUNT(DISTINCT origin_airport)` gives 34 and is not this series. Done-line anchors for failure attribution: r141 = 519,078, r142 = 523,333.
 
 **Still pending:** unchanged — `Session` timing test (Oct 7 and Oct 8 were both qualifying mornings); morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite; re-baseline the October reference bands (p50, p90, YVR→LAS, YTO→YYC).
+
+## October 9, 2026 — run 143: slowest run ever again (~5h 10m), third straight zero-failure day; airlines rebound to 100; NYC→PAR fare ties the lifecycle record at day 7
+
+Run 143: **5,451 offers**, **0 failures**, **4,200 api_calls**, ~**309.8m** (13:03:47 → 18:13:37 UTC; 09:03 → 14:13 EDT) — **a new all-time record, the second in two days** (298.9m yesterday, 251m run 136 before that). Cumulative **709,920 rows** (704,469 + 5,451 — reconciles exactly). Chain ran end to end: dedupe --apply **0 duplicates**, audit **All audits passed** (104th), backup 1.1 GB refreshed 14:13 EDT. No tracebacks. Done-line anchor: r143 = 527,589.
+
+**The latency climb is compounding, not fading:** runtime series 61 → 71 → 139 → 299 → **310**, with zero failures three days running — pure per-call slowness, no `NameResolutionError`, no read-timeouts. Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20, 4, 6, 0, 17, 0, 1, 38, 11, 5, 0, 27, 29, 0, 0, 18, 0, 0, **0**. The run now occupies 9 AM–2 PM; every day at this pace is a qualifying morning for the `Session` timing test, which remains the decisive experiment.
+
+**Distributions:** 285 routes (up from 283); gates 43 (city+airport union — series intact); **airlines 100 — the twelve-day slide reverses**: zero carriers departed, two arrived (4N, HY), so 98 looks like the trough. Floor held at **$37**. Pricing split in two directions: avg back up $569.55 → $577.62 and **p90 $1,030 — new October high** (999 → 1,030), but p50 down a second day $466 → **$464** — the middle softening while the top end stretches. 200 departure dates. Rows/route 19.1 — same mild thinning as yesterday, again with zero failures, so supply-side. Staleness vs Oct 8: 4,478 matched (**82.1%**), **97.8% identical** — in band.
+
+**Fares:** **NYC→PAR AF $5,723 holds — day 7**, tying the longest duration in the lifecycle series (7, 7, 4, 6, 6). Tomorrow decides: gone = the ~7-day pattern holds perfectly; still there = new record. Today's #2–3: NYC→BUE LA $3,127, SFO→TYO UA $2,966.
+
+**Watches:** YTO→YYC 27 → 29 — whipsaw continues inside its (wide) true range; still on the re-baseline list. YVR→LAS 2 → 3; **YVR→PDX still 0**; SFO→OGG holding at 1; LAX→SEA 11 → 10 — settled. Dark routes ONT→TYO, SFO→BLR, YTO→SJC all still dark.
+
+**Still pending:** unchanged — `Session` timing test (now three qualifying mornings in a row); morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite; re-baseline the October reference bands (p50, p90, YVR→LAS, YTO→YYC).
