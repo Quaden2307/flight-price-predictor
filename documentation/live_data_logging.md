@@ -1867,3 +1867,30 @@ Run 149: **5,354 offers**, **55 failures**, **4,200 api_calls**, ~**1,090m — 1
 **Run 150 (Oct 16) was mid-flight at check time** (fired on time 09:07 EDT; ~95% through the route table at 2h40m, pacing ~3h) — to be verified and logged separately.
 
 **Still pending:** `Session` timing test; **max-runtime guard / launchd overlapping-fire behavior — now urgent after an 18-hour run**; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite; re-baseline the October reference bands (p50, p90, floor, YVR→LAS, YTO→YYC).
+
+## October 16–19, 2026 — runs 150–153: the Oct 15 DNS episode doesn't repeat; runtime falls to 33m (fastest since Sep 28); Asia routes back; Oct 19 prices jump (p90 record 1,077)
+
+Run 150 (Oct 16): **5,306 offers**, **0 failures**, ~**161.5m** (13:07:31 → 15:49:04 UTC; 09:07 → 11:49 EDT). Run 151 (Oct 17): **5,089 offers**, **0 failures**, ~**261.6m** (13:13:08 → 17:34:43 UTC; 09:13 → 13:34 EDT). Run 152 (Oct 18): **5,117 offers**, **0 failures**, ~**72.1m** (13:00:21 → 14:12:24 UTC). Run 153 (Oct 19): **5,160 offers**, **1 failure**, ~**32.7m** (13:04:40 → 13:37:23 UTC; 09:04 → 09:37 EDT) — **fastest since run 132 on Sep 28 (30.9m)**. All four at **4,200 api_calls**. Cumulative **762,467 rows** (741,795 + 5,306 + 5,089 + 5,117 + 5,160 — reconciles exactly). All four chains ran end to end: dedupe --apply **0 duplicates** ×4, audits **All audits passed** (111th–114th), backup 1.2 GB refreshed 09:37 EDT Oct 19. err.log: only the standing LibreSSL `NotOpenSSLWarning`, no tracebacks. Done-line anchors: r150 = 557,482, r151 = 561,742, r152 = 565,983, r153 = 570,225.
+
+**The run-collision scare eases — for now:** runtime series 299 → 310 → 769 → 192 → 248 → 74 → 161 → 1,090 → **162 → 262 → 72 → 33**. Oct 15's 18-hour run looks like a spike, not a new floor, but the series has fallen and rebounded before (74 → 161 → 1,090), so the max-runtime guard question stays open. The lone run-153 failure was a single `NameResolutionError` on **YYZ→YOW** — the scattered pattern, not Oct 15's Asia cluster. Incident series since Sep 2: 29, 749, 886, 3, 0, 46, 0, 15, 0, 0, 162, 19, 15, 13, 0, 7, 3, 0, 20, 4, 6, 0, 17, 0, 1, 38, 11, 5, 0, 27, 29, 0, 0, 18, 0, 0, 0, 0, 0, 0, 0, 0, 55, **0, 0, 0, 1**.
+
+**Oct 15's dark Asia routes are back** (city codes in the DB: LAX→PVG = LAX→SHA, LAX→PEK = LAX→BJS, ORD→PEK = CHI→BJS):
+
+| Route | Oct 15 | Oct 16 | Oct 17 | Oct 18 | Oct 19 |
+|---|---|---|---|---|---|
+| LAX→PVG | 0 | 28 | 29 | 30 | 28 |
+| LAX→PEK | 0 | 14 | 14 | 13 | 8 |
+| LAX→HKG | 1 | 17 | 14 | 11 | 7 |
+| ORD→PEK | 0 | **0** | **0** | 3 | 3 |
+
+ORD→PEK stayed at 0 on Oct 16–17 with **zero failures** — so those days are supply-side emptiness, not network. LAX→HKG is sliding 17 → 14 → 11 → 7 and LAX→PEK dropped 13 → 8 on Oct 19 — watch, not a flag yet.
+
+**Distributions (Oct 16 / 17 / 18 / 19):** offers 5,306 → 5,089 → 5,117 → 5,160 (~18.4–18.8 rows/route); routes 280 → 279 → 282 → **275** (lowest in the October window); airlines 103 → 102 → 103 → 100; departure dates 196 → 195 → 194 → 190. Floor **$36 → $36 → $38 → $38** — the low-$40s stretch is over; it's back to the high-$30s. p50 458 → 459 → 461 → **473.5**; p90 1,039 → 1,047 → 1,050 → **1,077 (new high, prev 1,065 on Oct 14)**; avg $576.45 → $581.08 → $580.45 → **$597.53**. **Oct 19 is the notable day:** avg +$17, p50 +$12 and a record p90 at the same time — the whole distribution moved up, not just the top. Coincides with the 275-route dip, so it could be a route-mix change (cheaper routes missing) rather than real price movement — check tomorrow before calling it. Gates: 40 / 39 / 40 / 39 by `COUNT(DISTINCT gate)`, but that query returns 40 for Oct 15 versus the 42 logged there, so **these gate counts aren't comparable to earlier entries** until the original method is pinned down.
+
+**Staleness** (key `origin|destination|departure_at|return_at`; this method gives 4,318 / 80.7% / 98.0% for Oct 15, vs the logged 4,321 / 80.7% / 97.9%): Oct 16 vs 15 — 4,599 (**86.7%**), 99.0% identical; Oct 17 vs 16 — 4,281 (84.2%), 98.7%; Oct 18 vs 17 — 4,431 (**86.6%**), **99.2%**; Oct 19 vs 18 — 4,232 (82.0%), 98.3%. Oct 16 and Oct 18 joined Oct 11 above the 80–85% match band. With identical rates 98.3–99.2%, that reads as quiet repricing days, not a quality problem — the band's upper edge looks closer to ~88% than 85%.
+
+**Fares:** **SFO→SHA AC $5,692 anchor holds — day 6 on Oct 19** (plus the $5,494 AC offer; both via Авиасейлс). The lifecycle series (7, 7, 4, 6, 6, 7) puts the expected drop-off at **Oct 20**. #3 SFO→TYO UA $3,066 (Ubfly) held all four days; SFO→SHA AA $3,044 is #4. New Oct 19: YTO→TYO AC $2,948.
+
+**Watches:** YVR→LAS 1 → 2 → 2 → 1 — intermittent but present. YTO→YYC **14** → 15 → 17 → 19 — Oct 16 broke below the 22–27 range, now climbing back. YTO→SJC 2 ×4 — steady. SFO→OGG 1 → 1 → 1 → 2. LAX→SEA 10 → 13 → 13 → 13 — settled. YVR→PDX, SFO→BLR, ONT→TYO still dark.
+
+**Still pending:** `Session` timing test; max-runtime guard / launchd overlapping-fire behavior (less acute after four sub-4.5h runs, still unresolved); morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite; re-baseline the October reference bands (p50, p90, floor, YVR→LAS, YTO→YYC); **new: pin down the gate-count method; check whether Oct 19's price jump survives Oct 20.**
