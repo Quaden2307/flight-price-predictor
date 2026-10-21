@@ -23,3 +23,15 @@ TEST_CUTOFF = "2026-09-12"   # departs in [VAL_CUTOFF, this)  -> val ; on/after 
 # so the dataset stops growing under your experiments. Bump it DELIBERATELY when
 # you want to fold in newly collected data, then re-establish the baseline.
 SNAPSHOT_DATE = "2026-06-28"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PIPELINE GUARDS (src/guards.py), checked on every build_features() call.
+#
+# build_features() drops rows with NaN in its critical columns. Legitimate
+# losses are tiny: cold-start routes in val/test, ~0.2-0.4% of rows. Anything
+# larger means a join or a reference table broke upstream. In June 2026 the
+# airports table lacked the metro codes the API uses and dropna removed 92% of
+# rows without an error (archive Note A). This ceiling turns that into a hard
+# failure. If a run trips it, fix the table; do not raise the number.
+# ─────────────────────────────────────────────────────────────────────────────
+MAX_FEATURE_DROP_FRAC = 0.01

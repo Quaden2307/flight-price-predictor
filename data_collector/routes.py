@@ -135,7 +135,10 @@ ROUTES = [
     # ═══ Tier-1 expansion (23) — added 2026-06-03 ═══
     # Busiest-route gaps from documentation/route_expansion_proposal_2026-06-03.md.
     # NOTE: re-run populate_airports.py after this so new airport/city codes get
-    # coordinates, else build_features' dropna silently drops these rows.
+    # coordinates, then `python -m src.check_coverage` (and again after the first
+    # collection that follows, since the API may label a new route with a metro
+    # code). build_features() now refuses to run on unmapped codes instead of
+    # silently dropping the rows, so a missed re-run fails loudly.
 
     # Hawaii (4)
     ("LAX", "HNL"), ("SFO", "HNL"), ("SEA", "HNL"), ("HNL", "OGG"),

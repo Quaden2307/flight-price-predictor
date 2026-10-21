@@ -14,7 +14,10 @@ Layout — one shared core, two entry points:
                             the core and the two paths can't drift apart.
     build_features()        training path: log_price target, FITS route_means
                             (if not passed), Tier-B merges, itinerary_id
-                            label, dropna.
+                            label, guarded dropna. Two safeguards from
+                            src/guards.py run on every call: airport-code
+                            coverage up front, and a row-loss ceiling on the
+                            dropna (see MAX_FEATURE_DROP_FRAC in config.py).
     build_query_features()  serving path: no target, route_means is REQUIRED
                             (there is deliberately no None default — fitting
                             at inference would be target leakage), explicit
@@ -29,6 +32,9 @@ from math import radians, sin, cos, asin, sqrt
 
 import numpy as np
 import pandas as pd
+
+from src.config import MAX_FEATURE_DROP_FRAC
+from src.guards import check_airport_coverage, guarded_dropna
 
 # Columns present in a training DataFrame that must never enter X.
 # log_price is the target; itinerary_id is a grouping label for the bootstrap
@@ -126,6 +132,11 @@ def build_features(offers_df, airports_df, airlines_df, route_means=None):
     """
     df = offers_df.copy()
 
+    # 0. Guard: every origin/destination code must exist in the airports table,
+    #    or the merges in add_features() yield NaN coordinates and the row is
+    #    silently lost at the dropna below. Raises with the missing codes.
+    check_airport_coverage(df, airports_df, label=f"build_features, {len(df)} rows")
+
     # 1. Target: log_price = log(price)
     df["log_price"] = np.log(df["price"])
 
@@ -154,8 +165,16 @@ def build_features(offers_df, airports_df, airlines_df, route_means=None):
         + df["departure_at"] + "|" + df["return_at"]
     )
 
-    # 6. Drop rows with NaN in critical columns (log_price, distance_km, lead_time_days)
-    df = df.dropna(subset=["log_price", "distance_km", "lead_time_days", "route_mean_log_price"])
+    # 6. Drop rows with NaN in critical columns, with a receipt: rows before and
+    #    after, NaNs per column, and a hard failure if the loss exceeds
+    #    MAX_FEATURE_DROP_FRAC. Expected loss here is only cold-start routes in
+    #    val/test (route_mean_log_price NaN), well under 1%.
+    df = guarded_dropna(
+        df,
+        subset=["log_price", "distance_km", "lead_time_days", "route_mean_log_price"],
+        max_drop_frac=MAX_FEATURE_DROP_FRAC,
+        label=f"build_features dropna, {len(df)} rows in",
+    )
 
     # 7. Select final columns: target + features (+ itinerary_id label)
     FINAL_COLUMNS = [
