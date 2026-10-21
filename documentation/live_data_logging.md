@@ -1894,3 +1894,19 @@ ORD→PEK stayed at 0 on Oct 16–17 with **zero failures** — so those days ar
 **Watches:** YVR→LAS 1 → 2 → 2 → 1 — intermittent but present. YTO→YYC **14** → 15 → 17 → 19 — Oct 16 broke below the 22–27 range, now climbing back. YTO→SJC 2 ×4 — steady. SFO→OGG 1 → 1 → 1 → 2. LAX→SEA 10 → 13 → 13 → 13 — settled. YVR→PDX, SFO→BLR, ONT→TYO still dark.
 
 **Still pending:** `Session` timing test; max-runtime guard / launchd overlapping-fire behavior (less acute after four sub-4.5h runs, still unresolved); morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite; re-baseline the October reference bands (p50, p90, floor, YVR→LAS, YTO→YYC); **new: pin down the gate-count method; check whether Oct 19's price jump survives Oct 20.**
+
+## October 20, 2026 — run 154: avg crosses $600 for the first time; routes at 268, a new low; SFO→SHA anchor survives its expected drop-off day (day 7)
+
+Run 154: **5,097 offers**, **6 failures**, **4,200 api_calls**, ~**148.1m** (13:07:07 → 15:35:12 UTC; 09:07 → 11:35 EDT). Cumulative **767,564 rows** (762,467 + 5,097 — reconciles exactly). Chain ran end to end: dedupe --apply **0 duplicates**, audit **All audits passed** (115th), backup 1.2 GB refreshed 11:35 EDT. Done-line anchor: r154 = 574,491. The 6 failures: **5 `NameResolutionError` + 1 `ConnectTimeoutError`**, on HNL→OGG ×4 and YYC→SFO ×2 — scattered pattern, **nothing dark** (HNL→OGG kept 4 rows, YYC→SFO kept 2). Runtime series: 162 → 262 → 72 → 33 → **148** — still volatile, nowhere near crisis. Incident series since Sep 2: …, 55, 0, 0, 0, 1, **6**.
+
+**Answering the two questions from the last entry:**
+- **Gate-count method — it was already pinned down**: the Oct 7–8 entry's Bookkeeping paragraph records it as the **union of distinct origin city codes and origin airport codes** — `SELECT COUNT(*) FROM (SELECT origin_airport FROM offers WHERE … UNION SELECT origin FROM offers WHERE …)`. By that method Oct 16–19 are **42 / 42 / 42 / 43** (continuous with the logged series; the 40/39/40/39 readings came from a different column) and Oct 20 is **43**.
+- **Oct 19's price jump survived — and extended**: avg **$601.60, the first reading over $600** (record second day running: 597.53 → 601.60); p90 **$1,078, another record**; p50 472 (holding most of Oct 19's +$12). But the route-mix caveat from that entry got *stronger*, not weaker: **routes fell 275 → 268, a new low**, airlines dipped back under 100 to **99**, and rows/route is ~19.0 on just 5,097 offers. The cheap long tail evaporating would mechanically lift avg and p90 — the "real repricing vs route mix" question is still open and now spans two days.
+
+**Distributions:** 5,097 offers, 268 routes, gates 43, airlines 99, floor $38, 190 departure dates — the four-day slide (196 → 190) stopped, for a day at least. Staleness vs Oct 19 (6-column key): 4,138 matched (**81.2%**), 98.2% identical — in band.
+
+**Fares:** **SFO→SHA AC $5,692 holds — day 7**, surviving the lifecycle series' expected drop-off date (7, 7, 4, 6, 6, 7). Both AC offers present ($5,692 + $5,494); #3 SFO→TYO UA $3,066. **No fare has reached day 8 — tomorrow is a record attempt.**
+
+**Watches:** YTO→YYC **20** — fifth straight rise off the Oct 16 low (14 → 15 → 17 → 19 → 20). YVR→LAS 2; **YVR→PDX still 0**; SFO→OGG 2; LAX→SEA 11. (ONT→TYO, SFO→BLR not re-checked today.)
+
+**Still pending:** `Session` timing test; max-runtime guard / launchd overlapping-fire behavior; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite; re-baseline the October reference bands (p50, p90, floor, YVR→LAS, YTO→YYC); **watch whether the avg/p90 records are repricing or route-mix thinning (routes 268 and falling).**
