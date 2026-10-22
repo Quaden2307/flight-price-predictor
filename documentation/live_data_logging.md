@@ -1922,3 +1922,17 @@ Run 155: **5,316 offers**, **6 failures**, **4,200 api_calls**, ~**34.1m** (13:0
 **Watches:** YTO→YYC **21** — sixth straight rise off the Oct 16 low (14 → 15 → 17 → 19 → 20 → 21). YVR→LAS 2; **YVR→PDX still 0**; SFO→OGG 2; LAX→SEA 11; YTO→SJC 1; ONT→TYO and SFO→BLR still dark.
 
 **Still pending:** unchanged — `Session` timing test; max-runtime guard / launchd overlapping-fire behavior; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite; re-baseline the October reference bands (p50, p90, floor, staleness band edges, YVR→LAS, YTO→YYC); repricing-vs-route-mix watch.
+
+## October 22, 2026 — run 156: dedupe deletes its first row ever (net 5,310); records on BOTH ends — avg $606 and a $30 all-time-low floor; top end empty above $3k
+
+Run 156: **5,311 offers inserted**, **3 failures**, **4,200 api_calls**, ~**123.6m** (13:05:26 → 15:09:01 UTC; 09:05 → 11:09 EDT). **Dedupe --apply deleted a row for the first time in the log's history**: "Found 1 duplicate group(s), 1 redundant row(s)" after 40+ consecutive runs of zeros — the API returned the same offer twice within one run, and the 9-column guard caught it. Net **5,310**; cumulative **778,190 rows** (772,880 + 5,311 − 1 — reconciles exactly once the dedupe delete is counted; the ledger's `offers_inserted` is pre-dedupe). Audit **All audits passed** (117th), backup 1.2 GB refreshed 11:09 EDT. Done-line anchor: r156 = 582,996. The 3 failures: all `NameResolutionError` on YYZ→ATL — kept 1 row, **nothing dark**. Runtime series: 72 → 33 → 148 → 34 → **124**. Incident series since Sep 2: …, 55, 0, 0, 0, 1, 6, 6, **3**.
+
+**Records on both ends of the distribution, same day:** **avg $606.23 — fourth consecutive record** (597.53 → 601.60 → 605.68 → 606.23); **p90 $1,092 — fifth consecutive record** (1,077 → 1,078 → 1,086 → 1,092); p50 climbed to 482. Routes rose again to 279 (268 → 273 → 279), so the records keep coming *with* route recovery — leaning further toward real repricing over route-mix. **And the floor collapsed to $30 — all-time low** (SFO→ONT F9; previous minimum $31, recent floor $36–46). Widest low-to-high spread logged. **Meanwhile the top end emptied: no fare above $3k** (top is YTO→TYO AC $2,948, then BOS→LON BA $2,837) — first >$3k-free day in weeks, with the SFO→SHA anchor gone since yesterday.
+
+**Distributions:** 5,310 offers, 279 routes, gates 43, airlines 100, floor $30, **187 departure dates — the slide continues** (196 → 190 → 189 → 187). Staleness vs Oct 21: 4,382 matched (**82.5%**), 98.0% identical — back in band after yesterday's 79.0%.
+
+**Watches:** YTO→YYC **22** — seventh straight rise (14 → 15 → 17 → 19 → 20 → 21 → 22), a completed round trip back to its pre-dip level. YVR→LAS 2; **YVR→PDX still 0**; SFO→OGG 1; LAX→SEA 11; YTO→SJC 1; ONT→TYO and SFO→BLR still dark.
+
+**Bookkeeping:** reconciliation rule update — cumulative = previous + `offers_inserted` − dedupe deletions (the ledger column is pre-dedupe; this is the first run where the distinction mattered).
+
+**Still pending:** unchanged — `Session` timing test; max-runtime guard / launchd overlapping-fire behavior; morning router-link check; `Hour=6` vs `Hour=9` (reboot ⇒ captures shift 13:00 → 10:00 UTC); Python 3.12 / venv rebuild; CONTEXT.md rewrite; re-baseline the October reference bands (p50, p90, floor, staleness band edges, YVR→LAS, YTO→YYC); repricing-vs-route-mix watch; **departure-date slide watch (196 → 187 over five days).**
