@@ -38,7 +38,7 @@ A machine learning project that predicts what a flight should cost. It has three
 - **Modeling:** Scikit-learn, XGBoost
 - **Visualization:** Matplotlib, Seaborn
 - **Notebooks:** Jupyter
-- **Frontend:** Hand-written HTML/CSS/JS with a WebGL night-sky background, hosted on Vercel
+- **Frontend:** Hand-written HTML/CSS/JS on a single screen (no framework), with a hand-drawn 2D animation of a plane in the clouds, hosted on Vercel
 
 ---
 
