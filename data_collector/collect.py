@@ -211,10 +211,16 @@ if backup_path:
 # exact-key collision from a re-run or partial-write artifact gets removed.
 # Audit exits non-zero on anomalies; we surface the result but
 # don't fail the whole run, so backup happens before this point above.
+#
+# flush=True is load-bearing. stdout is a log file here, not a tty, so Python
+# block-buffers these headers while the children write straight to the
+# inherited fd. Unflushed, their output lands *above* the header that
+# introduces it and the tail of the log shows two empty sections — a healthy
+# chain that reads as a silent failure.
 import subprocess
 
-print("\n--- post-collection dedup ---")
+print("\n--- post-collection dedup ---", flush=True)
 subprocess.run([sys.executable, "data_collector/dedupe.py", "--apply"], check=False)
 
-print("\n--- post-collection audit ---")
+print("\n--- post-collection audit ---", flush=True)
 subprocess.run([sys.executable, "data_collector/audit.py"], check=False)
