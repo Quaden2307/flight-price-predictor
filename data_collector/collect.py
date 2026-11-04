@@ -61,6 +61,16 @@ def offset_month(month_str, offset):
     return f"{y:04d}-{m:02d}"
 
 
+def redact(text):
+    # requests embeds the full request URL in its exception messages, and that
+    # URL carries ?token=<API_TOKEN>. Printing an exception raw therefore
+    # writes the API token into logs/ in cleartext, once per failed call.
+    # Every message that may contain an exception goes through this first.
+    if not token:
+        return str(text)
+    return str(text).replace(token, "<token redacted>")
+
+
 '''
 Round-trip duration offsets — months between depart and return month.
 The API caps round-trip queries at a 30-day gap, so we can only do offset 0
@@ -122,7 +132,7 @@ for origin, destination in ROUTES:
                         print(f"{origin}→{destination} ({depart_month}→{return_month}): attempt {attempt + 1}/{MAX_ATTEMPTS} failed ({type(e).__name__}), retrying in {sleep_for}s")
                         time.sleep(sleep_for)
                     else:
-                        print(f"{origin}→{destination} ({depart_month}→{return_month}): FAILED after {MAX_ATTEMPTS} attempts — {e}")
+                        print(f"{origin}→{destination} ({depart_month}→{return_month}): FAILED after {MAX_ATTEMPTS} attempts — {redact(e)}")
                         failures += 1
 
             if offers is None:
