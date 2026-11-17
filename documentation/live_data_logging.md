@@ -2603,3 +2603,61 @@ Run 180: **6,294 inserted − 0 deduped = 6,294 net**, **0 failures**, **4,200 a
 **Bookkeeping:** the chat report for this run said every run in the log had at least one retry except Nov 4 and Nov 15; Jul 21, Jul 23 and Aug 21 (runs 76, 78, 97) also had none. Zero-retry runs were matched to `runs_logs` by their `Done:` line's offers count (the out.log holds 166 `Done:` lines for 180 runs). DB 1,591,955,456 bytes (+11.3 MB), `freelist_count` 0. err.log 296 lines; nothing new beyond the per-run `NotOpenSSLWarning`. `.env` unchanged since Aug 23.
 
 **Still pending:** **keep the overnight setup** (lid open, plugged in, `caffeinate`) and watch whether it holds on more nights; **build the end-of-run retry sweep** (proposed June); **chunk the commits** if the machine will ever run on battery (a dead battery mid-run still loses the whole day); **a per-call timestamp** (log line or column) — would pin when outages happen and confirm the retry/wake-boundary finding directly; **rotate the API token**; delete the abandoned 752 MB iCloud backup (Aug 21); `Session` timing test; max-runtime guard / launchd overlapping-fire behavior; morning router-link check (candidate to retire); what books the `CSPNEvaluation` wakes near 06:00 (moot with the lid open; low priority); whether `cloudd`'s post-update sync keeps holding wakes (moot with the lid open); Python 3.12 / venv rebuild (both venvs unusable); CONTEXT.md rewrite; **re-baseline the reference bands**; repricing-vs-route-mix watch (Nov 9–15's avg moves were all mix); confirm `COUNT(DISTINCT gate)` as the gates method; NYC→SAO recovery to ~32 (11); the 06:30 `caffeinate` job's source (a second awake-machine start at 06:30:06; harmless, low priority). **Retired:** overnight setup "not tried yet" (tried Nov 15: 8.5m, 0 failures, 0 retries).
+
+## November 16–17, 2026 — runs 181–182: the overnight setup again on Nov 16 (11.5m, 0 retries); lid closed on battery on Nov 17 (233m) with 9 DNS failures in one block; day 8 gives 22.0% and 1.5%; the NYC→SEL and NYC→DEL fares each last 8 captures; avg sets records both days and is mix
+
+Run 181 (Nov 16): **6,255 inserted − 0 deduped = 6,255 net**, **0 failures**, **4,200 api_calls**, ~**11.5m** (11:00:05 → 11:11:38 UTC; 06:00:05 → 06:11:38 EST). Run 182 (Nov 17): **6,225 inserted − 0 deduped = 6,225 net**, **9 failures**, **4,200 api_calls**, ~**232.9m** (11:13:43 → 15:06:39 UTC; 06:13:43 → 10:06:39 EST). Cumulative **917,933 → 924,188 → 930,413** (reconciles exactly both days). Chains complete ×2: dedupe --apply **0 / 0** (nineteenth and twentieth days), audits **All audits passed** (142nd, 143rd), backup **1.61 GB** refreshed 10:06 EST Nov 17 — 1,614,442,496 bytes, byte-identical to the live DB (`cmp`); Nov 16's backup was overwritten and can't be checked. Done-line anchors: r181 = 689,484, r182 = 693,765. Offers 6,294 → 6,255 → 6,225. Runtime series: 8.5 → **11.5 → 233**. Incident series since Sep 2: …, 0, **0, 9**. Retry lines: Nov 16 **0**; Nov 17 **44**, mostly `ConnectionError`, with some `ReadTimeout` and 2 `HTTPError`. Fired **06:00:05** and **06:13:43 EST** (below).
+
+**Failures (Nov 17): one DNS block.** 8 consecutive JFK→ATL calls (2026-11→2026-12 through 2027-03→2027-03) and 1 LGA→ATL (2027-01→2027-02), all `NameResolutionError` (couldn't resolve `api.travelpayouts.com`), starting ~20% of the way through the run (log line ~886 of 4,316). Same kind as Nov 8's 20-failure block, also a closed-lid battery crawl. Cost: NYC→ATL 44 → 32 rows; nothing else lost. Redacted (4,114 redacted lines in the file, +9 for the failure messages); 0 lines hold the live token.
+
+**Runtime: the lid decided both days.**
+
+| Night | Lid | Power | `caffeinate` | Run |
+|---|---|---|---|---|
+| Nov 15–16 | open from 00:05:24 | AC, 100% | PID 7359 from ~00:16 (holds `PreventUserIdleSystemSleep` and `PreventSystemSleep`) | awake all night; 11.5m, 0 retries |
+| **Nov 16–17** | **closed (`Clamshell Sleep` 18:11:00 Nov 16) until 10:02:17** | **battery, 93% → 59% by 06:00** | none | **44 dark wakes, 480 s awake in total; 233m, 9 failures, 44 retries** |
+
+The Nov 17 run crawled in the dark wakes until the lid opened at 10:02:17 and finished 4.4 minutes later. Zero-retry runs are now Nov 4, 15 and 16 (plus Jul 21, Jul 23, Aug 21) — all awake throughout; every closed-lid battery run since Nov 5 has had retries.
+
+**Fire times.** Nov 16 **06:00:05**: awake, so on the hour. Nov 17 **06:13:43**: a Wi-Fi (`wifibt`) dark wake, the first wake after 06:00 (the 05:58:32 wake ended at 05:58:39). Both fit the rule.
+
+**Day 8 (data only — predictions are paused):**
+- **Nov 16 (Nov 9 cohort):** 880 alive on day 7, **194 reached day 8 (22.0%)**. By decile: 12.3, 15.5, 17.2, 18.8, 37.4, 25.0, 21.9, 19.2, 30.8, 18.9%. Run 174 crawled unplugged until 14:14; run 181 was ahead throughout.
+- **Nov 17 (Nov 10 cohort):** 612 alive on day 7, **9 reached day 8 (1.5%)**. By decile: 0.0, 0.0, 2.4, 0.0, 0.8, 4.1, 5.5, 0.0, 0.0, 4.0%. Run 182 was later than run 175 throughout.
+
+| Cohort | First-seen run | Check run | Day-8 share |
+|---|---|---|---|
+| Nov 1 | 166: 809m | 173: 252m (much faster) | 26.4% |
+| **Nov 9** | **174: 499m (unplugged until 14:14)** | **181: 11.5m (much faster)** | **22.0%** |
+| Oct 30 | 164: 395m | 171: 173m (much faster) | 17.4% |
+| Oct 31 | 165: 462m | 172: 183m (much faster) | 17.9% |
+| Nov 8 | 173: 252m (crawled until 10:12) | 180: 8.5m (much faster) | 16.6% |
+| Nov 5 | 170: 338m (crawled until 11:32) | 177: 204m (much faster) | 12.0% |
+| Nov 2 | 167: 547m | 174: 499m (similar) | 6.6% |
+| Nov 3 | 168: 180m | 175: 198m (similar) | 6.1% |
+| Nov 6 | 171: 173m (06:00:04 → 08:53) | 178: 9.1m (same start second, then ahead) | 5.5% |
+| Oct 29 | 163: 446m | 170: 338m (started ~50 min later in real time) | 2.9% |
+| **Nov 10** | **175: 198m** | **182: 233m (later throughout)** | **1.5%** |
+| Nov 7 | 172: 183m (06:00:59 → 09:03) | 179: 158m (later until 08:41) | 1.0% |
+| Nov 4 | 169: 14.6m | 176: 228m (later throughout) | 0.2% |
+
+- **Watched fares that reached day 8 left on day 9 — each lasted 8 captures:** NYC→SEL TK $2,770, MS $2,739, TK $2,603 (Nov 8–15, gone Nov 16); NYC→DEL MS $2,843 (Nov 9–16, gone Nov 17). NYC→TYO PR $3,105 lasted Nov 14–16.
+
+**Distributions (Nov 16):** offers 6,255; routes 296; gates 41 (back: Tickets.kz — 2 rows, prior captures Nov 11–13; gone: MTravel, listed Nov 12–15); **airlines 106** (gone: X4; back: EH, JX, LF, RF, TG); floor $28 (day 5). Departure dates 194. **Avg $627.15** (record at the time). **p50 513 — all-time high.** p90 $1,139. Staleness vs Nov 15 — 5,134 matched (**82.1%**), 97.7% identical.
+
+**Distributions (Nov 17):** offers 6,225; **routes 291** (fewest since Nov 2's 289; gone: LAX→SAN, LGB→DEN, LGB→DFW, OAK→TYO, ONT→DEN, ONT→FRA, ONT→GDL, SEA→AUS, SJC→BJS, SJC→HNL, SJC→TYO; back: ONT→LON, ONT→SHA, PAE→LAS, SFO→CLT, YVR→ONT, YVR→PHX); gates 38 (gone: All Nippon Airways, Emirates, Topavia.by — 1 row each, listed Nov 13–16); airlines 105 (gone: BC, BF, H4; back: H1, PB); **floor $28** (F9 LAX→LAS flight 1184, Dec 5 → 9, day 6). Departure dates 192. **Avg $629.96 — all-time high.** p50 503. **p90 $1,156.** Staleness vs Nov 16 — 5,074 matched (**81.5%**), 97.7% identical.
+
+**Both avg rises are mix.** The same itinerary on consecutive days moved **+$0.37** on Nov 16 (71 up, 45 down) and **+$0.23** on Nov 17 (68 up, 50 down).
+- **Nov 16 (+$5.79):** kept 5,015 at $620.70; left 1,279 at $623.92; arrived 1,240 at **$653.21**.
+- **Nov 17 (+$2.81):** kept 4,956 at $624.26; left 1,299 at $638.14; arrived 1,269 at $652.22. December drove it: 502 new December rows at **$823** against 512 lost at $737 (December mean $698 → $714). Month means Nov 16 → 17: Nov $586 → $585, Dec $698 → $714, Jan $523 → $515, Feb $542 → $525, Mar $656 → $631, Apr $587 → $575, May $651 → $666.
+- Biggest moves Nov 17: drops NYC→LON 314 → 260, NYC→PAR 136 → 105, NYC→ROM 67 → 40, NYC→FLL 122 → 109, SFO→RDU 14 → 1, NYC→ATL 44 → 32 (the failure block); rises NYC→CHI 114 → 146, SEL→BJS 131 → 156, NYC→FRA 36 → 60, NYC→TYO 46 → 60, LAX→CUN 24 → 34.
+
+**Fares (Nov 16):** NYC→TYO PR $3,105 (Aviakassa, day 3, #1); NYC→TYO BR $2,995 (Farera, new); NYC→DEL MS $2,843 (Wowtickets, day 8); NYC→BOM SK $2,764 (Turna.com, day 3).
+
+**Fares (Nov 17):** six of the top nine are new, all departing Dec 17–24. NYC→TYO BR $2,995 (Farera, day 2, #1); **YTO→BJS CX $2,929 (Trip.com, new)**; **NYC→TYO B6 $2,864 (Clickavia, new)**; **NYC→TYO B6 $2,818 (Kupi.com, new)**; **LAX→SEL UA $2,797 (Aviakassa, new)**; **YTO→BJS AC $2,796 (Trip.com, new)**; NYC→BOM SK $2,764 (Turna.com, day 4); YTO→TYO UA $2,758 (Kupi.com, day 2); **NYC→TYO AS $2,716 (Trip.com, new)**.
+
+**Watches (Nov 14 / 15 / 16 / 17):** **NYC→FLL 139 / 126 / 122 / 109 — falling since Nov 13's 141.** LAX→LON 21 / 25 / 27 / 21. YTO→YYC 36 / 35 / 39 / 37. LAX→SEA 10 / 12 / 14 / 11. YVR→LAX 12 / 7 / 8 / 7. YVR→LAS 12 / 9 / 9 / 9. YYC→LAX 5 / 7 / 7 / 9. **SFO→OGG 7 / 6 / 4 / 3.** NYC→AUS 9 / 9 / 6 / 7. NYC→SAO 11 / 11 / 10 / 10. NYC→BOS 11 / 9 / 9 / 8. SFO→SEA 6 / 5 / 5 / 4. ONT→TYO 2 / 2 / 2 / 2. YVR→DEN 1 / 1 / 1 / 1. SJC→LAS 1 / 1 / 1 / 1. **YTO→SJC 2 / 1 / 0 / 0 — dark (2nd run).** Dark: **YVR→PDX (7th run)**, **SFO→BLR (9th run)**.
+
+**Bookkeeping:** the Nov 16 run is logged here for the first time. DB 1,614,442,496 bytes (+22.5 MB over two days), `freelist_count` 0. err.log 300 lines; nothing new beyond the per-run `NotOpenSSLWarning`. Not checked: the 06:30 `caffeinate` job on either day.
+
+**Still pending:** **keep the overnight setup** (lid open, plugged in, `caffeinate`) — Nov 15 and 16 with it: 8.5m and 11.5m, 0 retries; Nov 17 without it: 233m, 9 DNS failures; **build the end-of-run retry sweep** (proposed June — would have recovered today's 9 failed calls); **chunk the commits** if the machine will ever run on battery; **a per-call timestamp** (log line or column); **rotate the API token**; delete the abandoned 752 MB iCloud backup (Aug 21); `Session` timing test; max-runtime guard / launchd overlapping-fire behavior; morning router-link check (candidate to retire); what books the `CSPNEvaluation` wakes near 06:00 (moot with the lid open; low priority); whether `cloudd`'s post-update sync keeps holding wakes (moot with the lid open); Python 3.12 / venv rebuild (both venvs unusable); CONTEXT.md rewrite; **re-baseline the reference bands**; repricing-vs-route-mix watch (Nov 9–17's avg moves were all mix); confirm `COUNT(DISTINCT gate)` as the gates method; NYC→SAO recovery to ~32 (10); the 06:30 `caffeinate` job's source (harmless, low priority).
