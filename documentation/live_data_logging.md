@@ -2661,3 +2661,45 @@ The Nov 17 run crawled in the dark wakes until the lid opened at 10:02:17 and fi
 **Bookkeeping:** the Nov 16 run is logged here for the first time. DB 1,614,442,496 bytes (+22.5 MB over two days), `freelist_count` 0. err.log 300 lines; nothing new beyond the per-run `NotOpenSSLWarning`. Not checked: the 06:30 `caffeinate` job on either day.
 
 **Still pending:** **keep the overnight setup** (lid open, plugged in, `caffeinate`) — Nov 15 and 16 with it: 8.5m and 11.5m, 0 retries; Nov 17 without it: 233m, 9 DNS failures; **build the end-of-run retry sweep** (proposed June — would have recovered today's 9 failed calls); **chunk the commits** if the machine will ever run on battery; **a per-call timestamp** (log line or column); **rotate the API token**; delete the abandoned 752 MB iCloud backup (Aug 21); `Session` timing test; max-runtime guard / launchd overlapping-fire behavior; morning router-link check (candidate to retire); what books the `CSPNEvaluation` wakes near 06:00 (moot with the lid open; low priority); whether `cloudd`'s post-update sync keeps holding wakes (moot with the lid open); Python 3.12 / venv rebuild (both venvs unusable); CONTEXT.md rewrite; **re-baseline the reference bands**; repricing-vs-route-mix watch (Nov 9–17's avg moves were all mix); confirm `COUNT(DISTINCT gate)` as the gates method; NYC→SAO recovery to ~32 (10); the 06:30 `caffeinate` job's source (harmless, low priority).
+
+## November 18, 2026 — run 183: 358 minutes closed on battery from 29%, down to 15% at lid open; 0 failures and a record 6,363 offers; the Nov 11 cohort gives 0.7% on day 8; the +$21 avg jump is the largest since September and is mix; avg and p50 set records; SFO→BLR back, YVR→DEN gone
+
+Run 183: **6,363 inserted − 0 deduped = 6,363 net**, **0 failures**, **4,200 api_calls**, ~**357.9m** (11:08:06 → 17:05:57 UTC; 06:08:06 → 12:05:57 EST — longest since Nov 9's 499m). Cumulative **930,413 → 936,776** (reconciles exactly). Chain complete: dedupe --apply **0 / 0** (twenty-first day), audit **All audits passed** (144th), backup **1.63 GB** refreshed 12:06 EST — 1,625,899,008 bytes, byte-identical to the live DB (`cmp`). Done-line anchor: r183 = 698,022. Offers 6,255 → 6,225 → **6,363 (record; runs_logs top three are now 183, 178, 180)**. Runtime series: 11.5 → 233 → **358**. Incident series since Sep 2: …, 0, 9, **0**. Retry lines 20, covering 19 calls: `ConnectionError` ×15, `ReadTimeout` ×5. **JFK→IAH (2027-03→2027-03) needed both retries** and succeeded on the third attempt. All retry lines sit in the first ~third of the run's log (last at line 1,401 of 4,292). Fired **06:08:06 EST** (below).
+
+**Failures:** none. Redacted (4,114 redacted lines in the file, unchanged); 0 lines hold the live token.
+
+**Runtime: closed on battery, starting low.** `Clamshell Sleep` 23:03:39 Nov 17 at **29%**; 21% at 06:00; lid opened 11:55:23 at **15%**; on AC by 11:57:48 (14%). No `caffeinate`. During the run the machine got **36 dark wakes, 163 s awake in total** over ~5.8 hours (Nov 17: 44 wakes, 480 s). The run crawled until the lid opened and finished ~10.5 minutes later. **Battery risk:** a few more hours closed and the battery could have died mid-run, which loses the whole day (the collector commits at the end).
+
+**Fire time: 06:08:06.** A Wi-Fi (`wifibt`) dark wake at 06:08:05, the first wake after 06:00 (the 05:59:24 `SleepService` wake ended at 05:59:26). Fits the rule.
+
+**Day 8 (data only — predictions are paused):**
+- **Nov 18 (Nov 11 cohort):** 695 alive on day 7, **5 reached day 8 (0.7%)**. By decile: 0.0, 0.0, 2.8, 0.0, 1.7, 2.3, 0.0, 0.0, 0.0, 1.2%. Run 176 ran 06:02:46 → 09:50:46; run 183 reached nearly every route later in clock time, so almost nothing survived.
+
+| Cohort | First-seen run | Check run | Day-8 share |
+|---|---|---|---|
+| Nov 1 | 166: 809m | 173: 252m (much faster) | 26.4% |
+| Nov 9 | 174: 499m (unplugged until 14:14) | 181: 11.5m (much faster) | 22.0% |
+| Oct 30 | 164: 395m | 171: 173m (much faster) | 17.4% |
+| Oct 31 | 165: 462m | 172: 183m (much faster) | 17.9% |
+| Nov 8 | 173: 252m (crawled until 10:12) | 180: 8.5m (much faster) | 16.6% |
+| Nov 5 | 170: 338m (crawled until 11:32) | 177: 204m (much faster) | 12.0% |
+| Nov 2 | 167: 547m | 174: 499m (similar) | 6.6% |
+| Nov 3 | 168: 180m | 175: 198m (similar) | 6.1% |
+| Nov 6 | 171: 173m (06:00:04 → 08:53) | 178: 9.1m (same start second, then ahead) | 5.5% |
+| Oct 29 | 163: 446m | 170: 338m (started ~50 min later in real time) | 2.9% |
+| Nov 10 | 175: 198m | 182: 233m (later throughout) | 1.5% |
+| Nov 7 | 172: 183m (06:00:59 → 09:03) | 179: 158m (later until 08:41) | 1.0% |
+| **Nov 11** | **176: 228m (06:02 → 09:50)** | **183: 358m (later throughout)** | **0.7%** |
+| Nov 4 | 169: 14.6m | 176: 228m (later throughout) | 0.2% |
+
+**Distributions:** offers **6,363**; **routes 289** (was 291 — ties Nov 2 as the fewest since October; gone: LGB→PDX, ONT→CUN, ONT→TPE, SFO→CLT, SJC→LAS, SJC→PHX, YTO→WAS, YVR→DEN, YYC→YEA; back: CHI→RDU, FLL→PUJ, OAK→TYO, ONT→SAN, SEA→DFW, SFO→BLR, SFO→FLL); gates 42 (back, 1 row each: Austrian Airlines — prior Oct 11, 30, 31; MTravel — Nov 13–15; Uzbekistan airways — prior Sep 12–15; **Onewaytickets — first ever**); airlines 106 (gone: PT; back: BF, HB); **floor $28** (F9 LAX→LAS flight 1184, Dec 5 → 9, day 7). Departure dates 191. **Avg $651.19 — all-time high.** **p50 521 — all-time high.** **p90 $1,183.** Staleness vs Nov 17 — 5,060 matched (**79.5%**), 98.2% identical.
+
+**The +$21.23 avg jump is mix — and the largest one-day rise since at least September** (next: +$17.29 Sep 3, +$17.08 Oct 19). The same itinerary on both days moved **+$0.15** (53 up, 36 down). Rows kept (4,971) averaged $645.95; rows that left (1,254) averaged **$566.57**; rows that arrived (1,392) averaged **$669.88**. Losing the cheap leavers lifts the avg ~$16 and the pricier arrivals ~$5. November: 373 left at $545, 359 arrived at $646 (mean $585 → $610). December: 504 left at $613, 535 arrived at $760 (mean $714 → $743). January rows 866 → 964 (mean $515 → $548). Feb $525 → $524, Mar $631 → $631, Apr $575 → $580, May $666 → $676. Biggest rises: LAX→TYO 128 → 176, SFO→MIA 17 → 47, NYC→BOG 13 → 31, NYC→ATL 32 → 49 (recovered from Nov 17's failure block), YTO→BJS 35 → 51, YTO→TYO 112 → 127. Biggest drops: NYC→MIA 471 → 429, TYO→BJS 96 → 86, TYO→SEL 166 → 159, YVR→LAS 9 → 2, NYC→SJU 136 → 130, NYC→PAR 105 → 99. Why the leavers ran so cheap is not checked.
+
+**Fares (Nov 18):** NYC→TYO BR $2,995 (Farera, day 3, #1); **NYC→LON VS $2,938 (Kupi.com, new; departs Nov 22)**; **LAX→BKK AC $2,935 (Farera, new)**; YTO→BJS CX $2,929 (Trip.com, day 2); NYC→TYO B6 $2,864 (Clickavia, day 2); **YTO→BJS AC $2,840 (Trip.com, new)**; NYC→TYO B6 $2,818 (Kupi.com, day 2); **YTO→BJS CA $2,802 (SuperKassa, new)**; LAX→SEL UA $2,797 (Aviakassa, day 2).
+
+**Watches (Nov 15 / 16 / 17 / 18):** **SFO→BLR 0 / 0 / 0 / 1 — back after 9 dark runs.** **YVR→DEN 1 / 1 / 1 / 0 — gone** (its one WS fare departed Nov 17). **SJC→LAS 1 / 1 / 1 / 0 — dark.** **YVR→LAS 9 / 9 / 9 / 2.** NYC→FLL 126 / 122 / 109 / 111. LAX→LON 25 / 27 / 21 / 19. YTO→YYC 35 / 39 / 37 / 39. LAX→SEA 12 / 14 / 11 / 11. NYC→SAO 11 / 10 / 10 / 11. YYC→LAX 7 / 7 / 9 / 9. YVR→LAX 7 / 8 / 7 / 8. NYC→BOS 9 / 9 / 8 / 8. NYC→AUS 9 / 6 / 7 / 5. SFO→SEA 5 / 5 / 4 / 5. SFO→OGG 6 / 4 / 3 / 3. ONT→TYO 2 / 2 / 2 / 2. Dark: **YVR→PDX (8th run)**, **YTO→SJC (3rd run)**.
+
+**Bookkeeping:** DB 1,625,899,008 bytes (+11.5 MB), `freelist_count` 0. err.log 302 lines; nothing new beyond the per-run `NotOpenSSLWarning`. Not checked: the 06:30 `caffeinate` job.
+
+**Still pending:** **keep the overnight setup** (lid open, plugged in, `caffeinate`) — with it Nov 15–16: 8.5m and 11.5m, 0 retries; without it Nov 17–18: 233m and 358m, and Nov 18 started the night at 29% battery; **chunk the commits** — more urgent after Nov 18's 15% (a dead battery mid-run loses the whole day); **build the end-of-run retry sweep** (proposed June); **a per-call timestamp** (log line or column); **rotate the API token**; delete the abandoned 752 MB iCloud backup (Aug 21); `Session` timing test; max-runtime guard / launchd overlapping-fire behavior; morning router-link check (candidate to retire); what books the `CSPNEvaluation` wakes near 06:00 (low priority); whether `cloudd`'s post-update sync keeps holding wakes (low priority); Python 3.12 / venv rebuild (both venvs unusable); CONTEXT.md rewrite; **re-baseline the reference bands** (avg $651, p50 521, p90 $1,183 are all new highs); repricing-vs-route-mix watch (Nov 9–18's avg moves were all mix); **why Nov 18's leaving rows were so cheap** ($567 vs $646 kept); confirm `COUNT(DISTINCT gate)` as the gates method; NYC→SAO recovery to ~32 (11); the 06:30 `caffeinate` job's source (harmless, low priority). **Retired:** YVR→DEN watch (its only fare departed Nov 17).
